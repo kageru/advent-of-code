@@ -1,4 +1,4 @@
-C               IIIII
+C               IIII
 Go              IIIII
 Kotlin          IIIII
 Python          IIIII
