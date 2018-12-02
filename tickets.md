@@ -1,6 +1,6 @@
 C               IIII
 Go              IIIII
-Kotlin          IIIII
+Kotlin          IIII
 Python          IIIII
 Rust            IIIII
 
