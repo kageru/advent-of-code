@@ -9,7 +9,7 @@
 int main() {
     int position = 0;
     char line [10];
-    int positions [inputLength]; // all initialized to 0
+    char positions [inputLength]; // all initialized to 0
 
     while (1) {
     FILE* inputFile = fopen("input", "r");
