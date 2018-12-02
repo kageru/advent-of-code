@@ -21,8 +21,6 @@ fun main(args: Array<String>) {
                 println(line2)
                 return
             }
-            else {
-            }
         }
     }
 }
