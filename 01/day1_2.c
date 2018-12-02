@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "hashset/hashset.h"
-
 
 // Originally, I used hashsets for this, which refused to work for me.
 // I would then find out that the implementation I was using hashes based on the pointer, not the value, so I just wrote a stupid lookup table.
 
-#define inputLength 1000000 // adjust expected length
+#define inputLength 1000000 // adjust accordingly
 
 int main() {
     int position = 0;
