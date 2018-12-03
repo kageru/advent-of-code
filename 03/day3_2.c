@@ -31,16 +31,15 @@ void setFields(struct Claim claim, int fabric [SIZE][SIZE]) {
     }
 }
 
-int countDoubles(int fabric [SIZE][SIZE]) {
-    int sum = 0;
-    for (int i=0; i<SIZE; i++) {
-        for (int j=0; j<SIZE; j++) {
-            if (fabric[i][j] > 1) {
-                sum++;
+int verifyClaim(struct Claim claim, int fabric [SIZE][SIZE]) {
+    for (int i=claim.left; i<claim.left+claim.width; i++) {
+        for (int j=claim.top; j<claim.top+claim.height; j++) {
+            if (fabric[i][j] != 1) {
+                return 0;
             }
         }
     }
-    return sum;
+    return 1;
 }
 
 int main() {
@@ -48,13 +47,23 @@ int main() {
     FILE* input = fopen("input", "r");
     char line [25];
     
+    // Looks like int[][] isn’t initialized to 0
     resetFields(fabric);
+    int i = 0;
     while (fgets(line, sizeof(line), input)) {
         struct Claim claim = parseClaim(line);
         setFields(claim, fabric);
     }
 
-    printf("%d\n", countDoubles(fabric));
+    input = fopen("input", "r");
+    while (fgets(line, sizeof(line), input)) {
+        struct Claim claim = parseClaim(line);
+        if (verifyClaim(claim, fabric) == 1) {
+            printf("Valid claim: %d\n", claim.id);
+            return 0;
+        }
+    }
+
     return 0;
 }
 
