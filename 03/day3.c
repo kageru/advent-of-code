@@ -15,29 +15,21 @@ struct Claim parseClaim(char line[25]) {
     return claim;
 }
 
-//int totalIncrements = 0;
+void resetFields(int fabric [SIZE][SIZE]) {
+    for (int i=0; i<1000; i++) {
+        for (int j=0; j<1000; j++) {
+            fabric[i][j] = 0;
+        }
+    }
+}
 
 void setFields(struct Claim claim, int fabric [SIZE][SIZE]) {
     for (int i=claim.left; i<claim.left+claim.width; i++) {
         for (int j=claim.top; j<claim.top+claim.height; j++) {
             fabric[i][j] += 1;
-            // totalIncrements++;
         }
     }
 }
-
-/*
-int verifyClaim(struct Claim claim, int fabric [SIZE][SIZE]) {
-    for (int i=claim.left; i<=claim.left+claim.width; i++) {
-        for (int j=claim.top; j<=claim.top+claim.height; j++) {
-            if (fabric[i][j] != 1) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-*/
 
 int countDoubles(int fabric [SIZE][SIZE]) {
     int sum = 0;
@@ -56,23 +48,13 @@ int main() {
     FILE* input = fopen("input", "r");
     char line [25];
     
+    resetFields(fabric);
     while (fgets(line, sizeof(line), input)) {
         struct Claim claim = parseClaim(line);
         setFields(claim, fabric);
     }
 
-    /*
-    int validClaims;
-    input = fopen("input", "r");
-    while (fgets(line, sizeof(line), input)) {
-        struct Claim claim = parseClaim(line);
-        validClaims += verifyClaim(claim, fabric);
-    }
-    */
-
-
     printf("%d\n", countDoubles(fabric));
-    // printf("%d\n", totalIncrements);
     return 0;
 }
 
