@@ -2,10 +2,9 @@
 use std::{fs, cmp};
 
 enum GuardAction {
-    shift_start(Guard),
-    shift_end(Guard),
-    fall_asleep,
-    wake_up,
+    BeginShift(i32),
+    FallAsleep,
+    WakeUp,
 }
 
 struct Guard {
@@ -75,7 +74,16 @@ impl Event {
 }
 
 fn parse_action(input: &String) -> GuardAction {
-    return GuardAction::fall_asleep;
+    match input[0] {
+        "f" => GuardAction::FallAsleep,
+        "w" => GuardAction::WakeUp,
+        "G" => {
+            let gid: i32;
+            scan!(input.bytes() => "Guard #{} begins shift", gid);
+            GuardAction::BeginShift(gid)
+        }
+        _ => // undefined?
+    }
 }
 
 fn event_from_line(line: &String) -> Event {
