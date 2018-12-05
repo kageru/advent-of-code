@@ -18,12 +18,12 @@ fn parse_action(input: &String) -> GuardAction {
 }
 
 fn event_from_line(line: String) -> Event {
-    let (month, day, hour, minute, unparsed_action): (i32, i32, i32, i32, String);
+    let (year, month, day, hour, minute, unparsed_action): (i32, i32, i32, i32, i32, String);
     // I’m only adding the \n here to use it as a marker for scan!,
     // which would otherwise stop at the first space.
     let line2 = line.to_string() + "\n";
-    scan!(line2.bytes() => "[1518-{}-{} {}:{}] {}\n", month, day, hour, minute, unparsed_action);
-    let datetime = types::DateTime::new(month, day, hour, minute);
+    scan!(line2.bytes() => "[{}-{}-{} {}:{}] {}\n", year, month, day, hour, minute, unparsed_action);
+    let datetime = types::DateTime::new(year, month, day, hour, minute);
     return Event::new(datetime, parse_action(&unparsed_action));
 }
 
@@ -113,7 +113,7 @@ fn get_sleepy_minute(shifts: &Vec<Shift>) -> (i32, i32) {
 }
 
 fn main() {
-    let lines: Vec<&str> = include_str!("../input").split("\n").collect();
+    let lines: Vec<&str> = include_str!("../input_big").split("\n").collect();
     
     let mut events: Vec<Event> = Vec::new();
     for line in lines {

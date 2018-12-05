@@ -22,6 +22,7 @@ pub struct Shift {
 
 #[derive(Eq)]
 pub struct DateTime {
+    pub year: i32,
     pub month: i32,
     pub day: i32,
     pub hour: i32,
@@ -31,8 +32,8 @@ pub struct DateTime {
     // Calculate the absolute minute count relative to 01/01 0:00. Months are assumed to have 31
     // days because we just want to ensure that a higher month always results in a higher
     // timestamp. Think of this as a primitive and less correct unix epoch.
-    pub fn get_sortable_time(month: i32, day: i32, hour: i32, minute: i32) -> i32 {
-        return minute + hour * 60 + day * 60 * 24 + month * 60 * 24 * 31;
+    pub fn get_sortable_time(year: i32, month: i32, day: i32, hour: i32, minute: i32) -> i32 {
+        return minute + hour * 60 + day * 60 * 24 + month * 60 * 24 * 31 + year * 60 * 24 * 31 * 12;
     }
 
 impl Shift {
@@ -51,20 +52,21 @@ impl Guard {
 }
 
 impl DateTime {
-    pub fn new(month: i32, day: i32, hour: i32, minute: i32) -> Self {
+    pub fn new(year: i32, month: i32, day: i32, hour: i32, minute: i32) -> Self {
         DateTime {
+            year,
             month,
             day,
             hour,
             minute,
-            sortable_time: get_sortable_time(month, day, hour, minute)
+            sortable_time: get_sortable_time(year, month, day, hour, minute)
         }
     }
 }
 
 impl fmt::Display for DateTime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}.{} {}:{}", self.day, self.month, self.hour, self.minute)
+        write!(f, "{}.{}.{} {}:{}", self.day, self.month, self.year, self.hour, self.minute)
     }
 }
 
