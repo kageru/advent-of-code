@@ -61,7 +61,7 @@ fn calculate_sleep(events: &Vec<Event>) -> Vec<bool> {
     let mut last = 0;
     for e in events {
         if sleeping {
-            for i in (last..e.datetime.minute) {
+            for i in last..e.datetime.minute {
                 minutes[i as usize] = true;
             }
         }
@@ -100,7 +100,7 @@ fn find_sleepy_guard(guards: &HashMap<i32, Vec<Shift>>) -> i32 {
     return id_of_sleepiest;
 }
 
-fn get_sleepy_minute(shifts: &Vec<Shift>) -> i32 {
+fn get_sleepy_minute(shifts: &Vec<Shift>) -> (i32, i32) {
     let mut sleep_during_shifts = vec![0; 60];
     for shift in shifts {
         let minutes_asleep = calculate_sleep(&shift.events);
@@ -109,7 +109,7 @@ fn get_sleepy_minute(shifts: &Vec<Shift>) -> i32 {
         }
     }
     let sleepy_minute = sleep_during_shifts.iter().max().unwrap();
-    return sleep_during_shifts.iter().position(|&m| &m == sleepy_minute).unwrap() as i32;
+    return (*sleepy_minute, sleep_during_shifts.iter().position(|&m| &m == sleepy_minute).unwrap() as i32);
 }
 
 fn main() {
@@ -122,16 +122,24 @@ fn main() {
 
     events.sort();
     let shifts = events_to_shifts(events);
-    /*
-    for shift in shifts {
-        for event in shift.events {
-            println!("{}", event.datetime);
+    let shifts_by_guard = group_shifts_by_guard(shifts);
+    
+    // part 1
+    let mut sleepy_guard = find_sleepy_guard(&shifts_by_guard);
+    let sleepy_minute = get_sleepy_minute(&shifts_by_guard.get(&sleepy_guard).unwrap()).1;
+    println!("part 1: guard {}, minute {}: {}", sleepy_guard, sleepy_minute, sleepy_guard * sleepy_minute);
+    
+    // part 2
+    let (mut sleepy_minute_amount, mut sleepy_minute_id) = (-1, -1);
+    sleepy_guard = -1;
+    for (guard, shifts) in shifts_by_guard {
+        let (minute_amount, minute_id) = get_sleepy_minute(&shifts);
+        if minute_amount > sleepy_minute_amount {
+            sleepy_minute_amount = minute_amount;
+            sleepy_minute_id = minute_id;
+            sleepy_guard = guard;
         }
     }
-    */
-    let shifts_by_guard = group_shifts_by_guard(shifts);
-    let sleepy_guard = find_sleepy_guard(&shifts_by_guard);
-    let sleepy_minute = get_sleepy_minute(&shifts_by_guard.get(&sleepy_guard).unwrap());
-    println!("guard {}, minute {}: {}", sleepy_guard, sleepy_minute, sleepy_guard * sleepy_minute);
+    println!("part 2: guard {}, minute {}, asleep for {}: {}", sleepy_guard, sleepy_minute_id, sleepy_minute_amount, sleepy_guard * sleepy_minute_id);
 }
 
