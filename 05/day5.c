@@ -9,39 +9,36 @@ int isSameLetter(char a, char b) {
 
 int processArray(char* input, int length) {
     int outputLength = 0;
-    for (int i=0; i<length-1; i++) {
+    for (int i=0; i<length; i++) {
         if (isSameLetter(input[i], input[i+1]) == 1) {
-            printf("reacting: %c%c\n", input[i], input[i+1]);
             i++;
         } else {
             input[outputLength] = input[i];
             outputLength++;
         }
     }
-    return outputLength + 1;
+    return outputLength;
 }
 
 int main() {
     struct stat stbuffer;
     FILE *inputFile = fopen("input", "r");
-    fstat(fileno(inputFile), &stbuffer) != -1;
-    int inSize = stbuffer.st_size;
-    //inSize = 40;
+    fstat(fileno(inputFile), &stbuffer);
+    int inSize = stbuffer.st_size + 1;
+    //inSize = 20;
+    //fseek(inputFile, 10020, 0);
     char *input = malloc(inSize);
     fgets(input, inSize, inputFile);
 
     int lastLength = inSize;
     
-    printf("%s\n", input);
     int outLength = inSize;
     do {
         lastLength = outLength;
         outLength = processArray(input, lastLength);
-        printf("%s\n", input);
-        printf("%d\n", outLength);
     } while (lastLength != outLength);
 
-    printf("%d\n", outLength);
+    printf("%d\n", outLength - 1);
 
     fclose(inputFile);
     free(input);
