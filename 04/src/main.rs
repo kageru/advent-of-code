@@ -113,7 +113,7 @@ fn get_sleepy_minute(shifts: &Vec<Shift>) -> (i32, i32) {
 }
 
 fn main() {
-    let lines: Vec<&str> = include_str!("../input_big").split("\n").collect();
+    let lines = include_str!("../input_big").trim().lines();
     
     let mut events: Vec<Event> = Vec::new();
     for line in lines {
