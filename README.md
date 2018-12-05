@@ -8,4 +8,4 @@
 | Go     |   |   |   |   |   |
 | Kotlin | x |   |   |   |   |
 | Python |   |   |   |   |   |
-| Rust   |   |   |   |   |   |
+| Rust   | x |   |   |   |   |
