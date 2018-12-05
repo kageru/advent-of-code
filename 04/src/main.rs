@@ -1,5 +1,7 @@
 #[macro_use] extern crate text_io;
+extern crate rayon;
 use std::collections::HashMap;
+use rayon::prelude::*;
 mod types;
 use types::*;
 
@@ -113,14 +115,12 @@ fn get_sleepy_minute(shifts: &Vec<Shift>) -> (i32, i32) {
 }
 
 fn main() {
-    let lines = include_str!("../input_big").trim().lines();
+    let lines: Vec<&str> = include_str!("../input_big").trim().lines().collect();
     
-    let mut events: Vec<Event> = Vec::new();
-    for line in lines {
-        events.push(event_from_line(line.to_string()));
-    }
+    let mut events: Vec<Event> = lines.par_iter().map(|line| event_from_line(line.to_string())).collect();
 
-    events.sort();
+    events.par_sort_unstable();
+    //events.sort();
     let shifts = events_to_shifts(events);
     let shifts_by_guard = group_shifts_by_guard(shifts);
     
