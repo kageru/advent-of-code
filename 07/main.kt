@@ -16,11 +16,13 @@ fun main(args: Array<String>) {
         val currentDeps = map.getOrPut(step, { HashSet<Char>() })
         currentDeps.add(dep)
     }
-    for (entry in map) {
-        println(entry)
-    }
+    var output = mutableListOf<Char>()
     while (map.size > 0) {
-        val candidatesForNext = map.entries.map{a -> Pair(a.key, a.value.size)}//.map{e -> Pair(e.1, e.2.size()}
-        println(candidatesForNext)
+        // The keyset in Kotlin is already sorted, so we can just take the first value
+        val next = map.entries.map{ e -> Pair(e.key, e.value.size) }.filter{ e -> e.second == 0 }.map{ e -> e.first }[0]
+        map.remove(next)
+        map.values.map{ v -> v.remove(next) }
+        output.add(next)
     }
+    println(output.joinToString(""))
 }
