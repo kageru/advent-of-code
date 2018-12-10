@@ -7,5 +7,5 @@
 | C      | x | x | x |   |   |
 | Go     | x | x |   |   |   |
 | Kotlin | x | x |   |   |   |
-| Python |   |   |   |   |   |
+| Python | x |   |   |   |   |
 | Rust   | x |   |   |   |   |
