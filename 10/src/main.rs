@@ -3,7 +3,6 @@ extern crate rayon;
 extern crate regex;
 
 use regex::Regex;
-use rayon::prelude::*;
 
 struct Star {
     x: i32,
@@ -30,10 +29,10 @@ struct Bounds {
 impl Bounds {
     pub fn from_stars(stars: &Vec<Star>) -> Self {
         Bounds {
-            min_x: stars.par_iter().min_by_key(|a| a.x).unwrap().x,
-            max_x: stars.par_iter().max_by_key(|a| a.x).unwrap().x,
-            min_y: stars.par_iter().min_by_key(|a| a.y).unwrap().y, 
-            max_y: stars.par_iter().max_by_key(|a| a.y).unwrap().y 
+            min_x: stars.iter().min_by_key(|a| a.x).unwrap().x,
+            max_x: stars.iter().max_by_key(|a| a.x).unwrap().x,
+            min_y: stars.iter().min_by_key(|a| a.y).unwrap().y, 
+            max_y: stars.iter().max_by_key(|a| a.y).unwrap().y 
         }
     }
 }
@@ -50,10 +49,6 @@ fn parse_star(input: &str) -> Star {
     x_vel = captures.get(3).unwrap().as_str().parse::<i32>().unwrap();
     y_vel = captures.get(4).unwrap().as_str().parse::<i32>().unwrap();
     return Star::new(x, y, x_vel, y_vel);
-}
-
-fn move_star(star: &Star) -> Star {
-    return Star::new(star.x + star.x_vel, star.y + star.y_vel, star.x_vel, star.y_vel);
 }
 
 fn print_stars(stars: &Vec<Star>) {
@@ -74,12 +69,15 @@ fn print_stars(stars: &Vec<Star>) {
 fn main() {
     let lines: Vec<&str> = include_str!("../input").lines().collect();
 
-    let mut stars: Vec<Star> = lines.par_iter().map(|line| parse_star(line)).collect();
+    let mut stars: Vec<Star> = lines.iter().map(|line| parse_star(line)).collect();
 
     let mut bounds = Bounds::from_stars(&stars);
     let mut step = 0;
     while (bounds.max_y - bounds.min_y).abs() > 15 {
-        stars = stars.par_iter().map(|star| move_star(&star)).collect();
+        stars.iter_mut().for_each(|star| {
+            star.x += star.x_vel;
+            star.y += star.y_vel;
+        });
         bounds = Bounds::from_stars(&stars);
         step+=1;
     }
