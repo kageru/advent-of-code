@@ -4,14 +4,6 @@
 #define SERIAL 7347
 #define DIMENSIONS 300
 
-/*
-Find the fuel cell's rack ID, which is its X coordinate plus 10.
-Begin with a power level of the rack ID times the Y coordinate.
-Increase the power level by the value of the grid serial number (your puzzle input).
-Set the power level to itself multiplied by the rack ID.
-Keep only the hundreds digit of the power level (so 12345 becomes 3; numbers with no hundreds digit become 0).
-Subtract 5 from the power level. 
- */
 int initialFieldValue(int x, int y) {
     int id = x + 10;
     int power = id * y + SERIAL;
@@ -57,8 +49,12 @@ void setSummedArea(int sums[DIMENSIONS][DIMENSIONS], int input[DIMENSIONS][DIMEN
     }
 }
 
-int calculateMooreNeighborhood(int fields[DIMENSIONS][DIMENSIONS], int x, int y) {
-    return fields[x-2][y-2] + fields[x+1][y+1] - fields[x-2][y+1] - fields[x+1][y-2];
+int max(int a, int b) {
+    return a > b ? a : b;
+}
+
+int calculateNeighborhood(int fields[DIMENSIONS][DIMENSIONS], int x, int y, int size) {
+    return fields[x-1][y-1] + fields[x+size][y+size] - fields[x-1][y+size] - fields[x+size][y-1];
 }
 
 int main() {
@@ -70,17 +66,21 @@ int main() {
     // Part 1
     int maxPower = -999999999;
     int maxX, maxY;
-    for (int x=2; x<DIMENSIONS-1; x++) {
-        for (int y=2; y<DIMENSIONS-1; y++) {
-            int moore = calculateMooreNeighborhood(summedAreaFields, x, y);
-            if (moore > maxPower) {
-                maxPower = moore;
-                maxX = x;
-                maxY = y;
+    int maxSize = 0;
+    for (int x=1; x<DIMENSIONS-3; x++) {
+        for (int y=1; y<DIMENSIONS-3; y++) {
+            for (int size=3; size<DIMENSIONS-max(x, y); size++) {
+                int moore = calculateNeighborhood(summedAreaFields, x, y, size);
+                if (moore > maxPower) {
+                    maxPower = moore;
+                    maxX = x + 1;
+                    maxY = y + 1;
+                    maxSize = size + 1;
+                }
             }
         }
     }
-    printf("x: %d, y: %d, power: %d\n", maxX, maxY, maxPower);
+    printf("x: %d, y: %d, size: %d, power: %d\n", maxX, maxY, maxSize, maxPower);
 
     return 0;
 }
