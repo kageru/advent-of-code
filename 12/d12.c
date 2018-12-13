@@ -31,8 +31,8 @@ void pushInto(Array array, char element) {
 */
 
 void appendTo(Array array, char element) {
-    array.used++;
     array.content[array.used] = element;
+    array.used++;
 }
 
 // Convert a growth rule (5 chars) to a single byte by creating a bitmask.
@@ -55,24 +55,25 @@ char ruleToChar(char *input) {
 int main() {
     FILE *inputFile = fopen("input", "r");
 
+    printf("hi");
+
     // + 1 for the null byte
     char *inString = malloc(INSIZE + 1);
     fgets(inString, INSIZE, inputFile);
     
-    char *rawInput = malloc(INSIZE + 1);
-    scanf(inString, "initial state: %s", &rawInput);
-    printf(rawInput);
-    free(inString);
+    inString += 15;
 
     char *rawRule = malloc(12);
     // discard this as it’s just an empty line
     fgets(rawRule, 11, inputFile);
 
     Array rules = initArray();
+    printf("hi2");
     while (fgets(rawRule, 11, inputFile)) {
         appendTo(rules, ruleToChar(rawRule));
     }
 
+    free(inString - 15);
     fclose(inputFile);
 
     printf("%d, %c", rules.size, rules.content[0]);
