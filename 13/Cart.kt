@@ -1,43 +1,61 @@
-package aoc.day13
+package aoc.thirteen
 
-public class Cart() {
-    constructor(d: Direction, x: Int, y: Int) {
-        direction = d
-        x = x
-        y = y
+public class Train {
+    constructor(dir: Int, x: Int, y: Int) {
+        this.direction = dir
+        this.x = x
+        this.y = y
+        this.nextTurn = Turn.LEFT
     }
-    var direction: Direction
-    var nextTurn: Turn = Turn.LEFT
+
+    var direction: Int
+    var nextTurn: Turn
     var x: Int
     var y: Int
+
+    fun makeTurn(turn: Turn) {
+        this.direction += turn.dir
+        correctDirection()
+    }
+
+    fun crossIntersection() {
+        when (this.nextTurn) {
+            Turn.LEFT -> {
+                this.direction -= this.nextTurn.dir
+                this.nextTurn = Turn.STRAIGHT
+            }
+            Turn.STRAIGHT -> {
+                this.nextTurn = Turn.RIGHT
+            }
+            Turn.RIGHT -> {
+                this.direction += this.nextTurn.dir
+                this.nextTurn = Turn.LEFT
+            }
+        }
+        correctDirection()
+    }
+
+    fun correctDirection() {
+        if (this.direction < 0) {
+            this.direction = (this.direction + 4)
+        } else if (this.direction > 3) {
+            this.direction = (this.direction + 1) % 4
+        }
+    }
 }
 
 
-enum class Direction(val code: Int) {
-    UP(0),
-    RIGHT(1),
-    DOWN(2)
-    LEFT(3)
+public enum class Turn(val dir: Int) {
+    LEFT(-1),
+    STRAIGHT(0),
+    RIGHT(-1)
 }
 
-
-fun turnLeft(val oldDir: Direction): Direction {
-    return Direction((oldDir.code + 3) % 4)
-}
-
-fun turnRight(val oldDir: Direction): Direction {
-    return Direction((oldDir.code + 1) % 4)
-}
-
-fun crossIntersection(val cart: Cart): Cart {
-    var retCart = cart
-    retCart.direction = Direction((cart.direction.code + cart.nextTurn.dir - 1) % 4)
-    retCart.nextTurn = Turn((cart.nextTurn.dir + 1) % 3)
-    return retCart
-}
-
-enum class Turn(val dir: Int) {
-    LEFT(0),
-    STRAIGHT(1),
-    RIGHT(2)
+public enum class Field() {
+    VERTICAL,
+    HORIZONTAL,
+    TOP_LEFT,
+    TOP_RIGHT,
+    EMPTY,
+    INTERSECTION
 }

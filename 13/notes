@@ -1,0 +1,3 @@
+kotlinc main.kt Cart.kt -include-runtime -d out.jar
+java -cp out.jar aoc.thirteen.Main
+
