@@ -37,19 +37,21 @@ class Main() {
 
     fun moveTrain(t: Train): Train {
         when (t.direction) {
-            0 -> t.y += 1
+            0 -> t.y -= 1
             1 -> t.x += 1
-            2 -> t.y -= 1
+            2 -> t.y += 1
             3 -> t.x -= 1
             else -> throw IllegalArgumentException("this shouldn’t happen either selphyDerp")
         }
+        println("x ${t.x}, y ${t.y}")
         val current = field[t.x][t.y]
+        println(current)
         when (current) {
             Field.VERTICAL, Field.HORIZONTAL -> {}
             Field.TOP_LEFT -> t.direction = t.direction xor 1
             Field.TOP_RIGHT -> t.direction = t.direction xor 3
             Field.INTERSECTION -> t.crossIntersection()
-            Field.EMPTY -> IllegalStateException("I shouldn’t be here")
+            Field.EMPTY -> throw IllegalStateException("I shouldn’t be here")
         }
         return t
     }
@@ -62,11 +64,14 @@ class Main() {
         
         var trains = mutableListOf<Train>()
 
-        for ((x, line) in inputLines.withIndex()) {
+        for ((y, line) in inputLines.withIndex()) {
             var fields = mutableListOf<Field>()
-            for ((y, char) in line.toCharArray().withIndex()) {
+            for ((x, char) in line.toCharArray().withIndex()) {
                 if (char in TRAINS) {
-                    trains.add(parseTrain(char, x, y))
+                    val newTrain = parseTrain(char, x, y)
+                    println(newTrain)
+                    println(char)
+                    trains.add(newTrain)
                 }
                 fields.add(parseField(char))
             }
