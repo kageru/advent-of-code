@@ -85,24 +85,26 @@ class Main() {
         }
         var positions = HashSet<Pair<Int, Int>>(trains.size)
         positions.addAll(trains.map{ t -> Pair(t.x, t.y) })
-        var current = 0
-        while (trains.filter{ it.alive }.size > 1) {
-            while (positions.size == trains.filter{ it.alive }.size) {
-                if (!trains[current].alive)
-                    continue
-                trains[current] = moveTrain(trains[current])
+        var crash = false
+        var remove = Pair(-1, -1)
+        while (trains.size > 1) {
+            for ((i, train) in trains.withIndex()) {
+                trains[i] = moveTrain(train)
                 positions.clear()
-                positions.addAll(trains.filter{ it.alive }.map{ t -> Pair(t.x, t.y) })
-                current = (current + 1) % trains.size
+                positions.addAll(trains.map{ t -> Pair(t.x, t.y) })
+                if (trains.size > positions.size) {
+                    remove = cleanUpAfterCrash(trains)
+                    println("removing $remove")
+                    crash = true
+                }
             }
-            val remove = cleanUpAfterCrash(trains)
-            println("removing $remove")
-            trains[remove.first].alive = false
-            trains[remove.second].alive = false
-
-            positions.clear()
-            positions.addAll(trains.filter{ it.alive }.map{ t -> Pair(t.x, t.y) })
+            if (crash) {
+                trains.removeAll(listOf(trains[remove.first], trains[remove.second]))
+                crash = false
+            }
         }
+        println("${trains[0].x},${trains[0].y}")
+        println("done")
     }
     }
 }
