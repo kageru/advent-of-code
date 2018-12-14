@@ -24,8 +24,8 @@ class Main() {
     }
 
     fun cleanUpAfterCrash(trains: MutableList<Train>): Pair<Int, Int> {
-        for ((i, train) in trains.filter{ it.alive }.withIndex()) {
-            for ((j, t2) in trains.filter{ it.alive }.withIndex()) {
+        for ((i, train) in trains.withIndex()) {
+            for ((j, t2) in trains.withIndex()) {
                 if (train != t2 && train.x == t2.x && train.y == t2.y) {
                     return Pair(i, j)
                 }
@@ -92,9 +92,9 @@ class Main() {
                 trains[i] = moveTrain(train)
                 positions.clear()
                 positions.addAll(trains.map{ t -> Pair(t.x, t.y) })
-                if (trains.size > positions.size) {
+                // This is not ideal, but there is never more than one crash per tick
+                if (trains.size > positions.size && !crash) {
                     remove = cleanUpAfterCrash(trains)
-                    println("removing $remove")
                     crash = true
                 }
             }
@@ -102,9 +102,9 @@ class Main() {
                 trains.removeAll(listOf(trains[remove.first], trains[remove.second]))
                 crash = false
             }
+            trains = trains.sortedBy{ it.y * 200 + it.x }.toMutableList()
         }
         println("${trains[0].x},${trains[0].y}")
-        println("done")
     }
     }
 }

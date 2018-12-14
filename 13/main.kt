@@ -26,8 +26,8 @@ class Main() {
     fun findCrash(trains: MutableList<Train>) {
         var positions = HashSet<Pair<Int, Int>>(trains.size - 1)
         trains.map{ t -> Pair(t.x, t.y) }.forEach{ p ->
-            if (!(p in positions)) { positions.add(p); println("adding $p") }
-            else { println(p) }
+            if (p !in positions) positions.add(p)
+            else println(p)
         }
     }
 
@@ -50,13 +50,11 @@ class Main() {
             3 -> t.x -= 1
             else -> throw IllegalArgumentException("this shouldn’t happen either selphyDerp")
         }
-        //println("x ${t.x}, y ${t.y}")
         val current = field[t.y][t.x]
-        //println(current)
         when (current) {
             Field.VERTICAL, Field.HORIZONTAL -> {}
-            Field.TOP_LEFT -> {println("hit $current, changing dir from ${t.direction} to ${t.direction xor 1}"); t.direction = t.direction xor 1}
-            Field.TOP_RIGHT -> {println("hit $current, changing dir from ${t.direction} to ${t.direction xor 3}"); t.direction = t.direction xor 3}
+            Field.TOP_LEFT -> t.direction = t.direction xor 1
+            Field.TOP_RIGHT -> t.direction = t.direction xor 3
             Field.INTERSECTION -> t.crossIntersection()
             Field.EMPTY -> throw IllegalStateException("I shouldn’t be here")
         }
@@ -76,8 +74,6 @@ class Main() {
             for ((x, char) in line.toCharArray().withIndex()) {
                 if (char in TRAINS) {
                     val newTrain = parseTrain(char, x, y)
-                    println("train at $x, $y")
-                    println(char)
                     trains.add(newTrain)
                 }
                 fields.add(parseField(char))
@@ -86,13 +82,9 @@ class Main() {
         }
         var positions = HashSet<Pair<Int, Int>>(trains.size)
         positions.addAll(trains.map{ t -> Pair(t.x, t.y) })
-        //println(field[75])
         var current = 0
         while (positions.size == trains.size) {
             trains[current] = moveTrain(trains[current])
-            //trains.forEach{ t -> moveTrain(t) }
-            //val pos = Pair(trains[15].y, trains[15].x)
-            //println("$pos: ${field[pos.first][pos.second]}: ${trains[15].direction}")
             positions.clear()
             positions.addAll(trains.map{ t -> Pair(t.x, t.y) })
             current = (current + 1) % trains.size

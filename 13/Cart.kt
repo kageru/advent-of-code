@@ -6,14 +6,12 @@ public class Train {
         this.x = x
         this.y = y
         this.nextTurn = Turn.LEFT
-        this.alive = true
     }
 
     var direction: Int
     var nextTurn: Turn
     var x: Int
     var y: Int
-    var alive: Boolean
 
     fun makeTurn(turn: Turn) {
         this.direction += turn.dir
