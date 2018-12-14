@@ -21,7 +21,7 @@ public class Train {
     fun crossIntersection() {
         when (this.nextTurn) {
             Turn.LEFT -> {
-                this.direction -= this.nextTurn.dir
+                this.direction += this.nextTurn.dir
                 this.nextTurn = Turn.STRAIGHT
             }
             Turn.STRAIGHT -> {
@@ -39,7 +39,7 @@ public class Train {
         if (this.direction < 0) {
             this.direction = (this.direction + 4)
         } else if (this.direction > 3) {
-            this.direction = (this.direction + 1) % 4
+            this.direction = (this.direction) % 4
         }
     }
 }
@@ -48,7 +48,7 @@ public class Train {
 public enum class Turn(val dir: Int) {
     LEFT(-1),
     STRAIGHT(0),
-    RIGHT(-1)
+    RIGHT(1)
 }
 
 public enum class Field() {
