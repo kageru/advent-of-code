@@ -1,104 +1,51 @@
-fn addi(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] + second;
-    return regs;
+#[macro_use] extern crate text_io;
+mod functions;
+use crate::functions::*;
+
+struct Call {
+    before: [usize; 4],
+    call: [usize; 4],
+    after: [usize; 4],
 }
 
-fn addr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] + regs[second];
-    return regs;
-}
-
-fn muli(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] * second;
-    return regs;
-}
-
-fn mulr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] * regs[second];
-    return regs;
-}
-
-fn bori(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] | second;
-    return regs;
-}
-
-fn borr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] | regs[second];
-    return regs;
-}
-
-fn seti(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] =  first;
-    return regs;
-}
-
-fn setr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first];
-    return regs;
-}
-
-fn gtir(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if first > regs[second] {1} else {0};
-    return regs;
-}
-
-fn gtri(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if regs[first] > second {1} else {0};
-    return regs;
-}
-
-fn gtrr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if regs[first] > regs[second] {1} else {0};
-    return regs;
-}
-
-fn eqir(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if first == regs[second] {1} else {0};
-    return regs;
-}
-
-fn eqri(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if regs[first] == second {1} else {0};
-    return regs;
-}
-
-fn eqrr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = if regs[first] == regs[second] {1} else {0};
-    return regs;
-}
-
-fn bani(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = regs[first] & second;
-    return regs;
-}
-
-fn banr(first: usize, second: usize, address: usize, registers: &Vec<usize>) -> Vec<usize> {
-    let mut regs = registers.clone();
-    regs[address] = first & regs[second];
-    return regs;
+impl Call {
+    pub fn new() -> Self {
+        Call {
+            before: [0, 0, 0, 0],
+            call: [0, 0, 0, 0],
+            after: [0, 0, 0, 0],
+        }
+    }
 }
 
 fn main() {
-    let functions = [addi, addr, muli, mulr, seti, setr, bani, banr, bori, borr, gtir, gtri, gtrr, eqir, eqri, eqrr];
-    println!("{}", functions.len());
-    let input = vec![1, 2, 3, 4];
-    for func in functions.iter() {
-        println!("{}", func(1, 2, 3, &input)[3]);
+    let fns = [addi, addr, muli, mulr, seti, setr, bani, banr, bori, borr, gtir, gtri, gtrr, eqir, eqri, eqrr];
+    // Apparently, this needs to be mutable for me to take elements inside the loop later
+    let mut lines = include_str!("../input").lines().filter(|line| line != &"").peekable();
+    let mut calls: Vec<Call> = Vec::new();
+
+    while lines.peek() != None {
+        let mut call = Call::new();
+
+        scan!(lines.next().unwrap().bytes() => "Before: [{}, {}, {}, {}]", call.before[0], call.before[1], call.before[2], call.before[3]);
+        scan!(lines.next().unwrap().bytes() => "{} {} {} {}", call.call[0], call.call[1], call.call[2], call.call[3]);
+        scan!(lines.next().unwrap().bytes() => "After:  [{}, {}, {}, {}]", call.after[0], call.after[1], call.after[2], call.after[3]);
+
+        calls.push(call);
     }
+
+    let mut more_than_three = 0;
+
+    for call in calls {
+        let mut correct = 0;
+        for func in fns.iter() {
+            if func(call.call[1], call.call[2], call.call[3], &call.before) == call.after {
+                correct += 1;
+            }
+        }
+        if correct >= 3 {
+            more_than_three += 1;
+        }
+    }
+    println!("{}", more_than_three);
 }
