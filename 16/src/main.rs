@@ -1,4 +1,5 @@
 #[macro_use] extern crate text_io;
+use std::collections::HashMap;
 mod functions;
 use crate::functions::*;
 
@@ -18,6 +19,19 @@ impl Call {
     }
 }
 
+fn check(func: &fn(usize, usize, usize, &[usize; 4]) -> [usize; 4], call: &Call) -> bool {
+    return func(call.call[1], call.call[2], call.call[3], &call.before) == call.after;
+}
+
+fn verify_fn(func: &fn(usize, usize, usize, &[usize; 4]) -> [usize; 4], calls: &Vec<&Call>) -> bool {
+    for call in calls {
+        if !check(&func, &call) {
+            return false;
+        }
+    }
+    return true;
+}
+
 fn main() {
     let fns = [addi, addr, muli, mulr, seti, setr, bani, banr, bori, borr, gtir, gtri, gtrr, eqir, eqri, eqrr];
     // Apparently, this needs to be mutable for me to take elements inside the loop later
@@ -34,12 +48,12 @@ fn main() {
         calls.push(call);
     }
 
+    // Part 1
     let mut more_than_three = 0;
-
-    for call in calls {
+    for call in &calls {
         let mut correct = 0;
         for func in fns.iter() {
-            if func(call.call[1], call.call[2], call.call[3], &call.before) == call.after {
+            if check(&func, &call) {
                 correct += 1;
             }
         }
@@ -48,4 +62,20 @@ fn main() {
         }
     }
     println!("{}", more_than_three);
+
+    // Part 2
+    let mut mapping: HashMap<usize, fn(usize, usize, usize, &[usize; 4]) -> [usize; 4]> = HashMap::new();
+    for i in 0..16 {
+        let op_calls = calls.iter().filter(|&c| c.call[0] == i).collect::<Vec<_>>();
+        let clone = fns.clone();
+        println!("{}", op_calls.len());
+        let funcs = clone.into_iter().filter(|&f| verify_fn(&f, &op_calls)).collect::<Vec<_>>();
+
+        if funcs.len() == 1 {
+            //let f = *funcs.get(0).unwrap();
+            mapping.insert(i, *funcs.get(0).unwrap().clone());
+        } else {
+            println!("help: {}", funcs.len());
+        }
+    }
 }
