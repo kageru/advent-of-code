@@ -5,3 +5,4 @@ authors = ["kageru <kageru@encode.moe>"]
 edition = "2018"
 
 [dependencies]
+text_io = "0.1.7"
