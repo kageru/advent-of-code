@@ -12,6 +12,7 @@ function calc_fuel(mass) {
         c = calc_fuel(c);
     }
 }
+
 END {
     printf("Part 1: %s\n", p1)
     printf("Part 2: %s\n", p2)

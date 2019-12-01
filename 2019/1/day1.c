@@ -13,35 +13,18 @@ int costRec(int mass, int acc) {
     return costRec(c, acc+c);
 }
 
-int part1() {
+int main(int argc, char *argv[]) {
     FILE* inputFile = fopen("input", "r");
     char line [10];
 
     int fuel = 0;
+    int fuelRec = 0;
     while (fgets(line, sizeof(line), inputFile)) {
         fuel += cost(atoi(line));
+        fuelRec += costRec(atoi(line), 0);
     }
     fclose(inputFile);
     
-    return fuel;
-}
-
-int part2() {
-    FILE* inputFile = fopen("input", "r");
-    char line [10];
-
-    int fuel = 0;
-    while (fgets(line, sizeof(line), inputFile)) {
-        fuel += costRec(atoi(line), 0);
-    }
-    fclose(inputFile);
-    
-    return fuel;
-}
-
-int main(int argc, char *argv[]) {
-
-    printf("Part 1: %d\n", part1());
-    printf("Part 2: %d\n", part2());
-    return 0;
+    printf("Part 1: %d\n", fuel);
+    printf("Part 2: %d\n", fuelRec);
 }
