@@ -24,9 +24,8 @@ fn cost(mass: u32) -> u32 {
 }
 
 fn cost_rec(mass: u32, acc: u32) -> u32 {
-    let c = cost(mass);
-    match c {
+    match cost(mass) {
         0 => acc,
-        _ => cost_rec(c, acc + c)
+        c => cost_rec(c, acc + c)
     }
 }

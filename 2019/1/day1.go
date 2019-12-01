@@ -11,26 +11,20 @@ func main() {
 	inFile, _ := ioutil.ReadFile("input")
 	lines := strings.Split(string(inFile), "\n")
 
-	fmt.Printf("Part 1: %d\n", part1(lines))
-	fmt.Printf("Part 2: %d\n", part2(lines))
+	part1, part2 := solve(lines)
+	fmt.Printf("Part 1: %d\n", part1)
+	fmt.Printf("Part 2: %d\n", part2)
 }
 
-func part1(lines []string) int {
+func solve(lines []string) (int, int) {
 	fuel := 0
+	fuelRec := 0
 	for _, line := range lines {
 		mass, _ := strconv.Atoi(line)
 		fuel += cost(mass)
+		fuelRec += costRec(mass, 0)
 	}
-	return fuel
-}
-
-func part2(lines []string) int {
-	fuel := 0
-	for _, line := range lines {
-		mass, _ := strconv.Atoi(line)
-		fuel += costRec(mass, 0)
-	}
-	return fuel
+	return fuel, fuelRec
 }
 
 func cost(mass int) int {
