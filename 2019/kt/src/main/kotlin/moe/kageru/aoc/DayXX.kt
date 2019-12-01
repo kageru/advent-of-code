@@ -1,5 +1,8 @@
 package moe.kageru.aoc
 
+import java.io.File
+
 fun main() {
-    println("Hello, Advent of Code")
+  val lines = File("input").readLines().map { it.toInt() }
+  println(lines.sum())
 }
