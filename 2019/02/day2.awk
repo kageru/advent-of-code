@@ -5,10 +5,12 @@ function prepareInput(raw) {
     for (i=0; i<=len; i++) {
         arr[i-1] = int(arr[i]);
     }
-    return len
+    return len;
 }
 
-function process(arr, len) {
+function process(arr, len, first, second) {
+    arr[1] = first
+    arr[2] = second
     for (i=0; i<len; i+=4) {
         cmd = arr[i];
         e1 = arr[i+1];
@@ -27,8 +29,15 @@ function process(arr, len) {
 
 {
     len = prepareInput($1);
-    arr[1] = 12;
-    arr[2] = 2;
-    process(arr, len)
-    print arr[0]
+    process(arr, len, 12, 2);
+    printf("Part 1: %d\n", arr[0]);
+    for (x=0; x<100; x++) {
+        for (y=0; y<100; y++) {
+            len = prepareInput($1);
+            process(arr, len, x, y);
+            if (arr[0] == 19690720) {
+                printf("Part 2: %d\n", 100* x + y);
+            }
+        }
+    }
 }
