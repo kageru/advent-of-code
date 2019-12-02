@@ -1,3 +1,5 @@
+#!/usr/bin/awk -f
+
 # There are no scopes, so we just write to `arr` here and use it later.
 # Returning the array does not seem to be legal either. Only scalars allowed.
 function prepareInput(raw) {
@@ -31,12 +33,13 @@ function process(arr, len, first, second) {
     len = prepareInput($1);
     process(arr, len, 12, 2);
     printf("Part 1: %d\n", arr[0]);
+    part2_target = 19690720
     for (x=0; x<100; x++) {
         for (y=0; y<100; y++) {
             len = prepareInput($1);
             process(arr, len, x, y);
-            if (arr[0] == 19690720) {
-                printf("Part 2: %d\n", 100* x + y);
+            if (arr[0] == part2_target) {
+                printf("Part 2: %d\n", 100 * x + y);
             }
         }
     }
