@@ -1,12 +1,15 @@
 {
     len = split($1, arr, ",");
-    arr[2] = 12;
-    arr[3] = 2;
-    for (i=1; i<len; i+=4) {
+    for (i=0; i<=len; i++) {
+        arr[i-1] = arr[i];
+    }
+    arr[1] = 12;
+    arr[2] = 2;
+    for (i=0; i<len; i+=4) {
         cmd = int(arr[i]);
-        e1 = int(arr[i+1]) + 1;
-        e2 = int(arr[i+2]) + 1;
-        target = int(arr[i+3]) + 1;
+        e1 = int(arr[i+1]);
+        e2 = int(arr[i+2]);
+        target = int(arr[i+3]);
         if (cmd == 1)
             arr[target] = arr[e1] + arr[e2];
         else if (cmd == 2)
@@ -16,5 +19,5 @@
         else
             print "Error, invalid command";
     }
-    print arr[1]
+    print arr[0]
 }
