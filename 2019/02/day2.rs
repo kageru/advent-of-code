@@ -16,9 +16,8 @@ pub fn main() {
     let part2_target = 19690720;
     let part2 = (1..99)
         .flat_map(|x| (1..99).map(move |y| (x, y)))
-        .map(|(x, y)| (x, y, execute(&mut input.clone(), x, y)))
-        .filter(|(_, _, r)| r == &part2_target)
-        .map(|(x, y, _)| x * 100 + y)
+        .filter(|(x, y)| execute(&mut input.clone(), *x, *y) == part2_target)
+        .map(|(x, y)| x * 100 + y)
         .next()
         .unwrap();
     println!("Part 2: {}", part2);
