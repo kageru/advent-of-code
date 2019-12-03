@@ -27,33 +27,51 @@ function changePosition(dir) {
         y--;
 }
 
+function calculateDistances() {
+    if (grid[x,y] == "X" && x+y != 0)
+        intersectionPaths[x,y] += steps;
+    steps++;
+}
+
+function markCollisions() {
+    if (grid[x,y] != "" && grid[x,y] != wirenum) {
+        grid[x,y] = "X";
+        manhattan = abs(x) + abs(y);
+        if (manhattan < closestCollision && manhattan != 0)
+            closestCollision = manhattan;
+    }
+    else
+        grid[x,y] = wirenum;
+}
+
 BEGIN {
     closestCollision = 1000000000;
+    shortestPath = 1000000000;
 }
 
 {
     wirenum++;
     x = 0;
     y = 0;
+    steps = 0;
     len = separateCommands($1);
     for (i=1; i<=len; i++) {
         dir = direction(arr[i])
         dis = distance(arr[i])
         for (j=0; j<dis; j++) {
-            if (grid[x,y] != "" && grid[x,y] != wirenum) {
-                grid[x,y] = "X";
-                printf("Collision at %d,%d\n", x, y);
-                manhattan = abs(x) + abs(y);
-                if (manhattan < closestCollision && manhattan != 0)
-                    closestCollision = manhattan;
-            }
+            # First pass
+            if (wirenum <= 2)
+                markCollisions();
+            # Second pass
             else
-                grid[x,y] = wirenum;
+                calculateDistances();
             changePosition(dir);
         }
     }
 }
 
 END {
-    printf("Closest collision at %d\n", closestCollision);
+    printf("Part 1: %d\n", closestCollision);
+    asort(intersectionPaths);
+    printf("Part 2: %d\n", intersectionPaths[1]);
 }
