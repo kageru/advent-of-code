@@ -12,6 +12,16 @@ pub fn main() {
         .map(|n| n.parse().unwrap())
         .collect();
     println!("Part 1: {}", execute(&mut input.clone(), 12, 2));
+
+    let part2_target = 19690720;
+    let part2 = (1..99)
+        .flat_map(|x| (1..99).map(move |y| (x, y)))
+        .map(|(x, y)| (x, y, execute(&mut input.clone(), x, y)))
+        .filter(|(_, _, r)| r == &part2_target)
+        .map(|(x, y, _)| x * 100 + y)
+        .next()
+        .unwrap();
+    println!("Part 2: {}", part2);
 }
 
 fn execute(input: &mut Vec<usize>, p1: usize, p2: usize) -> usize {
@@ -19,19 +29,15 @@ fn execute(input: &mut Vec<usize>, p1: usize, p2: usize) -> usize {
     input[2] = p2;
     for i in (0..).step_by(4) {
         let opcode = input[i];
-        let first = input[i+1];
-        let second = input[i+2];
-        let target = input[i+3];
-        if target == 0 {
-            dbg!("target is 0", target, opcode, first, second);
-        }
+        let first = input[i + 1];
+        let second = input[i + 2];
+        let target = input[i + 3];
         match opcode {
             1 => input[target] = input[first] + input[second],
             2 => input[target] = input[first] * input[second],
             99 => break,
-            _ => unreachable!("Invalid opcode")
+            _ => unreachable!("Invalid opcode"),
         }
     }
-    dbg!(&input);
     input[0]
 }
