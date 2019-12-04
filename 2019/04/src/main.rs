@@ -12,11 +12,7 @@ pub fn main() {
         vec.iter()
             .group_by(move |n| *n)
             .into_iter()
-            .filter_map(|(_, v)| if v.count() == 2 { Some(true) } else { None })
-            // can’t do this because I’m too smol brained for the borrow checker
-            //.filter(|(_, v)| v.count() == 2)
-            .count()
-            > 0
+            .fold(false, |acc, (_, v)| acc || v.count() == 2)
     });
     println!("Part 2: {}", part2.count());
 }
