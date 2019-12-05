@@ -12,7 +12,7 @@ pub fn main() {
         vec.iter()
             .group_by(move |n| *n)
             .into_iter()
-            .fold(false, |acc, (_, v)| acc || v.count() == 2)
+            .any(|(_, v)| v.count() == 2)
     });
     println!("Part 2: {}", part2.count());
 }
