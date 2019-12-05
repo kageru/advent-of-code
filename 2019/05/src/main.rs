@@ -43,7 +43,7 @@ impl Into<Mode> for &char {
     }
 }
 
-fn get_next(input: &Vec<i32>, pos: &mut i32, mode: Mode) -> i32 {
+fn get_next(input: &[i32], pos: &mut i32, mode: Mode) -> i32 {
     let value = input[*pos as usize];
     let next = match mode {
         Mode::Position => input[value as usize],
@@ -53,11 +53,11 @@ fn get_next(input: &Vec<i32>, pos: &mut i32, mode: Mode) -> i32 {
     next
 }
 
-fn get_mode(raw_opcode: &Vec<char>, pos: ParameterPosition) -> Mode {
+fn get_mode(raw_opcode: &[char], pos: ParameterPosition) -> Mode {
     raw_opcode.get::<usize>(pos.into()).unwrap_or(&'0').into()
 }
 
-fn next_operation(input: &Vec<i32>, pos: &mut i32, inp: i32) -> Option<Operation> {
+fn next_operation(input: &[i32], pos: &mut i32, inp: i32) -> Option<Operation> {
     let next = get_next(input, pos, Mode::Immediate);
     let mut raw_opcode: Vec<_> = next.to_string().chars().collect();
     raw_opcode.reverse();
@@ -142,7 +142,7 @@ pub fn main() {
         .next()
         .unwrap()
         .unwrap()
-        .split(",")
+        .split(',')
         .map(|n| n.parse().unwrap())
         .collect();
     let mut pos = 0;
