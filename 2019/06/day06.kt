@@ -6,7 +6,7 @@ fun main() {
     val childToParent = input.associateBy { it[1] }.mapValues { it.value[0] }
     val santaParents = getParents(childToParent, "SAN")
     val myParents = getParents(childToParent, "YOU")
-    val commonParent = santaParents.first { it in myParents }
+    val commonParent = myParents.toSet().let { s -> santaParents.first { it in s } }
     println("Part 2: ${santaParents.indexOf(commonParent) + myParents.indexOf(commonParent)}")
 }
 
