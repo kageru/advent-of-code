@@ -4,14 +4,14 @@ use std::io::BufRead;
 
 #[derive(Debug)]
 enum Operation {
-    Add { x: i32, y: i32, addr: usize },
-    Multiply { x: i32, y: i32, addr: usize },
-    Input { value: i32, addr: usize },
-    Output { value: i32 },
-    JumpIfTrue { value: i32, addr: i32 },
-    JumpIfFalse { value: i32, addr: i32 },
-    LessThan { first: i32, second: i32, addr: i32 },
-    Equals { first: i32, second: i32, addr: i32 },
+    Add { x: i64, y: i64, addr: usize },
+    Multiply { x: i64, y: i64, addr: usize },
+    Input { value: i64, addr: usize },
+    Output { value: i64 },
+    JumpIfTrue { value: i64, addr: i64 },
+    JumpIfFalse { value: i64, addr: i64 },
+    LessThan { first: i64, second: i64, addr: i64 },
+    Equals { first: i64, second: i64, addr: i64 },
 }
 
 #[derive(Debug)]
@@ -44,7 +44,7 @@ impl Into<Mode> for &char {
     }
 }
 
-fn get_next(input: &[i32], pos: &mut i32, mode: Mode) -> i32 {
+fn get_next(input: &[i64], pos: &mut i64, mode: Mode) -> i64 {
     let value = input[*pos as usize];
     let next = match mode {
         Mode::Position => input[value as usize],
@@ -58,11 +58,7 @@ fn get_mode(raw_opcode: &[char], pos: ParameterPosition) -> Mode {
     raw_opcode.get::<usize>(pos.into()).unwrap_or(&'0').into()
 }
 
-fn next_operation(
-    input: &[i32],
-    pos: &mut i32,
-    inputs: &mut dyn Iterator<Item = i32>,
-) -> Option<Operation> {
+fn next_operation(input: &[i64], pos: &mut i64, inputs: &mut Vec<i64>) -> Option<Operation> {
     let next = get_next(input, pos, Mode::Immediate);
     let mut raw_opcode: Vec<_> = next.to_string().chars().collect();
     raw_opcode.reverse();
@@ -78,7 +74,7 @@ fn next_operation(
             addr: get_next(input, pos, Mode::Immediate) as usize,
         }),
         '3' => Some(Operation::Input {
-            value: inputs.next().unwrap(),
+            value: inputs.pop().unwrap(),
             addr: get_next(input, pos, Mode::Immediate) as usize,
         }),
         '4' => Some(Operation::Output {
@@ -107,7 +103,7 @@ fn next_operation(
     }
 }
 
-fn execute(op: Operation, input: &mut Vec<i32>, pos: &mut i32) -> Option<i32> {
+fn execute(op: Operation, input: &mut Vec<i64>, pos: &mut i64) -> Option<i64> {
     match op {
         Operation::Add { x, y, addr } => {
             input[addr as usize] = x + y;
@@ -139,7 +135,7 @@ fn execute(op: Operation, input: &mut Vec<i32>, pos: &mut i32) -> Option<i32> {
             second,
             addr,
         } => {
-            input[addr as usize] = (first < second) as i32;
+            input[addr as usize] = (first < second) as i64;
             None
         }
         Operation::Equals {
@@ -147,14 +143,14 @@ fn execute(op: Operation, input: &mut Vec<i32>, pos: &mut i32) -> Option<i32> {
             second,
             addr,
         } => {
-            input[addr as usize] = (first == second) as i32;
+            input[addr as usize] = (first == second) as i64;
             None
         }
     }
 }
 
 pub fn main() {
-    let input: Vec<i32> = io::stdin()
+    let input: Vec<i64> = io::stdin()
         .lock()
         .lines()
         .next()
@@ -164,11 +160,11 @@ pub fn main() {
         .map(|n| n.parse().unwrap())
         .collect();
 
+    /*
     println!("Part 1:");
     for amps in (0..5).permutations(5) {
         let mut last_output = 0;
         for amp in amps {
-            //for amp in 0..5 {
             let mut pos = 0;
             let mut part1_input = input.clone();
             let mut inputs = vec![amp, last_output].into_iter();
@@ -180,5 +176,54 @@ pub fn main() {
             }
             println!("{}", last_output);
         }
+    }
+    */
+
+    println!("Part 2:");
+    for mut amps in (5..10).permutations(5) {
+    //for mut amps in vec![vec![5, 6, 7, 8, 9]] {
+        let mut last_output = 0;
+        let mut inputs = vec![
+            vec![amps.pop().unwrap()],
+            vec![amps.pop().unwrap()],
+            vec![amps.pop().unwrap()],
+            vec![amps.pop().unwrap()],
+            vec![amps.pop().unwrap()],
+        ];
+        let mut positions = vec![0, 0, 0, 0, 0];
+        let mut states = vec![
+            input.clone(),
+            input.clone(),
+            input.clone(),
+            input.clone(),
+            input.clone(),
+        ];
+        let mut halted = false;
+        for state in (0..5).cycle() {
+            let mut part1_input = states.get_mut(state).unwrap();
+            let mut pos = positions.get_mut(state).unwrap();
+            let mut params = inputs.get_mut(state).unwrap();
+            params.insert(0, last_output);
+            //let mut input = vec![amp, last_output].into_iter();
+            //dbg!("before execution", inputs.clone().collect::<Vec<_>>());
+            loop {
+                match next_operation(&part1_input, &mut pos, &mut params) {
+                    Some(op) => {
+                        if let Some(o) = execute(op, &mut part1_input, &mut pos) {
+                            last_output = o;
+                            break;
+                        }
+                    }
+                    None => {
+                        halted = true;
+                        break;
+                    }
+                }
+            }
+            if halted {
+                break;
+            }
+        }
+        println!("{}", last_output);
     }
 }
