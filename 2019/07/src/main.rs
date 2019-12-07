@@ -160,28 +160,25 @@ pub fn main() {
         .map(|n| n.parse().unwrap())
         .collect();
 
-    /*
-    println!("Part 1:");
-    for amps in (0..5).permutations(5) {
+    let p1: i64 = (0..5).permutations(5).map(|amps| {
         let mut last_output = 0;
         for amp in amps {
             let mut pos = 0;
             let mut part1_input = input.clone();
-            let mut inputs = vec![amp, last_output].into_iter();
+            let mut inputs = vec![last_output, amp];
             while let Some(op) = next_operation(&part1_input, &mut pos, &mut inputs) {
                 if let Some(o) = execute(op, &mut part1_input, &mut pos) {
                     last_output = o;
                     break;
                 }
             }
-            println!("{}", last_output);
         }
-    }
-    */
+        last_output
+    }).max().unwrap();
+    println!("Part 1: {}", p1);
 
-    println!("Part 2:");
-    for mut amps in (5..10).permutations(5) {
-    //for mut amps in vec![vec![5, 6, 7, 8, 9]] {
+    let p2: i64 = (5..10).permutations(5).map(|mut amps| {
+    //for mut amps in (5..10).permutations(5) {
         let mut last_output = 0;
         let mut inputs = vec![
             vec![amps.pop().unwrap()],
@@ -204,8 +201,6 @@ pub fn main() {
             let mut pos = positions.get_mut(state).unwrap();
             let mut params = inputs.get_mut(state).unwrap();
             params.insert(0, last_output);
-            //let mut input = vec![amp, last_output].into_iter();
-            //dbg!("before execution", inputs.clone().collect::<Vec<_>>());
             loop {
                 match next_operation(&part1_input, &mut pos, &mut params) {
                     Some(op) => {
@@ -224,6 +219,7 @@ pub fn main() {
                 break;
             }
         }
-        println!("{}", last_output);
-    }
+        last_output
+    }).max().unwrap();
+    println!("Part 2: {}", p2);
 }
