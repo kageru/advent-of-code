@@ -160,8 +160,7 @@ fn execute(op: Operation, input: &mut Vec<i64>, pos: &mut i64) -> Option<i64> {
 fn find_max(range: Range<i64>, input: &Vec<i64>) -> i64 {
     range
         .permutations(5)
-        .map(|amps| {
-            let mut last_output = 0;
+        .scan(0, |&mut mut acc, amps| {
             let mut machines: Vec<_> = amps
                 .into_iter()
                 .map(|amp| Machine {
@@ -172,13 +171,13 @@ fn find_max(range: Range<i64>, input: &Vec<i64>) -> i64 {
                 .collect();
             for state in (0..5).cycle() {
                 let mut machine = machines.get_mut(state).unwrap();
-                machine.params.insert(0, last_output);
+                machine.params.insert(0, acc);
                 match execute_machine(&mut machine) {
-                    Err(output) => last_output = output,
+                    Err(output) => acc = output,
                     Ok(_) => break,
                 }
             }
-            last_output
+            Some(acc)
         })
         .max()
         .unwrap()
@@ -198,7 +197,7 @@ fn execute_machine(machine: &mut Machine) -> Result<i64, i64> {
 }
 
 pub fn main() {
-    let input: Vec<i64> = io::stdin()
+    let input: Vec<_> = io::stdin()
         .lock()
         .lines()
         .next()
