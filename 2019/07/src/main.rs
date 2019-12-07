@@ -160,66 +160,60 @@ pub fn main() {
         .map(|n| n.parse().unwrap())
         .collect();
 
-    let p1: i64 = (0..5).permutations(5).map(|amps| {
-        let mut last_output = 0;
-        for amp in amps {
-            let mut pos = 0;
-            let mut part1_input = input.clone();
-            let mut inputs = vec![last_output, amp];
-            while let Some(op) = next_operation(&part1_input, &mut pos, &mut inputs) {
-                if let Some(o) = execute(op, &mut part1_input, &mut pos) {
-                    last_output = o;
-                    break;
+    let p1: i64 = (0..5)
+        .permutations(5)
+        .map(|amps| {
+            let mut last_output = 0;
+            for amp in amps {
+                let mut pos = 0;
+                let mut tape = input.clone();
+                let mut params = vec![last_output, amp];
+                match execute_machine(&mut tape, &mut pos, &mut params) {
+                    Ok(o) => last_output = o,
+                    Err(o) => last_output = o,
                 }
             }
-        }
-        last_output
-    }).max().unwrap();
+            last_output
+        })
+        .max()
+        .unwrap();
     println!("Part 1: {}", p1);
 
-    let p2: i64 = (5..10).permutations(5).map(|mut amps| {
-    //for mut amps in (5..10).permutations(5) {
-        let mut last_output = 0;
-        let mut inputs = vec![
-            vec![amps.pop().unwrap()],
-            vec![amps.pop().unwrap()],
-            vec![amps.pop().unwrap()],
-            vec![amps.pop().unwrap()],
-            vec![amps.pop().unwrap()],
-        ];
-        let mut positions = vec![0, 0, 0, 0, 0];
-        let mut states = vec![
-            input.clone(),
-            input.clone(),
-            input.clone(),
-            input.clone(),
-            input.clone(),
-        ];
-        let mut halted = false;
-        for state in (0..5).cycle() {
-            let mut part1_input = states.get_mut(state).unwrap();
-            let mut pos = positions.get_mut(state).unwrap();
-            let mut params = inputs.get_mut(state).unwrap();
-            params.insert(0, last_output);
-            loop {
-                match next_operation(&part1_input, &mut pos, &mut params) {
-                    Some(op) => {
-                        if let Some(o) = execute(op, &mut part1_input, &mut pos) {
-                            last_output = o;
-                            break;
-                        }
-                    }
-                    None => {
-                        halted = true;
-                        break;
-                    }
+    let p2: i64 = (5..10)
+        .permutations(5)
+        .map(|amps| {
+            let mut last_output = 0;
+            let mut inputs: Vec<_> = amps.into_iter().map(move |amp| vec![amp]).collect();
+            let mut positions = vec![0, 0, 0, 0, 0];
+            let mut states: Vec<_> = (0..5).map(|_| input.clone()).collect();
+            for state in (0..5).cycle() {
+                let mut part1_input = states.get_mut(state).unwrap();
+                let mut pos = positions.get_mut(state).unwrap();
+                let mut params = inputs.get_mut(state).unwrap();
+                params.insert(0, last_output);
+                match execute_machine(&mut part1_input, &mut pos, &mut params) {
+                    Err(output) => last_output = output,
+                    Ok(_) => break,
                 }
             }
-            if halted {
-                break;
+            last_output
+        })
+        .max()
+        .unwrap();
+    println!("Part 2: {}", p2);
+}
+
+fn execute_machine(tape: &mut Vec<i64>, pos: &mut i64, params: &mut Vec<i64>) -> Result<i64, i64> {
+    loop {
+        match next_operation(tape, pos, params) {
+            Some(op) => {
+                if let Some(o) = execute(op, tape, pos) {
+                    return Err(o);
+                }
+            }
+            None => {
+                return Ok((params.pop().unwrap()));
             }
         }
-        last_output
-    }).max().unwrap();
-    println!("Part 2: {}", p2);
+    }
 }
