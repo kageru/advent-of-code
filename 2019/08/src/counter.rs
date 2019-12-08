@@ -12,7 +12,13 @@ impl <T: Hash + Eq + Clone> Counter<T> {
         Self { values: HashMap::new() }
     }
 
-    pub fn add(&mut self, collection: &[T]) {
+    pub fn of<C: IntoIterator<Item=T>>(collection: C) -> Counter<T> {
+        let mut counter = Counter::new();
+        counter.add(collection);
+        counter
+    }
+
+    pub fn add<C: IntoIterator<Item=T>>(&mut self, collection: C) {
         for x in collection {
             self.values.insert(x.clone(), self.values.get(&x).unwrap_or(&0) + 1);
         }
