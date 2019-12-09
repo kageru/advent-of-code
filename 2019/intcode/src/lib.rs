@@ -1,8 +1,8 @@
+use amplifier::*;
 use itertools::Itertools;
 use std::convert::TryFrom;
 use std::io::{self, BufRead};
 use std::ops::Range;
-use amplifier::*;
 mod amplifier;
 
 /**
