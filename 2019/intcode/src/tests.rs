@@ -49,3 +49,83 @@ fn test_find_max_with_loops() {
         Some(18216)
     );
 }
+
+#[test]
+fn test_position_less_than() {
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,9,8,9,10,9,4,9,99,-1,8"),
+            &mut 0,
+            vec![8]
+        ),
+        1
+    );
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,9,8,9,10,9,4,9,99,-1,8"),
+            &mut 0,
+            vec![7]
+        ),
+        0
+    );
+}
+
+#[test]
+fn test_position_equals() {
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,9,7,9,10,9,4,9,99,-1,8"),
+            &mut 0,
+            vec![8]
+        ),
+        0
+    );
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,9,7,9,10,9,4,9,99,-1,8"),
+            &mut 0,
+            vec![7]
+        ),
+        1
+    );
+}
+
+#[test]
+fn test_immediate_less_than() {
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,3,1107,-1,8,3,4,3,99"),
+            &mut 0,
+            vec![8]
+        ),
+        0
+    );
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,3,1107,-1,8,3,4,3,99"),
+            &mut 0,
+            vec![7]
+        ),
+        1
+    );
+}
+
+#[test]
+fn test_immediate_equals() {
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,3,1108,-1,8,3,4,3,99"),
+            &mut 0,
+            vec![8]
+        ),
+        1
+    );
+    assert_eq!(
+        run_for_input(
+            &parse_test_input("3,3,1108,-1,8,3,4,3,99"),
+            &mut 0,
+            vec![7]
+        ),
+        0
+    );
+}
