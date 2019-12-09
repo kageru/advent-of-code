@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::convert::TryFrom;
 use std::io::{self, BufRead};
 use std::ops::Range;
 
@@ -156,30 +157,37 @@ fn execute(op: Operation, input: &mut Vec<i64>, pos: &mut i64) -> Option<i64> {
     }
 }
 
-pub fn find_max(range: Range<i64>, input: &Vec<i64>) -> i64 {
-    range
-        .permutations(5)
-        .scan(0, |&mut mut acc, amps| {
-            let mut machines: Vec<_> = amps
-                .into_iter()
-                .map(|amp| Machine {
-                    tape: input.clone(),
-                    pos: 0,
-                    params: vec![amp],
-                })
-                .collect();
-            for state in (0..5).cycle() {
-                let mut machine = machines.get_mut(state).unwrap();
-                machine.params.insert(0, acc);
-                match execute_machine(&mut machine) {
-                    Err(output) => acc = output,
-                    Ok(_) => break,
-                }
-            }
-            Some(acc)
+pub fn run_for_input(input: &Vec<i64>, acc: &mut i64, amps: Vec<i64>) -> i64 {
+    let mut machines: Vec<_> = amps
+        .into_iter()
+        .map(|amp| Machine {
+            tape: input.clone(),
+            pos: 0,
+            params: vec![amp],
         })
-        .max()
-        .unwrap()
+        .collect();
+    for state in (0..machines.len()).cycle() {
+        let mut machine = machines.get_mut(state).unwrap();
+        machine.params.insert(0, *acc);
+        match execute_machine(&mut machine) {
+            Err(output) => *acc = output,
+            Ok(_) => break,
+        }
+    }
+    *acc
+}
+
+pub fn find_max(range: Range<i64>, input: &Vec<i64>) -> Option<i64> {
+    usize::try_from(range.end - range.start)
+        .ok()
+        .and_then(|len| {
+            range
+                .permutations(len)
+                .scan(0, |&mut mut acc, amps| {
+                    Some(run_for_input(input, &mut acc, amps))
+                })
+                .max()
+        })
 }
 
 fn execute_machine(machine: &mut Machine) -> Result<i64, i64> {
