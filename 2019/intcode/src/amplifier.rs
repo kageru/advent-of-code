@@ -148,9 +148,9 @@ impl Amplifier {
     }
 }
 
+#[inline]
 fn get_mode(raw_opcode: &[char], pos: ParameterPosition) -> Mode {
-    let mode = raw_opcode.get::<usize>(pos.into()).unwrap_or(&'0').into();
-    mode
+    raw_opcode.get::<usize>(pos.into()).unwrap_or(&'0').into()
 }
 
 #[derive(Debug)]
