@@ -1,0 +1,6 @@
+*bigboyinput
+main
+Cargo.lock
+target/
+*.kexe
+.gradle/
