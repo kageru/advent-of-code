@@ -14,11 +14,7 @@ mod amplifier;
 pub fn run_for_input(input: &Vec<i64>, acc: &mut i64, amp_phases: Vec<i64>) -> i64 {
     let mut amplifiers: Vec<_> = amp_phases
         .into_iter()
-        .map(|amp| Amplifier {
-            tape: input.clone(),
-            pos: 0,
-            params: vec![amp],
-        })
+        .map(|amp| Amplifier::new(input.clone(), 0, vec![amp]))
         .collect();
     for state in (0..amplifiers.len()).cycle() {
         let amplifier = amplifiers.get_mut(state).unwrap();
