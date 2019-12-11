@@ -1,13 +1,18 @@
-pub struct Amplifier {
+pub struct IntComputer {
     pub pos: i64,
     pub tape: Vec<i64>,
     pub params: Vec<i64>,
     relative_base: i64,
 }
 
-impl Amplifier {
+pub enum IntComputerResult {
+    Halt,
+    Output(i64),
+}
+
+impl IntComputer {
     pub fn new(tape: Vec<i64>, pos: i64, params: Vec<i64>) -> Self {
-        Self {
+        IntComputer {
             pos,
             tape,
             params,
@@ -15,15 +20,15 @@ impl Amplifier {
         }
     }
 
-    pub fn run(&mut self) -> Result<i64, i64> {
+    pub fn run(&mut self) -> IntComputerResult {
         loop {
             match self.decode_next() {
                 Some(op) => {
                     if let Some(o) = self.execute(op) {
-                        return Err(o);
+                        return IntComputerResult::Output(o);
                     }
                 }
-                None => return Ok(self.params.pop().unwrap()),
+                None => return IntComputerResult::Halt,
             }
         }
     }

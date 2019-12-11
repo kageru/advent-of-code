@@ -1,9 +1,9 @@
-use amplifier::*;
+use intcomputer::*;
 use itertools::Itertools;
 use std::convert::TryFrom;
 use std::io::{self, BufRead};
 use std::ops::Range;
-mod amplifier;
+mod intcomputer;
 
 /**
  * Construct amplifiers and run all of them for a single given input tape
@@ -14,14 +14,14 @@ mod amplifier;
 pub fn run_for_input(input: &Vec<i64>, acc: &mut i64, amp_phases: Vec<i64>) -> i64 {
     let mut amplifiers: Vec<_> = amp_phases
         .into_iter()
-        .map(|amp| Amplifier::new(input.clone(), 0, vec![amp]))
+        .map(|amp| IntComputer::new(input.clone(), 0, vec![amp]))
         .collect();
     for state in (0..amplifiers.len()).cycle() {
         let amplifier = amplifiers.get_mut(state).unwrap();
         amplifier.params.insert(0, *acc);
         match amplifier.run() {
-            Err(output) => *acc = output,
-            Ok(_) => break,
+            IntComputerResult::Output(output) => *acc = output,
+            IntComputerResult::Halt => break,
         }
     }
     *acc
