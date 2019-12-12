@@ -1,4 +1,4 @@
-use intcomputer::*;
+pub use intcomputer::*;
 use itertools::Itertools;
 use std::convert::TryFrom;
 use std::io::{self, BufRead};

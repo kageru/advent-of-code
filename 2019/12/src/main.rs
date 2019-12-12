@@ -78,7 +78,7 @@ impl System {
 }
 
 fn main() {
-    let system = System {
+    let mut system = System {
         moons: io::stdin()
             .lock()
             .lines()
@@ -92,25 +92,29 @@ fn main() {
     let energy: i64 = part1_system.moons.into_iter().map(|m| m.energy()).sum();
     println!("Part 1: {}", energy);
 
-    let mut part2_system = system.clone();
-    let initial_x = extract_attribute(&part2_system, |m| (m.x, m.x_vel));
-    let initial_y = extract_attribute(&part2_system, |m| (m.y, m.y_vel));
-    let initial_z = extract_attribute(&part2_system, |m| (m.z, m.z_vel));
+    let initial_x = extract_attribute(&system, |m| (m.x, m.x_vel));
+    let initial_y = extract_attribute(&system, |m| (m.y, m.y_vel));
+    let initial_z = extract_attribute(&system, |m| (m.z, m.z_vel));
     let (mut x_found, mut y_found, mut z_found) = (0u64, 0, 0);
     for i in 1.. {
-        let _: u64 = i;
-        part2_system = part2_system.step();
-        let xs = extract_attribute(&part2_system, |m| (m.x, m.x_vel));
-        if x_found == 0 && xs == initial_x {
-            x_found = i;
+        system = system.step();
+        if x_found == 0 {
+            let xs = extract_attribute(&system, |m| (m.x, m.x_vel));
+            if xs == initial_x {
+                x_found = i;
+            }
         }
-        let ys = extract_attribute(&part2_system, |m| (m.y, m.y_vel));
-        if y_found == 0 && ys == initial_y {
-            y_found = i;
+        if y_found == 0 {
+            let ys = extract_attribute(&system, |m| (m.y, m.y_vel));
+            if ys == initial_y {
+                y_found = i;
+            }
         }
-        let zs = extract_attribute(&part2_system, |m| (m.z, m.z_vel));
-        if z_found == 0 && zs == initial_z {
-            z_found = i;
+        if z_found == 0 {
+            let zs = extract_attribute(&system, |m| (m.z, m.z_vel));
+            if zs == initial_z {
+                z_found = i;
+            }
         }
         if x_found != 0 && y_found != 0 && z_found != 0 {
             break;
@@ -119,7 +123,10 @@ fn main() {
     println!("Part 2: {}", lcm(lcm(x_found, y_found), z_found));
 }
 
-fn extract_attribute<F>(system: &System, f: F)  -> Vec<(i64, i64)> where F: (FnMut(Moon) -> (i64, i64)){
+fn extract_attribute<F>(system: &System, f: F) -> Vec<(i64, i64)>
+where
+    F: (FnMut(Moon) -> (i64, i64)),
+{
     system.moons.clone().into_iter().map(f).collect()
 }
 

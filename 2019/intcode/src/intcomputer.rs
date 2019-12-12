@@ -10,6 +10,15 @@ pub enum IntComputerResult {
     Output(i64),
 }
 
+impl IntComputerResult {
+    pub fn unwrap(self) -> i64 {
+        match self {
+            IntComputerResult::Halt => panic!("Attempted to get value of halt operation"),
+            IntComputerResult::Output(o) => o,
+        }
+    }
+}
+
 impl IntComputer {
     pub fn new(tape: Vec<i64>, pos: i64, params: Vec<i64>) -> Self {
         IntComputer {

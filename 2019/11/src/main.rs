@@ -56,10 +56,10 @@ impl Robot {
 #[rustfmt::skip]
 fn get_boundaries(positions: &HashMap<(i64, i64), i64>) -> (i64, i64, i64, i64) {
     let keys = positions.keys();
-    let x_max = keys.clone().into_iter().max_by_key(|k| k.0).unwrap() .0;
-    let y_max = keys.clone().into_iter().max_by_key(|k| k.1).unwrap() .1;
-    let x_min = keys.clone().into_iter().min_by_key(|k| k.0).unwrap() .0;
-    let y_min = keys.clone().into_iter().min_by_key(|k| k.1).unwrap() .1;
+    let x_max = keys.clone().into_iter().max_by_key(|k| k.0).unwrap().0;
+    let y_max = keys.clone().into_iter().max_by_key(|k| k.1).unwrap().1;
+    let x_min = keys.clone().into_iter().min_by_key(|k| k.0).unwrap().0;
+    let y_min = keys.clone().into_iter().min_by_key(|k| k.1).unwrap().1;
     (x_min, x_max, y_min, y_max)
 }
 
