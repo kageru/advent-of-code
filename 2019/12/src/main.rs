@@ -1,21 +1,137 @@
+use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::io::{self, BufRead};
 #[macro_use]
 extern crate scan_fmt;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Moon {
-    x: i32,
-    y: i32,
-    z: i32,
-    x_vel: i32,
-    y_vel: i32,
-    z_vel: i32,
+    x: i64,
+    y: i64,
+    z: i64,
+    x_vel: i64,
+    y_vel: i64,
+    z_vel: i64,
+}
+
+impl std::fmt::Display for Moon {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(
+            fmt,
+            "pos=<x={}, y={}, z={}>, vel=<x={}, y={}, z={}>",
+            self.x, self.y, self.z, self.x_vel, self.y_vel, self.z_vel
+        )
+    }
+}
+
+impl std::fmt::Display for System {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(
+            fmt,
+            "{}\n{}\n{}\n{}",
+            self.moons[0], self.moons[1], self.moons[2], self.moons[3],
+        )
+    }
+}
+
+impl Moon {
+    fn mv(&mut self) {
+        self.x += self.x_vel;
+        self.y += self.y_vel;
+        self.z += self.z_vel;
+    }
+
+    fn calculate_gravity(&mut self, others: &[Moon]) {
+        for moon in others {
+            self.x_vel += int(self.x.cmp(&moon.x));
+            self.y_vel += int(self.y.cmp(&moon.y));
+            self.z_vel += int(self.z.cmp(&moon.z));
+        }
+    }
+
+    fn energy(&self) -> i64 {
+        (self.x.abs() + self.y.abs() + self.z.abs())
+            * (self.x_vel.abs() + self.y_vel.abs() + self.z_vel.abs())
+    }
+}
+
+#[derive(Clone)]
+struct System {
+    moons: Vec<Moon>,
+}
+
+impl System {
+    // TODO: don’t take ownership
+    fn step(self) -> Self {
+        let old_moons = self.moons.clone();
+        System {
+            moons: self
+                .moons
+                .into_iter()
+                .map(|mut moon| {
+                    moon.calculate_gravity(&old_moons);
+                    moon.mv();
+                    moon
+                })
+                .collect(),
+        }
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
+    let system = System {
+        moons: io::stdin()
+            .lock()
+            .lines()
+            .map(|l| parse(&l.unwrap()))
+            .collect(),
+    };
+    let mut part1_system = system.clone();
+    for _ in 0..1000 {
+        part1_system = part1_system.step();
+    }
+    let energy: i64 = part1_system.moons.into_iter().map(|m| m.energy()).sum();
+    println!("Part 1: {}", energy);
+
+    let mut part2_system = system.clone();
+    let mut x_positions = HashMap::new();
+    let mut y_positions = HashMap::new();
+    let mut z_positions = HashMap::new();
+    let (mut x_found, mut y_found, mut z_found) = (0u64, 0, 0);
+    for i in 1.. {
+        let _: u64 = i;
+        part2_system = part2_system.step();
+        let xs: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.x, m.x_vel)).collect::<Vec<_>>();
+        if x_found == 0 && x_positions.contains_key(&xs) {
+            x_found = i - x_positions.get(&xs).unwrap();
+        }
+        x_positions.insert(xs, i);
+        let ys: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.y, m.y_vel)).collect::<Vec<_>>();
+        if y_found == 0 && y_positions.contains_key(&ys) {
+            y_found = i - y_positions.get(&ys).unwrap();
+        }
+        y_positions.insert(ys, i);
+        let zs: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.z, m.z_vel)).collect::<Vec<_>>();
+        if z_found == 0 && z_positions.contains_key(&zs) {
+            z_found = i - z_positions.get(&zs).unwrap();
+        }
+        z_positions.insert(zs, i);
+        if x_found != 0 && y_found != 0 && z_found != 0 {
+            break;
+        }
+    }
+    println!("Part 2: {}", lcm(lcm(x_found, y_found), z_found));
 }
 
-fn gcd(mut x: u32, mut y: u32) -> u32 {
+fn int(ord: Ordering) -> i64 {
+    match ord {
+        Ordering::Less => 1,
+        Ordering::Equal => 0,
+        Ordering::Greater => -1,
+    }
+}
+
+fn gcd(mut x: u64, mut y: u64) -> u64 {
     let mut remainder;
     while y != 0 {
         remainder = x % y;
@@ -25,13 +141,13 @@ fn gcd(mut x: u32, mut y: u32) -> u32 {
     x
 }
 
-fn lcm(x: u32, y: u32) -> u32 {
+fn lcm(x: u64, y: u64) -> u64 {
     x * y / gcd(x, y)
 }
 
 #[rustfmt::skip]
 fn parse(line: &str) -> Moon {
-    let (x, y, z) = scan_fmt!(line, "<x={}, y={}, z={}>", i32, i32, i32).unwrap();
+    let (x, y, z) = scan_fmt!(line, "<x={}, y={}, z={}>", i64, i64, i64).unwrap();
     Moon { x, y, z, x_vel: 0, y_vel: 0, z_vel: 0, }
 }
 
