@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::io::{self, BufRead};
 #[macro_use]
 extern crate scan_fmt;
@@ -94,33 +93,34 @@ fn main() {
     println!("Part 1: {}", energy);
 
     let mut part2_system = system.clone();
-    let mut x_positions = HashMap::new();
-    let mut y_positions = HashMap::new();
-    let mut z_positions = HashMap::new();
+    let initial_x = extract_attribute(&part2_system, |m| (m.x, m.x_vel));
+    let initial_y = extract_attribute(&part2_system, |m| (m.y, m.y_vel));
+    let initial_z = extract_attribute(&part2_system, |m| (m.z, m.z_vel));
     let (mut x_found, mut y_found, mut z_found) = (0u64, 0, 0);
     for i in 1.. {
         let _: u64 = i;
         part2_system = part2_system.step();
-        let xs: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.x, m.x_vel)).collect::<Vec<_>>();
-        if x_found == 0 && x_positions.contains_key(&xs) {
-            x_found = i - x_positions.get(&xs).unwrap();
+        let xs = extract_attribute(&part2_system, |m| (m.x, m.x_vel));
+        if x_found == 0 && xs == initial_x {
+            x_found = i;
         }
-        x_positions.insert(xs, i);
-        let ys: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.y, m.y_vel)).collect::<Vec<_>>();
-        if y_found == 0 && y_positions.contains_key(&ys) {
-            y_found = i - y_positions.get(&ys).unwrap();
+        let ys = extract_attribute(&part2_system, |m| (m.y, m.y_vel));
+        if y_found == 0 && ys == initial_y {
+            y_found = i;
         }
-        y_positions.insert(ys, i);
-        let zs: Vec<_> = part2_system.moons.clone().into_iter().map(|m| (m.z, m.z_vel)).collect::<Vec<_>>();
-        if z_found == 0 && z_positions.contains_key(&zs) {
-            z_found = i - z_positions.get(&zs).unwrap();
+        let zs = extract_attribute(&part2_system, |m| (m.z, m.z_vel));
+        if z_found == 0 && zs == initial_z {
+            z_found = i;
         }
-        z_positions.insert(zs, i);
         if x_found != 0 && y_found != 0 && z_found != 0 {
             break;
         }
     }
     println!("Part 2: {}", lcm(lcm(x_found, y_found), z_found));
+}
+
+fn extract_attribute<F>(system: &System, f: F)  -> Vec<(i64, i64)> where F: (FnMut(Moon) -> (i64, i64)){
+    system.moons.clone().into_iter().map(f).collect()
 }
 
 fn int(ord: Ordering) -> i64 {
