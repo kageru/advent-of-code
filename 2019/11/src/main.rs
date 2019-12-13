@@ -75,6 +75,6 @@ fn main() {
     let part1_robot = start_with_input(input.clone(), 0);
     println!("Part 1: {}", part1_robot.visited.len());
 
-    let part2_robot = start_with_input(input.clone(), 1);
+    let part2_robot = start_with_input(input, 1);
     println!("Part 2:\n{}", draw_ascii(&part2_robot.visited, 0).replace('0', " ").replace('1', "•"));
 }
