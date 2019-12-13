@@ -35,12 +35,12 @@ impl IntComputer {
 
     pub fn step(&mut self) -> IntComputerResult {
         match self.cmd_buffer.pop().unwrap_or_else(|| self.decode_next()) {
-            Operation::Halt {} => return IntComputerResult::Halt,
+            Operation::Halt {} => IntComputerResult::Halt,
             op => {
-                if let Some(o) = self.execute(op.to_owned()) {
-                    return IntComputerResult::Output(o);
+                if let Some(o) = self.execute(op) {
+                    IntComputerResult::Output(o)
                 } else {
-                    return IntComputerResult::Continue;
+                    IntComputerResult::Continue
                 }
             }
         }

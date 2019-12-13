@@ -1,5 +1,7 @@
 use itertools::join;
 use std::collections::HashMap;
+use std::fmt::Display;
+use std::hash::BuildHasher;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position2D {
@@ -23,7 +25,7 @@ fn get_boundaries(input: &[&Position2D]) -> Boundaries {
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
-pub fn draw_ascii<T: std::fmt::Display>(coordinates: &HashMap<Position2D, T>, default: T) -> String {
+pub fn draw_ascii<T: Display, S: BuildHasher>(coordinates: &HashMap<Position2D, T, S>, default: T) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
