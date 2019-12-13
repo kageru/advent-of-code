@@ -41,7 +41,6 @@ fn test_find_max_with_loops() {
         ),
         Some(139629729)
     );
-    /*
     assert_eq!(
         find_max(
             5..10,
@@ -49,7 +48,6 @@ fn test_find_max_with_loops() {
         ),
         Some(18216)
     );
-    */
 }
 
 #[test]

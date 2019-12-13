@@ -42,6 +42,14 @@ impl IntComputer {
         }
     }
 
+    pub fn get_all_outputs(&mut self) -> Vec<i64> {
+        let mut outputs = Vec::new();
+        while let IntComputerResult::Output(o) = self.run() {
+            outputs.push(o);
+        }
+        outputs
+    }
+
     #[rustfmt::skip]
     fn get_next(&mut self, mode: Mode) -> i64 {
         let value = *self.tape.get(self.pos as usize).unwrap();
