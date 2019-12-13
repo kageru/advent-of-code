@@ -22,6 +22,7 @@ pub fn run_for_input(input: &Vec<i64>, acc: &mut i64, amp_phases: Vec<i64>) -> i
         match amplifier.run() {
             IntComputerResult::Output(output) => *acc = output,
             IntComputerResult::Halt => break,
+            IntComputerResult::Continue => unreachable!()
         }
     }
     *acc

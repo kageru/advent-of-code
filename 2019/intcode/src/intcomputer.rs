@@ -9,6 +9,7 @@ pub struct IntComputer {
 pub enum IntComputerResult {
     Halt,
     Output(i64),
+    Continue,
 }
 
 impl IntComputerResult {
@@ -16,6 +17,7 @@ impl IntComputerResult {
         match self {
             IntComputerResult::Halt => panic!("Attempted to get value of halt operation"),
             IntComputerResult::Output(o) => o,
+            IntComputerResult::Continue => panic!("Attempted to get value of non-output operation"),
         }
     }
 }
@@ -31,15 +33,25 @@ impl IntComputer {
         }
     }
 
+    pub fn step(&mut self) -> IntComputerResult {
+        match self.cmd_buffer.pop().unwrap_or_else(|| self.decode_next()) {
+            Operation::Halt {} => return IntComputerResult::Halt,
+            op => {
+                if let Some(o) = self.execute(op.to_owned()) {
+                    return IntComputerResult::Output(o);
+                } else {
+                    return IntComputerResult::Continue;
+                }
+            }
+        }
+    }
+
     pub fn run(&mut self) -> IntComputerResult {
         loop {
-            match self.cmd_buffer.pop().unwrap_or_else(|| self.decode_next()) {
-                Operation::Halt {} => return IntComputerResult::Halt,
-                op => {
-                    if let Some(o) = self.execute(op.to_owned()) {
-                        return IntComputerResult::Output(o);
-                    }
-                }
+            match self.step() {
+                IntComputerResult::Halt => return IntComputerResult::Halt,
+                IntComputerResult::Output(o) => return IntComputerResult::Output(o),
+                IntComputerResult::Continue => (),
             }
         }
     }
