@@ -1,5 +1,5 @@
 use intcode::*;
-use itertools::join;
+use grid::*;
 use std::collections::HashMap;
 
 enum Direction {
@@ -11,8 +11,8 @@ enum Direction {
 
 struct Robot {
     direction: Direction,
-    position: (i64, i64),
-    visited: HashMap<(i64, i64), i64>,
+    position: Position2D,
+    visited: HashMap<Position2D, i64>,
 }
 
 impl Robot {
@@ -37,10 +37,10 @@ impl Robot {
     fn mv(&mut self) {
         let pos = self.position;
         self.position = match self.direction {
-            Direction::Up => (pos.0, pos.1 + 1),
-            Direction::Right => (pos.0 + 1, pos.1),
-            Direction::Left => (pos.0 - 1, pos.1),
-            Direction::Down => (pos.0, pos.1 - 1),
+            Direction::Up => pos + (0, 1).into(),
+            Direction::Right => pos + (1, 0).into(),
+            Direction::Left => pos + (-1, 0).into(),
+            Direction::Down => pos + (0, -1).into(),
         }
     }
 
@@ -53,19 +53,9 @@ impl Robot {
     }
 }
 
-#[rustfmt::skip]
-fn get_boundaries(positions: &HashMap<(i64, i64), i64>) -> (i64, i64, i64, i64) {
-    let keys = positions.keys();
-    let x_max = keys.clone().into_iter().max_by_key(|k| k.0).unwrap().0;
-    let y_max = keys.clone().into_iter().max_by_key(|k| k.1).unwrap().1;
-    let x_min = keys.clone().into_iter().min_by_key(|k| k.0).unwrap().0;
-    let y_min = keys.clone().into_iter().min_by_key(|k| k.1).unwrap().1;
-    (x_min, x_max, y_min, y_max)
-}
-
 fn start_with_input(input: Vec<i64>, color: i64) -> Robot {
     let mut robot = Robot {
-        position: (0, 0),
+        position: (0, 0).into(),
         visited: HashMap::new(),
         direction: Direction::Up,
     };
@@ -80,25 +70,11 @@ fn start_with_input(input: Vec<i64>, color: i64) -> Robot {
     robot
 }
 
-fn draw_ascii_text(coordinates: &HashMap<(i64, i64), i64>) -> String {
-    let (x_min, x_max, y_min, y_max) = get_boundaries(&coordinates);
-    join(
-        (y_min..y_max + 1).rev().map(|y| {
-            (x_min..x_max)
-                .map(|x| coordinates.get(&(x, y)).unwrap_or(&0).to_string())
-                .collect::<String>()
-                .replace('0', " ")
-                .replace('1', "█")
-        }),
-        "\n",
-    )
-}
-
 fn main() {
     let input = read_input();
     let part1_robot = start_with_input(input.clone(), 0);
     println!("Part 1: {}", part1_robot.visited.len());
 
     let part2_robot = start_with_input(input.clone(), 1);
-    println!("Part 2:\n{}", draw_ascii_text(&part2_robot.visited));
+    println!("Part 2:\n{}", draw_ascii(&part2_robot.visited, 0).replace('0', " ").replace('1', "•"));
 }
