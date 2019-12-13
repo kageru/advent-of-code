@@ -93,19 +93,11 @@ fn test_position_equals() {
 #[test]
 fn test_immediate_less_than() {
     assert_eq!(
-        run_for_input(
-            &parse_test_input("3,3,1107,-1,8,3,4,3,99"),
-            &mut 0,
-            vec![8]
-        ),
+        run_for_input(&parse_test_input("3,3,1107,-1,8,3,4,3,99"), &mut 0, vec![8]),
         0
     );
     assert_eq!(
-        run_for_input(
-            &parse_test_input("3,3,1107,-1,8,3,4,3,99"),
-            &mut 0,
-            vec![7]
-        ),
+        run_for_input(&parse_test_input("3,3,1107,-1,8,3,4,3,99"), &mut 0, vec![7]),
         1
     );
 }
@@ -113,19 +105,11 @@ fn test_immediate_less_than() {
 #[test]
 fn test_immediate_equals() {
     assert_eq!(
-        run_for_input(
-            &parse_test_input("3,3,1108,-1,8,3,4,3,99"),
-            &mut 0,
-            vec![8]
-        ),
+        run_for_input(&parse_test_input("3,3,1108,-1,8,3,4,3,99"), &mut 0, vec![8]),
         1
     );
     assert_eq!(
-        run_for_input(
-            &parse_test_input("3,3,1108,-1,8,3,4,3,99"),
-            &mut 0,
-            vec![7]
-        ),
+        run_for_input(&parse_test_input("3,3,1108,-1,8,3,4,3,99"), &mut 0, vec![7]),
         0
     );
 }
@@ -133,14 +117,14 @@ fn test_immediate_equals() {
 #[test]
 fn test_quine() {
     assert_eq!(
-        run_for_input(
-            &parse_test_input("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"),
-            &mut 0,
+        IntComputer::new(
+            parse_test_input("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"),
+            0,
             vec![0]
-        ),
-        99
+        )
+        .get_all_outputs(),
+        vec![109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99]
     );
-    //"109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
 }
 
 #[test]

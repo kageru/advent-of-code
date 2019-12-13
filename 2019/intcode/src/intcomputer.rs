@@ -52,6 +52,14 @@ impl IntComputer {
         outputs
     }
 
+    pub fn peek_operation(&mut self) -> Operation {
+        if self.cmd_buffer.is_empty() {
+            let next = self.decode_next();
+            self.cmd_buffer.push(next);
+        }
+        self.cmd_buffer[0].clone()
+    }
+
     #[rustfmt::skip]
     fn get_next(&mut self, mode: Mode) -> i64 {
         let value = *self.tape.get(self.pos as usize).unwrap();
@@ -179,7 +187,7 @@ fn get_mode(raw_opcode: &[char], pos: ParameterPosition) -> Mode {
 }
 
 #[derive(Debug, Clone)]
-enum Operation {
+pub enum Operation {
     Add {
         x: i64,
         y: i64,
