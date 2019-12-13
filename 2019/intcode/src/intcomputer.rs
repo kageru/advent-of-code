@@ -3,6 +3,7 @@ pub struct IntComputer {
     pub tape: Vec<i64>,
     pub params: Vec<i64>,
     relative_base: i64,
+    cmd_buffer: Vec<Operation>,
 }
 
 pub enum IntComputerResult {
@@ -26,18 +27,19 @@ impl IntComputer {
             tape,
             params,
             relative_base: 0,
+            cmd_buffer: Vec::new(),
         }
     }
 
     pub fn run(&mut self) -> IntComputerResult {
         loop {
-            match self.decode_next() {
-                Some(op) => {
-                    if let Some(o) = self.execute(op) {
+            match self.cmd_buffer.pop().unwrap_or_else(|| self.decode_next()) {
+                Operation::Halt {} => return IntComputerResult::Halt,
+                op => {
+                    if let Some(o) = self.execute(op.to_owned()) {
                         return IntComputerResult::Output(o);
                     }
                 }
-                None => return IntComputerResult::Halt,
             }
         }
     }
@@ -73,7 +75,7 @@ impl IntComputer {
         value
     }
 
-    fn decode_next(&mut self) -> Option<Operation> {
+    fn decode_next(&mut self) -> Operation {
         let next = self.get_next(Mode::Immediate);
         let mut full_opcode: Vec<_> = next.to_string().chars().collect();
         full_opcode.reverse();
@@ -82,50 +84,50 @@ impl IntComputer {
             full_opcode[0],
         ];
         match raw_opcode {
-            ['0', '1'] => Some(Operation::Add {
+            ['0', '1'] => Operation::Add {
                 x: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
                 y: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::Third))
                     as usize,
-            }),
-            ['0', '2'] => Some(Operation::Multiply {
+            },
+            ['0', '2'] => Operation::Multiply {
                 x: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
                 y: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::Third))
                     as usize,
-            }),
-            ['0', '3'] => Some(Operation::Input {
+            },
+            ['0', '3'] => Operation::Input {
                 value: self.params.pop().unwrap(),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::First))
                     as usize,
-            }),
-            ['0', '4'] => Some(Operation::Output {
+            },
+            ['0', '4'] => Operation::Output {
                 value: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
-            }),
-            ['0', '5'] => Some(Operation::JumpIfTrue {
-                value: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
-                addr: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)) as usize,
-            }),
-            ['0', '6'] => Some(Operation::JumpIfFalse {
+            },
+            ['0', '5'] => Operation::JumpIfTrue {
                 value: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
                 addr: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)) as usize,
-            }),
-            ['0', '7'] => Some(Operation::LessThan {
+            },
+            ['0', '6'] => Operation::JumpIfFalse {
+                value: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
+                addr: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)) as usize,
+            },
+            ['0', '7'] => Operation::LessThan {
                 first: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
                 second: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::Third))
                     as usize,
-            }),
-            ['0', '8'] => Some(Operation::Equals {
+            },
+            ['0', '8'] => Operation::Equals {
                 first: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
                 second: self.get_next(get_mode(&full_opcode, ParameterPosition::Second)),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::Third))
                     as usize,
-            }),
-            ['0', '9'] => Some(Operation::AdjustRelativeBase {
+            },
+            ['0', '9'] => Operation::AdjustRelativeBase {
                 value: self.get_next(get_mode(&full_opcode, ParameterPosition::First)),
-            }),
-            ['9', '9'] => None,
+            },
+            ['9', '9'] => Operation::Halt {},
             _ => unreachable!("Unknown opcode"),
         }
     }
@@ -165,6 +167,7 @@ impl IntComputer {
             Operation::Output { value } => {
                 return Some(value);
             }
+            Operation::Halt {} => unreachable!(),
         };
         None
     }
@@ -175,7 +178,7 @@ fn get_mode(raw_opcode: &[char], pos: ParameterPosition) -> Mode {
     raw_opcode.get::<usize>(pos.into()).unwrap_or(&'0').into()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Operation {
     Add {
         x: i64,
@@ -215,6 +218,7 @@ enum Operation {
     AdjustRelativeBase {
         value: i64,
     },
+    Halt {},
 }
 
 #[derive(Debug)]
