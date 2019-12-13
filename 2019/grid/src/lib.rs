@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position2D {
-    x: i64,
-    y: i64,
+    pub x: i64,
+    pub y: i64,
 }
 
 struct Boundaries {
@@ -27,7 +27,7 @@ pub fn draw_ascii<T: std::fmt::Display>(coordinates: &HashMap<Position2D, T>, de
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
-            (b.x_min..b.x_max)
+            (b.x_min..=b.x_max)
                 .map(|x| {
                     coordinates
                         .get(&(x, y).into())
