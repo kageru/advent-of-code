@@ -2,17 +2,16 @@
 extern crate lazy_static;
 
 use std::collections::HashMap;
-use std::default::Default;
 use std::io::{stdin, BufRead};
 use std::sync::Mutex;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug)]
 struct Element<'a> {
     quantity: usize,
     element: &'a str,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug)]
 struct Reaction<'a> {
     inputs: Vec<Element<'a>>,
     output: Element<'a>,
