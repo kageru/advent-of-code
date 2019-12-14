@@ -47,12 +47,32 @@ lazy_static! {
     static ref STORAGE: Mutex<HashMap<&'static str, usize>> = Mutex::new(HashMap::new());
 }
 
-const ORE: &'static str = "ORE";
-const FUEL: &'static str = "FUEL";
+const ORE: &str = "ORE";
+const FUEL: &str = "FUEL";
 
 fn main() {
-    println!("FUEL: {:?}", REACTIONS.get("FUEL"));
-    println!("{}", count_ingredients(FUEL, 1));
+    let p1 = count_ingredients(FUEL, 1);
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", make_all_the_fuel(p1, 1_000_000_000_000));
+}
+
+// Not beautiful, but it gets the job done.
+fn make_all_the_fuel(start: usize, limit: usize) -> usize {
+    let mut current = start;
+    let mut fuel = 1;
+    while current < 950_000_000_000 {
+        current += count_ingredients(FUEL, 1000);
+        fuel += 1000;
+    }
+    while current < 990_000_000_000 {
+        current += count_ingredients(FUEL, 100);
+        fuel += 100;
+    }
+    while current < limit {
+        current += count_ingredients(FUEL, 1);
+        fuel += 1;
+    }
+    fuel - 1
 }
 
 fn count_ingredients(element: &'static str, desired_quantity: usize) -> usize {
@@ -62,26 +82,20 @@ fn count_ingredients(element: &'static str, desired_quantity: usize) -> usize {
     let mut ores = 0;
     let reaction = REACTIONS.get(&element).unwrap();
     let output_quantity = reaction.output.quantity;
-    //dbg!(&reaction);
     let num_reactions = (desired_quantity as f32 / output_quantity as f32).ceil() as usize;
-    //dbg!(&num_reactions);
-    //println!("A: {}, B: {}", get_from_storage("A"), get_from_storage("B"));
     for input in &reaction.inputs {
+        let needed = input.quantity * num_reactions;
         let in_storage = get_from_storage(input.element);
-        let mut needed = input.quantity * num_reactions;
         if in_storage >= needed {
             put_into_storage(input.element, in_storage - needed);
         } else {
-            needed -= in_storage;
             put_into_storage(input.element, 0);
-            ores += count_ingredients(input.element, needed);
+            ores += count_ingredients(input.element, needed - in_storage);
         }
     }
-    //let num_reactions = (desired_quantity as f32 / output_quantity as f32).ceil() as usize;
-    //dbg!(&num_reactions);
-    let surplus = output_quantity * num_reactions - desired_quantity;
-    put_into_storage(element, get_from_storage(element) + surplus);
-    return ores;// * num_reactions;
+    let surplus = (output_quantity * num_reactions) - desired_quantity;
+    put_into_storage(element, surplus);
+    ores
 }
 
 #[inline]
