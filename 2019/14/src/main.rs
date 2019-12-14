@@ -56,22 +56,19 @@ fn main() {
 }
 
 // Not beautiful, but it gets the job done.
-fn make_all_the_fuel(start: usize, limit: usize) -> usize {
-    let mut current = start;
-    let mut fuel = 1;
-    while current < 950_000_000_000 {
-        current += count_ingredients(FUEL, 1000);
-        fuel += 1000;
+fn make_all_the_fuel(mut total_ore: usize, limit: usize) -> usize {
+    let initial_batch_size = 10_000;
+    let mut batch_size = initial_batch_size;
+    let mut fuel = 0;
+    while total_ore < limit {
+        total_ore += count_ingredients(FUEL, batch_size);
+        fuel += batch_size;
+        // gib int multiplication with float pls
+        if total_ore > limit - (limit / (initial_batch_size / batch_size)) && batch_size > 1 {
+            batch_size /= 10;
+        }
     }
-    while current < 990_000_000_000 {
-        current += count_ingredients(FUEL, 100);
-        fuel += 100;
-    }
-    while current < limit {
-        current += count_ingredients(FUEL, 1);
-        fuel += 1;
-    }
-    fuel - 1
+    fuel
 }
 
 fn count_ingredients(element: &'static str, desired_quantity: usize) -> usize {
