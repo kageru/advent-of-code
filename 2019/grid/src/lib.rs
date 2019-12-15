@@ -2,7 +2,10 @@ use itertools::join;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::BuildHasher;
-use std::ops::{Add, AddAssign};
+use std::ops::AddAssign;
+#[macro_use]
+extern crate impl_ops;
+use std::ops;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position2D {
@@ -75,32 +78,34 @@ impl Direction {
     }
 }
 
-impl Position2D {
-    pub fn mov(&mut self, dir: &Direction) {
-        *self = *self
-            + match dir {
-                Direction::Up => (0, 1).into(),
-                Direction::Right => (1, 0).into(),
-                Direction::Left => (-1, 0).into(),
-                Direction::Down => (0, -1).into(),
-            }
+impl_op!(+ |a: Position2D, b: Position2D| -> Position2D {
+    Position2D {
+        x: a.x + b.x,
+        y: a.y + b.y }
+});
+impl_op!(-|a: Position2D, b: Position2D| -> Position2D {
+    Position2D {
+        x: a.x - b.x,
+        y: a.y - b.y,
+    }
+});
+impl_op!(+ |a: Position2D, b: Direction| -> Position2D { a + match b {
+            Direction::Up => Position2D::from((0, 1)),
+            Direction::Right => Position2D::from((1, 0)),
+            Direction::Left => Position2D::from((-1, 0)),
+            Direction::Down => Position2D::from((0, -1)),
+        }
+});
+
+impl AddAssign<Direction> for Position2D {
+    fn add_assign(&mut self, rhs: Direction) {
+        *self = *self + rhs;
     }
 }
 
 impl AddAssign for Position2D {
     fn add_assign(&mut self, rhs: Position2D) {
         *self = *self + rhs;
-    }
-}
-
-impl Add for Position2D {
-    type Output = Position2D;
-
-    fn add(self, rhs: Position2D) -> Position2D {
-        Position2D {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
     }
 }
 

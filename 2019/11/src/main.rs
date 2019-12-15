@@ -10,7 +10,7 @@ struct Robot {
 
 impl Robot {
     fn mov(&mut self) {
-        self.position.mov(&self.direction);
+        self.position += self.direction;
     }
 
     fn paint(&mut self, color: i64) {
