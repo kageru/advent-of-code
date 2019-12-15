@@ -57,7 +57,7 @@ fn main() {
 
 // Not beautiful, but it gets the job done.
 fn make_all_the_fuel(mut total_ore: usize, limit: usize) -> usize {
-    let initial_batch_size = 10_000;
+    let initial_batch_size = 1 << 15;
     let mut batch_size = initial_batch_size;
     let mut fuel = 0;
     while total_ore < limit {
@@ -65,7 +65,7 @@ fn make_all_the_fuel(mut total_ore: usize, limit: usize) -> usize {
         fuel += batch_size;
         // gib int multiplication with float pls
         if total_ore > limit - (limit / (initial_batch_size / batch_size)) && batch_size > 1 {
-            batch_size /= 10;
+            batch_size /= 2;
         }
     }
     fuel
