@@ -9,24 +9,6 @@ struct Robot {
 }
 
 impl Robot {
-    fn turn(&mut self, turn_value: i64) {
-        self.direction = match turn_value {
-            0 => match self.direction {
-                Direction::Up => Direction::Left,
-                Direction::Right => Direction::Up,
-                Direction::Down => Direction::Right,
-                Direction::Left => Direction::Down,
-            },
-            1 => match self.direction {
-                Direction::Up => Direction::Right,
-                Direction::Right => Direction::Down,
-                Direction::Down => Direction::Left,
-                Direction::Left => Direction::Up,
-            },
-            _ => unreachable!("Illegal turn value"),
-        }
-    }
-
     fn mov(&mut self) {
         self.position.mov(&self.direction);
     }
@@ -50,7 +32,7 @@ fn start_with_input(input: Vec<i64>, color: i64) -> Robot {
     while let IntComputerResult::Output(o) = pc.run() {
         robot.paint(o);
         let turn_int = pc.run().unwrap();
-        robot.turn(turn_int);
+        robot.direction.turn(turn_int * 2 - 1);
         robot.mov();
         pc.params.push(robot.current_color());
     }

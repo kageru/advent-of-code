@@ -10,6 +10,7 @@ pub struct Position2D {
     pub y: i64,
 }
 
+#[derive(Clone, Copy)]
 pub enum Direction {
     Up,
     Down,
@@ -53,6 +54,27 @@ pub fn draw_ascii<T: Display, S: BuildHasher>(
     )
 }
 
+impl Direction {
+    pub fn turn(&mut self, turn_value: i64) {
+        *self = match turn_value {
+            -1 => match self {
+                Direction::Up => Direction::Left,
+                Direction::Right => Direction::Up,
+                Direction::Down => Direction::Right,
+                Direction::Left => Direction::Down,
+            },
+            1 => match self {
+                Direction::Up => Direction::Right,
+                Direction::Right => Direction::Down,
+                Direction::Down => Direction::Left,
+                Direction::Left => Direction::Up,
+            },
+            0 => *self,
+            n => unreachable!(format!("Illegal turn value: {}", n)),
+        }
+    }
+}
+
 impl Position2D {
     pub fn mov(&mut self, dir: &Direction) {
         *self = *self
@@ -90,6 +112,3 @@ impl From<(i64, i64)> for Position2D {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {}
