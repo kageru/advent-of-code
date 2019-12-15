@@ -1,6 +1,5 @@
 use grid::*;
 use intcode::*;
-use rand::random;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use std::sync::Mutex;
@@ -9,11 +8,10 @@ extern crate lazy_static;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum Tile {
-    Unknown,
     Wall,
     Empty,
     Oxygen,
-    Bot,
+    O2,
 }
 
 #[derive(Clone)]
@@ -25,17 +23,8 @@ struct Robot {
 }
 
 impl Robot {
-    fn turn(&mut self) {
-        self.dir.turn((random::<bool>() as i64) * 2 - 1);
-        for d in &ALL_DIRECTIONS {
-            if get(&(self.pos + *d)).is_none() {
-                self.dir = *d;
-            }
-        }
-    }
-
-    fn step(&mut self, dir: &Direction) -> Tile {
-        self.dir = *dir;
+    fn step(&mut self, dir: Direction) -> Tile {
+        self.dir = dir;
         self.ic.params.push(int(dir));
         match self.ic.run() {
             IntComputerResult::Output(0) => {
@@ -52,38 +41,12 @@ impl Robot {
                 self.pos += self.dir;
                 self.steps += 1;
                 save(self.pos, Tile::Oxygen);
-                let mut r = OXYGEN_BOT.lock().unwrap();
-                *r = Some(self.clone());
-                println!("Part 1: {}", self.steps);
+                OXYGEN_BOT.lock().unwrap().push(self.clone());
                 Tile::Oxygen
             }
             _ => unreachable!("This roboter shouldn’t halt"),
         }
     }
-    /*
-    fn step(&mut self) {
-        match self.ic.run() {
-            IntComputerResult::Output(0) => {
-                save(self.pos + self.dir, Tile::Wall);
-                self.turn();
-                self.ic.params.push(int(&self.dir));
-            }
-            IntComputerResult::Output(1) => {
-                self.pos += self.dir;
-                save(self.pos, Tile::Empty);
-                self.turn();
-                self.ic.params.push(int(&self.dir));
-            }
-            IntComputerResult::Output(2) => {
-                self.pos += self.dir;
-                save(self.pos, Tile::Empty);
-                self.turn();
-                self.ic.params.push(int(&self.dir));
-            }
-            _ => unreachable!("This roboter shouldn’t halt"),
-        };
-    }
-    */
 }
 
 impl From<i64> for Tile {
@@ -100,17 +63,16 @@ impl From<i64> for Tile {
 impl Display for Tile {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         let c = match self {
-            Tile::Unknown => '•',
             Tile::Wall => '█',
             Tile::Empty => ' ',
             Tile::Oxygen => 'X',
-            Tile::Bot => 'O',
+            Tile::O2 => 'O',
         };
         write!(f, "{}", c)
     }
 }
 
-fn int(dir: &Direction) -> i64 {
+fn int(dir: Direction) -> i64 {
     match dir {
         Direction::Up => 1,
         Direction::Down => 2,
@@ -121,12 +83,12 @@ fn int(dir: &Direction) -> i64 {
 
 lazy_static! {
     static ref FIELD: Mutex<HashMap<Position2D, Tile>> = Mutex::new(HashMap::new());
-    static ref OXYGEN_BOT: Mutex<Option<Robot>> = Mutex::new(None);
+    static ref OXYGEN_BOT: Mutex<Vec<Robot>> = Mutex::new(Vec::with_capacity(1));
 }
 
 #[inline]
 fn get(p: &Position2D) -> Option<Tile> {
-    FIELD.lock().unwrap().get(p).map(|o| *o)
+    FIELD.lock().unwrap().get(p).copied()
 }
 
 #[inline]
@@ -135,10 +97,38 @@ fn save(p: Position2D, t: Tile) {
 }
 
 fn print_field() {
-    println!(
-        "\n{}\n",
-        draw_ascii(&FIELD.lock().unwrap(), Tile::Wall)
-    );
+    if ENABLE_MAP_PRINT {
+        std::thread::sleep(std::time::Duration::from_millis(16));
+        println!("\n{}\n", draw_ascii(&FIELD.lock().unwrap(), Tile::Wall));
+    }
+}
+
+#[rustfmt::skip]
+fn is_dead_end(pos: &Position2D) -> bool {
+    pos.neighbors().iter().filter(|(_, p)| get(p).unwrap() == Tile::Empty).count() == 0
+}
+
+fn fill(bot: Robot) -> usize {
+    if is_dead_end(&bot.pos) {
+        return bot.steps;
+    }
+    bot.pos
+        .neighbors()
+        .iter()
+        .map(|(dir, pos)| {
+            if get(pos).unwrap() == Tile::Empty {
+                let mut clone = bot.clone();
+                clone.pos += *dir;
+                save(clone.pos, Tile::O2);
+                clone.steps += 1;
+                print_field();
+                fill(clone)
+            } else {
+                0
+            }
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 fn explore(bot: Robot) {
@@ -146,25 +136,33 @@ fn explore(bot: Robot) {
     for (dir, pos) in nbs.iter() {
         if get(pos).is_none() {
             let mut clone = bot.clone();
-            if clone.step(dir) == Tile::Empty {
-                // Pretty visuals :wow:
-                // std::thread::sleep(std::time::Duration::from_millis(33));
-                // print_field();
+            if clone.step(*dir) == Tile::Empty {
+                print_field();
                 explore(clone);
             }
-
         }
     }
 }
 
+#[rustfmt::skip]
+fn get_bot_at_generator() -> Robot {
+    OXYGEN_BOT.lock().unwrap().pop().expect("No oxygen found in Part 1")
+}
+
+// Pretty visuals :wow:
+const ENABLE_MAP_PRINT: bool = true;
+
 fn main() {
-    let bot = Robot {
+    let mut bot = Robot {
         pos: (0, 0).into(),
         dir: Direction::Up,
         ic: IntComputer::new(read_input(), 0, vec![]),
         steps: 0,
     };
-    save(bot.pos, Tile::Unknown);
+    save(bot.pos, Tile::Empty);
     explore(bot);
-    //print_field();
+    bot = get_bot_at_generator();
+    println!("Part 1: {}", bot.steps);
+    bot.steps = 0;
+    println!("Part 2: {}", fill(bot));
 }

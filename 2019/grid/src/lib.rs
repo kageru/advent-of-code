@@ -66,12 +66,12 @@ pub fn draw_ascii<T: Display, S: BuildHasher>(
 
 impl Position2D {
     pub fn neighbors(&self) -> [(Direction, Position2D); 4] {
-        return [
-            (Direction::Up, self.clone() + Direction::Up),
-            (Direction::Down, self.clone() + Direction::Down),
-            (Direction::Right, self.clone() + Direction::Right),
-            (Direction::Left, self.clone() + Direction::Left),
-        ];
+        [
+            (Direction::Up, *self + Direction::Up),
+            (Direction::Down, *self + Direction::Down),
+            (Direction::Right, *self + Direction::Right),
+            (Direction::Left, *self + Direction::Left),
+        ]
     }
 }
 
@@ -145,9 +145,6 @@ mod tests {
             Position2D { x: 0, y: 2 } + Position2D { x: -1, y: 0 },
             (-1, 2).into()
         );
-        assert_eq!(
-            Position2D { x: 0, y: -1 } + Direction::Up,
-            (0, 0).into()
-        );
+        assert_eq!(Position2D { x: 0, y: -1 } + Direction::Up, (0, 0).into());
     }
 }
