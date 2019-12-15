@@ -13,13 +13,20 @@ pub struct Position2D {
     pub y: i64,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Direction {
     Up,
     Down,
     Left,
     Right,
 }
+
+pub const ALL_DIRECTIONS: [Direction; 4] = [
+    Direction::Up,
+    Direction::Down,
+    Direction::Left,
+    Direction::Right,
+];
 
 struct Boundaries {
     x_min: i64,
@@ -55,6 +62,17 @@ pub fn draw_ascii<T: Display, S: BuildHasher>(
         }),
         "\n",
     )
+}
+
+impl Position2D {
+    pub fn neighbors(&self) -> [(Direction, Position2D); 4] {
+        return [
+            (Direction::Up, self.clone() + Direction::Up),
+            (Direction::Down, self.clone() + Direction::Down),
+            (Direction::Right, self.clone() + Direction::Right),
+            (Direction::Left, self.clone() + Direction::Left),
+        ];
+    }
 }
 
 impl Direction {
@@ -115,5 +133,21 @@ impl From<(i64, i64)> for Position2D {
             x: tuple.0,
             y: tuple.1,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_add() {
+        assert_eq!(
+            Position2D { x: 0, y: 2 } + Position2D { x: -1, y: 0 },
+            (-1, 2).into()
+        );
+        assert_eq!(
+            Position2D { x: 0, y: -1 } + Direction::Up,
+            (0, 0).into()
+        );
     }
 }

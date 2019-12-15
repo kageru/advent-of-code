@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct IntComputer {
     pub pos: i64,
     pub tape: Vec<i64>,
