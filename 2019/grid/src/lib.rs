@@ -2,11 +2,19 @@ use itertools::join;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::BuildHasher;
+use std::ops::{Add, AddAssign};
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position2D {
     pub x: i64,
     pub y: i64,
+}
+
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 struct Boundaries {
@@ -25,7 +33,10 @@ fn get_boundaries(input: &[&Position2D]) -> Boundaries {
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
-pub fn draw_ascii<T: Display, S: BuildHasher>(coordinates: &HashMap<Position2D, T, S>, default: T) -> String {
+pub fn draw_ascii<T: Display, S: BuildHasher>(
+    coordinates: &HashMap<Position2D, T, S>,
+    default: T,
+) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
@@ -42,7 +53,25 @@ pub fn draw_ascii<T: Display, S: BuildHasher>(coordinates: &HashMap<Position2D, 
     )
 }
 
-impl std::ops::Add for Position2D {
+impl Position2D {
+    pub fn mov(&mut self, dir: &Direction) {
+        *self = *self
+            + match dir {
+                Direction::Up => (0, 1).into(),
+                Direction::Right => (1, 0).into(),
+                Direction::Left => (-1, 0).into(),
+                Direction::Down => (0, -1).into(),
+            }
+    }
+}
+
+impl AddAssign for Position2D {
+    fn add_assign(&mut self, rhs: Position2D) {
+        *self = *self + rhs;
+    }
+}
+
+impl Add for Position2D {
     type Output = Position2D;
 
     fn add(self, rhs: Position2D) -> Position2D {

@@ -1,13 +1,6 @@
-use intcode::*;
 use grid::*;
+use intcode::*;
 use std::collections::HashMap;
-
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
 
 struct Robot {
     direction: Direction,
@@ -34,14 +27,8 @@ impl Robot {
         }
     }
 
-    fn mv(&mut self) {
-        let pos = self.position;
-        self.position = match self.direction {
-            Direction::Up => pos + (0, 1).into(),
-            Direction::Right => pos + (1, 0).into(),
-            Direction::Left => pos + (-1, 0).into(),
-            Direction::Down => pos + (0, -1).into(),
-        }
+    fn mov(&mut self) {
+        self.position.mov(&self.direction);
     }
 
     fn paint(&mut self, color: i64) {
@@ -64,7 +51,7 @@ fn start_with_input(input: Vec<i64>, color: i64) -> Robot {
         robot.paint(o);
         let turn_int = pc.run().unwrap();
         robot.turn(turn_int);
-        robot.mv();
+        robot.mov();
         pc.params.push(robot.current_color());
     }
     robot
@@ -76,5 +63,10 @@ fn main() {
     println!("Part 1: {}", part1_robot.visited.len());
 
     let part2_robot = start_with_input(input, 1);
-    println!("Part 2:\n{}", draw_ascii(&part2_robot.visited, 0).replace('0', " ").replace('1', "•"));
+    println!(
+        "Part 2:\n{}",
+        draw_ascii(&part2_robot.visited, 0)
+            .replace('0', " ")
+            .replace('1', "•")
+    );
 }
