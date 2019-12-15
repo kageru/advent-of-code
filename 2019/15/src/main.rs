@@ -145,7 +145,15 @@ fn explore(bot: Robot) {
 }
 
 #[rustfmt::skip]
-fn get_bot_at_generator() -> Robot {
+fn find_generator() -> Robot {
+    save((0, 0).into(), Tile::Empty);
+    let bot = Robot {
+        pos: (0, 0).into(),
+        dir: Direction::Up,
+        ic: IntComputer::new(read_input(), 0, vec![]),
+        steps: 0,
+    };
+    explore(bot);
     OXYGEN_BOT.lock().unwrap().pop().expect("No oxygen found in Part 1")
 }
 
@@ -153,15 +161,7 @@ fn get_bot_at_generator() -> Robot {
 const ENABLE_MAP_PRINT: bool = true;
 
 fn main() {
-    let mut bot = Robot {
-        pos: (0, 0).into(),
-        dir: Direction::Up,
-        ic: IntComputer::new(read_input(), 0, vec![]),
-        steps: 0,
-    };
-    save(bot.pos, Tile::Empty);
-    explore(bot);
-    bot = get_bot_at_generator();
+    let mut bot = find_generator();
     println!("Part 1: {}", bot.steps);
     bot.steps = 0;
     println!("Part 2: {}", fill(bot));
