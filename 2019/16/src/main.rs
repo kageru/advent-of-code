@@ -43,14 +43,14 @@ fn part1(mut last_phase: Vec<i32>) -> String {
 fn part2(input: Vec<i32>) -> String {
     let offset: usize = input.iter().take(7).map(|n| n.to_string()).collect::<String>().parse().unwrap();
     let mut p2 = input.repeat(10_000).split_off(offset);
+    p2.reverse();
     for _ in 0..100 {
-        let mut s = 0;
-        for i in (0..p2.len()).rev() {
-            s += p2[i];
-            p2[i] = s % 10;
-        }
+        p2 = p2.iter().scan(0, |acc, n| {
+            *acc += n;
+            Some(*acc%10)
+        }).collect();
     }
-    p2.iter().take(8).map(|n| n.to_string()).collect::<String>()
+    p2.iter().rev().take(8).map(|n| n.to_string()).collect::<String>()
 }
 
 fn main() {
