@@ -18,9 +18,10 @@ fn part1(mut last_phase: Vec<i32>) -> String {
 }
 
 /**
- * The outputs after each phase are related in a way that I can’t really explain.
- * They are essentially a summed-area table, but built starting with the last element.
- * However, this only works for the second half of the output. The rest seem to be random?
+ * The outputs of each phase are essentially a summed-area table,
+ * but built starting with the last element.
+ * This works because – for all elements in the second half of the input vector –
+ * all coefficients before the current index are 0, and all after it are one.
  * 
  * The examples show this quite clearly:
  * Input signal:  12345678 (let’s call this `input`)
@@ -33,11 +34,9 @@ fn part1(mut last_phase: Vec<i32>) -> String {
  * output[4] = input[4..8].iter().sum() % 10; // 26 % 10 == 6
  * ```
  * Which is exactly the output sequence.
- * This pattern only holds true for the second half of the array,
- * but the offset always seems to be high enough for that.
  *
- * Because all input elements only affect outputs with lower indices,
- * we can also drop all elements before the output starts.
+ * The offset is always higher than input.len() / 2,
+ * so this always works.
  */
 #[rustfmt::skip]
 fn part2(input: Vec<i32>) -> String {
