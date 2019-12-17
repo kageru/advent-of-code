@@ -103,31 +103,44 @@ fn function_to_string(function: &[Movement]) -> String {
     function.iter().map(|m| m.to_string()).join(",")
 }
 
+fn find_reoccuring_segments<'a>(
+    commands: &'a [Movement],
+    previous_segments: &[&'a [Movement]],
+    starting_pos: &mut usize,
+    length: usize,
+) -> Option<(usize, usize, &'a [Movement])> {
+    let reference = commands[*starting_pos..].windows(length).next().unwrap();
+    // If the segment we’re currently looking at (reference) is already in our function list,
+    // add it with the highest priority. (We’ll deduplicate later)
+    if previous_segments.contains(&reference) {
+        return Some((length, 99, reference));
+    }
+    let dupes = commands[*starting_pos..]
+        .windows(length)
+        .filter(|&w| w == reference)
+        .count();
+    if dupes > 1 {
+        Some((length, dupes, reference))
+    } else {
+        None
+    }
+}
+
+/**
+ * From each position, try to find the slice of the next 2-4 (inclusive)
+ * elements that reoccur as often as possible in the output.
+ */
 fn split_into_functions<'a>(commands: &'a [Movement]) -> Vec<&'a [Movement]> {
     let mut pos = 0;
     let mut segments = Vec::new();
     while pos < commands.len() - 4 {
-        if let Some((n, mov)) = (2..=4)
-            .filter_map(|i| {
-                let reference = commands[pos..].windows(i).next();
-                if segments.contains(&reference.unwrap()) {
-                    Some(((i, 99), reference))
-                } else {
-                    let dupes = commands[pos..]
-                        .windows(i)
-                        .filter(|&w| Some(w) == reference)
-                        .count();
-                    if dupes > 0 {
-                        Some(((i, dupes), reference))
-                    } else {
-                        None
-                    }
-                }
-            })
-            .max_by_key(|((x, y), _)| x * y)
+        if let Some((segment_length, _, mov)) = (2..=4)
+            .filter_map(|i| find_reoccuring_segments(commands, &segments, &mut pos, i))
+            // Segments are rated by length and number of occurences
+            .max_by_key(|(x, y, _)| x * y)
         {
-            pos += n.0;
-            segments.push(mov.unwrap());
+            pos += segment_length;
+            segments.push(mov);
         }
     }
     segments
