@@ -77,36 +77,42 @@ impl Position2D {
 
 impl Direction {
     pub fn turn(&mut self, turn_value: i64) {
-        *self = match turn_value {
-            -1 => match self {
+        *self = *self + turn_value as i8;
+    }
+}
+
+impl_op!(+ |a: Direction, b: i8| -> Direction {
+        match b {
+            -1 => match a {
                 Direction::Up => Direction::Left,
                 Direction::Right => Direction::Up,
                 Direction::Down => Direction::Right,
                 Direction::Left => Direction::Down,
             },
-            1 => match self {
+            1 => match a {
                 Direction::Up => Direction::Right,
                 Direction::Right => Direction::Down,
                 Direction::Down => Direction::Left,
                 Direction::Left => Direction::Up,
             },
-            0 => *self,
+            0 => a,
             n => unreachable!(format!("Illegal turn value: {}", n)),
         }
-    }
-}
+});
 
 impl_op!(+ |a: Position2D, b: Position2D| -> Position2D {
     Position2D {
         x: a.x + b.x,
         y: a.y + b.y }
 });
+
 impl_op!(-|a: Position2D, b: Position2D| -> Position2D {
     Position2D {
         x: a.x - b.x,
         y: a.y - b.y,
     }
 });
+
 impl_op!(+ |a: Position2D, b: Direction| -> Position2D { a + match b {
             Direction::Up => Position2D::from((0, 1)),
             Direction::Right => Position2D::from((1, 0)),
@@ -114,6 +120,12 @@ impl_op!(+ |a: Position2D, b: Direction| -> Position2D { a + match b {
             Direction::Down => Position2D::from((0, -1)),
         }
 });
+
+impl AddAssign<i8> for Direction {
+    fn add_assign(&mut self, rhs: i8) {
+        *self = *self + rhs;
+    }
+}
 
 impl AddAssign<Direction> for Position2D {
     fn add_assign(&mut self, rhs: Direction) {
