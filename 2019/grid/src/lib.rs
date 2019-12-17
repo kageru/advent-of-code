@@ -77,7 +77,7 @@ impl Position2D {
 
 impl Direction {
     pub fn turn(&mut self, turn_value: i64) {
-        *self = *self + turn_value as i8;
+        *self += turn_value as i8;
     }
 }
 
