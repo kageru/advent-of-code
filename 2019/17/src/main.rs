@@ -1,8 +1,9 @@
 use grid::*;
 use intcode::*;
 use std::char;
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fmt;
+use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Movement {
@@ -24,11 +25,7 @@ fn find_commands(field: &HashMap<Position2D, char>) -> Vec<Movement> {
     let mut commands = Vec::new();
     loop {
         let mut steps = 0;
-        let turn = if field.get(&(robot_position + (robot_direction + 1))) == Some(&'#') {
-            1
-        } else {
-            -1
-        };
+        let turn = ((field.get(&(robot_position + (robot_direction + 1))) == Some(&'#')) as i8) * 2 - 1;
         robot_direction += turn;
         while field.get(&(robot_position + robot_direction)) == Some(&'#') {
             robot_position += robot_direction;
@@ -83,7 +80,7 @@ fn main() {
         .enumerate()
         .flat_map(move |(y, s)| s.chars().enumerate().map(move |(x, c)| ((x, y).into(), c)))
         .collect();
-    //let field = test_input();
+    // let field = test_input();
     let p1 = field
         .iter()
         .filter(|(pos, obj)| {
@@ -99,10 +96,12 @@ fn main() {
 
     let commands = find_commands(&field);
     println!("Commands: {}", commands.len());
-    for c in commands.iter() { println!("{}", c); }
+    for c in commands.iter() {
+        println!("{}", c);
+    }
     let mut pos = 0;
-    //let mut segments = Vec::new();
-    let segments = vec![
+    let mut segments = Vec::new();
+    /*let segments = vec![
         vec![
         Movement{ rotation: -1, distance: 8 },
         Movement{ rotation: 1, distance: 12 },
@@ -119,62 +118,78 @@ fn main() {
         Movement{ rotation: 1, distance: 10 },
         Movement{ rotation: -1, distance: 6 },
         ]
-    ];
-    /*
-    while pos < commands.len() {
-        if let Some((n, mov)) = (1..=5)
+    ];*/
+    while pos < commands.len() - 4 {
+        if let Some((n, mov)) = (2..=4)
             .filter_map(|i| {
                 let reference = commands[pos..].windows(i).next();
-                let dupes = commands[pos..]
-                    .windows(i)
-                    .filter(|&w| Some(w) == reference)
-                    .count();
-                if dupes > 0 {
-                    Some(((i, dupes), reference))
+                if segments.contains(&reference.unwrap()) {
+                    Some(((i, 99), reference))
                 } else {
-                    None
+                    let dupes = commands[pos..]
+                        .windows(i)
+                        .filter(|&w| Some(w) == reference)
+                        .count();
+                    if dupes > 0 {
+                        Some(((i, dupes), reference))
+                    } else {
+                        None
+                    }
                 }
             })
-            .max_by_key(|((x, y), _)| x + y*2)
+            .inspect(|_| println!("hit for {}", pos))
+            .max_by_key(|((x, y), _)| x * y)
         {
             pos += n.0;
             segments.push(mov.unwrap());
+        } else {
+            //panic!("nothing found at position {}", pos);
         }
     }
-    let filtered: HashSet<_> = segments.clone().into_iter().map(|mut curr| {
-        for s in &segments {
-            if curr.len() <= s.len() {
-                continue
+    let filtered: HashSet<_> = segments
+        .clone()
+        .into_iter()
+        /*
+        .map(|mut curr| {
+            for s in &segments {
+                if curr.len() <= s.len() {
+                    continue;
+                }
+                let index_after = curr.len() - s.len();
+                if s == &&curr[index_after..] {
+                    curr = &curr[..index_after];
+                }
+                if s == &&curr[..index_after] {
+                    curr = &curr[index_after..];
+                }
             }
-            let index_after = curr.len() - s.len();
-            if s == &&curr[index_after..] {
-                curr = &curr[..index_after];
-            }
-            if s == &&curr[..index_after] {
-                curr = &curr[index_after..];
-            }
-        }
-        curr
-    })
-    .filter(|s| !s.is_empty())
-    .collect();
-    //dbg!(&segments, segments.len());
+            curr
+        })
+        .filter(|s| !s.is_empty())
+        */
+        .collect();
+    let mut filtered: Vec<_> = filtered
+        .into_iter()
+        .zip(['A', 'B', 'C'].iter())
+        .collect();
+    filtered.sort_by_key(|(_, c)| c.to_owned());
+    dbg!(&segments, segments.len());
     dbg!(filtered.len());
     println!(
         "{}",
         filtered
             .iter()
-            .map(|s| s.iter().map(|m| m.to_string()).collect::<String>() + "\n")
+            .map(|s| s.0.iter().map(|m| m.to_string()).collect::<String>() + "\n")
             .collect::<String>()
     );
-    */
-    let filtered = segments;
+    //let filtered = segments;
     let mut instructions = Vec::new();
     let mut pos = 0;
     while pos < commands.len() {
+        println!("searching");
         for i in 1.. {
-            if filtered.contains(&commands[pos..pos+i].to_vec()) {
-                instructions.push(&commands[pos..pos+i]);
+            if filtered.iter().any(|(c, _)| c == &&commands[pos..pos + i]) {
+                instructions.push(&commands[pos..pos + i]);
                 pos += i;
                 println!("match for {}..{}", pos, i);
                 break;
@@ -183,14 +198,21 @@ fn main() {
             }
         }
     }
-    for i in instructions {
-        println!("{}", i.iter().map(|m| m.to_string()).collect::<String>());
+    fn dir(rotation: i8) -> char {
+        if rotation == 1 { 'R' } else { 'L' }
     }
-    
-    // it’s surprisingly easy to do this manually with enough debug prints above.
-    // proper solution once the headache is gone. fml
     input[0] = 2;
-    let mut path: Vec<i64> = "A,B,A,B,C,C,B,A,B,C\nL,8,R,12,R,12,R,10\nR,10,R,12,R,10\nL,10,R,10,L,6\nn\n".chars().map(|c| c as i64).collect();
-    path.reverse();
-    println!("Part 2: {:?}", IntComputer::new(input, 0, path).get_all_outputs());
+    let raw_path = (instructions.iter().map(|i| filtered.iter().find(|(f, c)| i == f).unwrap().1).join(",")
+        + "\n"
+        + &filtered.into_iter().map(|(f, _)| f.iter().map(|m| format!("{},{}", dir(m.rotation), m.distance)).join(",")).join("\n")
+        + "\nn\n");
+    let path: Vec<i64> = raw_path
+            .chars()
+            .map(|c| c as i64)
+            .rev()
+            .collect();
+    println!(
+        "Part 2: {:?}",
+        IntComputer::new(input, 0, path).get_all_outputs().pop()
+    );
 }
