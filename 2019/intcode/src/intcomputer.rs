@@ -24,6 +24,16 @@ impl IntComputerResult {
 }
 
 impl IntComputer {
+    pub fn without_params(tape: Vec<i64>) -> Self {
+        IntComputer {
+            pos: 0,
+            tape,
+            params: Vec::new(),
+            relative_base: 0,
+            cmd_buffer: Vec::new(),
+        }
+    }
+
     pub fn new(tape: Vec<i64>, pos: i64, params: Vec<i64>) -> Self {
         IntComputer {
             pos,

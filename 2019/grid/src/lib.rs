@@ -127,6 +127,24 @@ impl AddAssign for Position2D {
     }
 }
 
+impl From<(usize, usize)> for Position2D {
+    fn from(tuple: (usize, usize)) -> Position2D {
+        Position2D {
+            x: tuple.0 as i64,
+            y: tuple.1 as i64,
+        }
+    }
+}
+
+impl From<(i32, i32)> for Position2D {
+    fn from(tuple: (i32, i32)) -> Position2D {
+        Position2D {
+            x: tuple.0 as i64,
+            y: tuple.1 as i64,
+        }
+    }
+}
+
 impl From<(i64, i64)> for Position2D {
     fn from(tuple: (i64, i64)) -> Position2D {
         Position2D {
