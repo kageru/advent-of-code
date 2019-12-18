@@ -1,0 +1,11 @@
+priority:
+(closest) actually dead end with keys -> (closest) key for reachable door
+alphabetical as tiebreaker
+
+for scan: set of visited positions
+
+tasks:
+//scan entire map -> create dependencies (Map<Key, Set<Key>>)
+dead end detection -> also done?
+//implement pathfinding (maybe dijkstra-like?)
+
