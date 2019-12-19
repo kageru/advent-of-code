@@ -1,12 +1,10 @@
 use intcode::*;
-use grid::*;
-use std::collections::HashMap;
 
-fn tractor_at_position(input: &Vec<i64>, x: i64, y: i64) -> bool {
-    IntComputer::new(input.clone(), 0, vec![x, y]).get_all_outputs()[0] == 1
+fn tractor_at_position(input: &[i64], x: i64, y: i64) -> bool {
+    IntComputer::new(input.to_vec(), 0, vec![x, y]).get_all_outputs()[0] == 1
 }
 
-const ZONE_SIZE: i64 = 100;
+const ZONE_SIZE: i64 = 99;
 
 fn main() {
     let input = read_input();
@@ -20,22 +18,18 @@ fn main() {
     }
     println!("Part 1: {}", s);
 
-    let mut beam = HashMap::new();
-    for x in 0..900 {
-        for y in 0..1100 {
-            let here = tractor_at_position(&input, x, y);
-            beam.insert(Position2D {x, y}, if here { '#'}  else { '.' });
-            if here 
-            && tractor_at_position(&input, x+ZONE_SIZE, y)
-            && tractor_at_position(&input, x, y+ZONE_SIZE)
-            && tractor_at_position(&input, x+ZONE_SIZE, y+ZONE_SIZE) {
-                beam.insert(Position2D {x, y}, 'O');
-                println!("Part 2: {}, {}, {}", x, y, x*10_000 + y);
+    for y in 0..1000 {
+        for x in 0..1000 {
+            if tractor_at_position(&input, x, y)
+                && tractor_at_position(&input, x + ZONE_SIZE, y)
+                && tractor_at_position(&input, x, y + ZONE_SIZE)
+            {
+                println!("Part 2: {}", y * 10_000 + x);
+                return;
             }
         }
-        if x%100 == 0 {
-            println!("Outer loop {}", x);
+        if y % 100 == 0 {
+            println!("Outer loop {}", y);
         }
     }
-    println!("{}", draw_ascii(&beam, '.'));
 }
