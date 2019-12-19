@@ -189,7 +189,7 @@ impl IntComputer {
                 first,
                 second,
                 addr,
-            } => self.tape[addr as usize] = (first < second) as i64,
+            } => safe_write(&mut self.tape, addr as usize, (first < second) as i64),
             Operation::Equals {
                 first,
                 second,
