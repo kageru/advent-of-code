@@ -128,7 +128,7 @@ impl IntComputer {
                     as usize,
             },
             ['0', '3'] => Operation::Input {
-                value: self.params.pop().unwrap(),
+                value: self.params.pop().expect("Encountered input instruction with empty parameters"),
                 addr: self.get_next_address(get_mode(&full_opcode, ParameterPosition::First))
                     as usize,
             },
