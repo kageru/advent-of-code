@@ -35,17 +35,23 @@ fn apply(deck: &mut Vec<usize>, operation: &str) {
     };
 }
 
+fn create_deck(len: usize) -> Vec<usize> {
+    let mut deck = Vec::with_capacity(len);
+    (0..len).for_each(|n| deck.push(n));
+    deck
+}
+
 const DECK_SIZE: usize = 10007;
+const P2_DECK_SIZE: usize = 119315717514047;
+const P2_ITERATIONS: usize = 101741582076661;
 
 fn main() {
     let input: Vec<_> = io::stdin().lock().lines().map(|l| l.unwrap()).collect();
-    let mut deck = Vec::with_capacity(DECK_SIZE);
-    (0..DECK_SIZE).for_each(|n| deck.push(n));
-    for line in input {
-        apply(&mut deck, &line);
+    let mut deck = create_deck(DECK_SIZE);
+    for command in &input {
+        apply(&mut deck, command);
     }
     println!("{}", deck.iter().position(|&x| x == 2019).unwrap());
-    assert_eq!(deck.capacity(), 10007);
 }
 
 mod tests {
@@ -53,7 +59,7 @@ mod tests {
 
     #[test]
     fn deal_test() {
-        let mut deck: Vec<usize> = (0..10).collect();
+        let mut deck = create_deck(10);
         let instructions = "deal with increment 7
 deal into new stack
 deal into new stack";
@@ -65,7 +71,7 @@ deal into new stack";
 
     #[test]
     fn cut_deal_test() {
-        let mut deck: Vec<usize> = (0..10).collect();
+        let mut deck = create_deck(10);
         let instructions = "cut 6
 deal with increment 7
 deal into new stack";
@@ -77,7 +83,7 @@ deal into new stack";
 
     #[test]
     fn test_all() {
-        let mut deck: Vec<usize> = (0..10).collect();
+        let mut deck = create_deck(10);
         let instructions = "deal into new stack
 cut -2
 deal with increment 7
