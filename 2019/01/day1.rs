@@ -7,16 +7,16 @@ fn main() {
         .lines()
         .map(|l| l.unwrap().parse().unwrap())
         .collect();
-    println!("Part 1: {}", part1(lines.clone()));
-    println!("Part 2: {}", part2(lines));
+    println!("Part 1: {}", part1(&lines));
+    println!("Part 2: {}", part2(&lines));
 }
 
-fn part1(numbers: Vec<u32>) -> u32 {
-    numbers.into_iter().map(cost).sum()
+fn part1(numbers: &Vec<u32>) -> u32 {
+    numbers.iter().map(|&m| cost(m)).sum()
 }
 
-fn part2(numbers: Vec<u32>) -> u32 {
-    numbers.into_iter().map(|m| cost_rec(m, 0)).sum()
+fn part2(numbers: &Vec<u32>) -> u32 {
+    numbers.iter().map(|&m| cost_rec(m, 0)).sum()
 }
 
 fn cost(mass: u32) -> u32 {
