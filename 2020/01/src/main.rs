@@ -3,11 +3,7 @@ use itertools::Itertools;
 use std::io::BufRead;
 
 fn main() {
-    let input: Vec<usize> = std::io::stdin()
-        .lock()
-        .lines()
-        .filter_map(|l| l.unwrap().parse().ok())
-        .collect();
+    let input: Vec<usize> = std::io::stdin().lock().lines().filter_map(|l| l.unwrap().parse().ok()).collect();
     let p1 = input
         .iter()
         .tuple_combinations()
