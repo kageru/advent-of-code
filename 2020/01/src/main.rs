@@ -1,4 +1,4 @@
-use itertools::iproduct;
+use itertools::Itertools;
 use std::io::BufRead;
 
 fn main() {
@@ -7,7 +7,9 @@ fn main() {
         .lines()
         .filter_map(|l| l.unwrap().parse().ok())
         .collect();
-    let p1 = iproduct!(input.iter(), input.iter())
+    let p1 = input
+        .iter()
+        .tuple_combinations()
         .filter(|(&a, &b)| a + b == 2020)
         .map(|(a, b)| a * b)
         .next()
@@ -15,7 +17,8 @@ fn main() {
     println!("Part 1: {}", p1);
     /*
     smol-brain, n³ solution:
-    let p2 = iproduct!(input.iter(), input.iter(), input.iter())
+    let p2 = input
+        .tuple_combinations()
         .filter(|(&a, &b, &c)| a + b + c == 2020)
         .map(|(a, b, c)| a * b * c)
         .next()
@@ -24,7 +27,7 @@ fn main() {
     */
     // Ascended n² solution (thanks to Lypheo)
     let mut p2_table = vec![None; 2020];
-    for (&a, &b) in iproduct!(input.iter(), input.iter()) {
+    for (&a, &b) in input.iter().tuple_combinations() {
         if a + b < 2020 {
             p2_table[a + b] = Some((a, b))
         }
