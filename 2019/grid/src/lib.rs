@@ -73,6 +73,19 @@ impl Position2D {
             (Direction::Left, *self + Direction::Left),
         ]
     }
+
+    pub fn moore(&self) -> [Position2D; 8] {
+        [
+            *self + Direction::Up + Direction::Left,
+            *self + Direction::Up,
+            *self + Direction::Up + Direction::Right,
+            *self + Direction::Left,
+            *self + Direction::Right,
+            *self + Direction::Down + Direction::Left,
+            *self + Direction::Down,
+            *self + Direction::Down + Direction::Right,
+        ]
+    }
 }
 
 impl Direction {

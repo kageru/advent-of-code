@@ -140,6 +140,7 @@ fn remove(map: &mut HashMap<Position2D, char>, k: Key) {
     }
 }
 
+/*
 fn distance_to_door(map: &HashMap<Position2D, char>, k: &Key) -> usize {
     let (distances, _, _) = traverse(map, find(map, k.0).unwrap());
     let door_pos = find(map, k.0.to_uppercase().next().unwrap());
@@ -154,6 +155,7 @@ fn distance_to_locked_door(map: &HashMap<Position2D, char>, k: &Key) -> usize {
         .min()
         .unwrap_or(&0)
 }
+*/
 
 fn next_key(
     map: &mut HashMap<Position2D, char>,
@@ -198,6 +200,9 @@ fn next_key(
         .collect();
     //.min_by_key(|k| )
 
+    let nearest = dependencies.iter() 
+        .filter(|(_, (_, d))| d.is_empty())
+        .min_by_key(|(k, _)| distances.get(&find(&map, k.0).unwrap()));
     let dead_end_keys = find_keys_at_dead_ends(&dependencies);
     let mut next: Vec<_> = dead_end_keys
         .iter()
@@ -215,16 +220,16 @@ fn next_key(
         //.chain(useful_keys)
         .collect();
     next.sort_by_key(|(k, n)| *n);//*3 + distance_to_door(map, k));
+    nearest.map(|(k, _)| next.insert(0, (k, *distances.get(&find(map, k.0).unwrap()).expect("No distance to nearest?"))));
     useful_keys.sort_by_key(|(k, n)| *n);
     useful_keys.reverse();
     useful_keys.pop().map(|k| next.insert(0, k));
-    useful_keys.pop().map(|k| next.push(k));
-    useful_keys.pop().map(|k| next.push(k));
+    //useful_keys.pop().map(|k| next.push(k));
     useful_keys.pop().map(|k| next.push(k));
     useful_keys.pop().map(|k| next.push(k));
     let len = next.len();
     next.par_iter()
-        .take((len.min(5) - 1).max(1))
+        .take((len.min(4) - 1).max(1))
         .map(|(k, _)| {
             let mut map2 = map.clone();
             let next_pos = find(&map2, k.0).expect("Could not find key #3");
@@ -255,8 +260,8 @@ fn main() {
         })
         .collect();
     let pos = find(&map, '@').unwrap();
-    let steps = 0;
-    let (_, dependencies, _) = traverse(&map, pos.to_owned());
+    //let steps = 0;
+    //let (_, dependencies, _) = traverse(&map, pos.to_owned());
     let p1 = next_key(&mut map.clone(), &pos, 0);
     println!("Part 1: {}", p1);
     println!("Part 1: {}", BEST.lock().unwrap());
