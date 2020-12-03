@@ -16,6 +16,7 @@ const STEP_RIGHT: [usize; 5] = [1, 3, 5, 7, 1];
 const STEP_DOWN: [usize; 5] = [1, 1, 1, 1, 2];
 
 impl From<char> for Tile {
+    #[inline]
     fn from(c: char) -> Self {
         match c {
             '.' => Tile::Free,
