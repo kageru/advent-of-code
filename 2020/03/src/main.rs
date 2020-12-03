@@ -117,24 +117,18 @@ mod tests {
     #[bench]
     fn bench_part_1_functional(b: &mut test::Bencher) {
         let forest = parse_input(&read_input());
-        b.iter(|| {
-            assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 187);
-        })
+        b.iter(|| assert_eq!(count_trees(black_box(&forest), STEP_RIGHT[1], STEP_DOWN[1]), 187));
     }
 
     #[bench]
     fn bench_part_1_imperative(b: &mut test::Bencher) {
         let forest = parse_input(&read_input());
-        b.iter(|| {
-            assert_eq!(count_trees_imperative(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 187);
-        })
+        b.iter(|| assert_eq!(count_trees_imperative(black_box(&forest), STEP_RIGHT[1], STEP_DOWN[1]), 187));
     }
 
     #[bench]
     fn bench_part_2(b: &mut test::Bencher) {
         let forest = parse_input(&read_input());
-        b.iter(|| {
-            let p2 = count_all_paths(&forest);
-        })
+        b.iter(|| assert_eq!(count_all_paths(black_box(&forest)), 4723283400));
     }
 }
