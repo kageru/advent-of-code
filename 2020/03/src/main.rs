@@ -56,9 +56,10 @@ fn main() {
     println!("Part 2: {}", p2);
 }
 
+#[allow(unused)]
 mod tests {
     use super::*;
-    use test;
+    use test::{self, black_box};
 
     const INPUT: &str = "..##.......
 #...#...#..
@@ -72,15 +73,67 @@ mod tests {
 #...##....#
 .#..#...#.#";
 
+    fn count_trees_imperative(forest: &Forest, step_right: usize, step_down: usize) -> usize {
+        let mut x = 0;
+        let mut y = 0;
+        let mut trees = 0;
+        let width = forest[0].len();
+        while y < forest.len() {
+            trees += (forest[y][x] == Tile::Tree) as usize;
+            y += step_down;
+            x = (x + step_right) % width;
+        }
+        return trees;
+    }
+
     #[test]
-    fn part1_test() {
+    fn part1_test_functional() {
         let forest = parse_input(INPUT);
         assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
+    }
+
+    #[test]
+    fn part1_test_imperative() {
+        let forest = parse_input(INPUT);
+        assert_eq!(count_trees_imperative(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
     }
 
     #[test]
     fn part2_test() {
         let forest = parse_input(INPUT);
         assert_eq!(count_all_paths(&forest), 336);
+    }
+
+    #[bench]
+    fn bench_input_parsing(b: &mut test::Bencher) {
+        let raw = read_input();
+        b.iter(|| {
+            let forest = parse_input(black_box(&raw));
+            assert_eq!(forest.len(), 323);
+        });
+    }
+
+    #[bench]
+    fn bench_part_1_functional(b: &mut test::Bencher) {
+        let forest = parse_input(&read_input());
+        b.iter(|| {
+            assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 187);
+        })
+    }
+
+    #[bench]
+    fn bench_part_1_imperative(b: &mut test::Bencher) {
+        let forest = parse_input(&read_input());
+        b.iter(|| {
+            assert_eq!(count_trees_imperative(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 187);
+        })
+    }
+
+    #[bench]
+    fn bench_part_2(b: &mut test::Bencher) {
+        let forest = parse_input(&read_input());
+        b.iter(|| {
+            let p2 = count_all_paths(&forest);
+        })
     }
 }
