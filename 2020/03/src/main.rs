@@ -42,12 +42,10 @@ fn count_all_paths(forest: &Forest) -> usize {
 }
 
 fn count_trees(forest: &Forest, step_right: usize, step_down: usize) -> usize {
-    iter::successors(Some((step_down, step_right)), |(y, x)| {
-        Some((y + step_down, (x + step_right) % forest[0].len()))
-    })
-    .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
-    .filter(|&t| t == Tile::Tree)
-    .count()
+    iter::successors(Some((0, 0)), |(y, x)| Some((y + step_down, (x + step_right) % forest[0].len())))
+        .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
+        .filter(|&t| t == Tile::Tree)
+        .count()
 }
 
 fn main() {
