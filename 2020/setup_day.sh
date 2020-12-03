@@ -11,3 +11,7 @@ cargo add itertools
 xsel -b > input
 # add trailing newline if necessary
 sed -i -e '$a\' input
+
+echo 'fn read_input() -> String {
+    std::fs::read_to_string("input").unwrap()
+}' >> src/main.rs

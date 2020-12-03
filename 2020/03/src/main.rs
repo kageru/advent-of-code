@@ -1,8 +1,10 @@
+#![feature(iter_map_while)]
 #![feature(test)]
 extern crate test;
 use itertools::Itertools;
+use std::iter;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Tile {
     Free,
     Tree,
@@ -32,22 +34,20 @@ fn parse_input(raw: &str) -> Forest {
 }
 
 fn count_all_paths(forest: &Forest) -> usize {
-    STEP_RIGHT.iter().zip(STEP_DOWN.iter())
+    STEP_RIGHT
+        .iter()
+        .zip(STEP_DOWN.iter())
         .map(|(&r, &d)| count_trees(forest, r, d))
         .product()
 }
 
 fn count_trees(forest: &Forest, step_right: usize, step_down: usize) -> usize {
-    let mut x = 0;
-    let mut y = 0;
-    let mut trees = 0;
-    let width = forest[0].len();
-    while y < forest.len() {
-        trees += (forest[y][x] == Tile::Tree) as usize;
-        y += step_down;
-        x = (x + step_right) % width;
-    }
-    return trees;
+    iter::successors(Some((step_down, step_right)), |(y, x)| {
+        Some((y + step_down, (x + step_right) % forest[0].len()))
+    })
+    .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
+    .filter(|&t| t == Tile::Tree)
+    .count()
 }
 
 fn main() {
@@ -77,18 +77,12 @@ mod tests {
     #[test]
     fn part1_test() {
         let forest = parse_input(INPUT);
-        assert_eq!(
-            count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]),
-            7
-        );
+        assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
     }
 
     #[test]
     fn part2_test() {
         let forest = parse_input(INPUT);
-        assert_eq!(
-            count_all_paths(&forest),
-            336
-        );
+        assert_eq!(count_all_paths(&forest), 336);
     }
 }
