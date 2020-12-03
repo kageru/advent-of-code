@@ -5,6 +5,7 @@ mkdir "$today"
 cd "$today"
 cargo init --name "day$today"
 echo 'Initialized cargo project'
+cargo add itertools
 
 # this assumes that your puzzle input is already in your clipboard
 xsel -b > input
