@@ -43,10 +43,17 @@ fn count_all_paths(forest: &Forest) -> usize {
 }
 
 fn count_trees(forest: &Forest, step_right: usize, step_down: usize) -> usize {
-    iter::successors(Some((0, 0)), |(y, x)| Some((y + step_down, (x + step_right) % forest[0].len())))
-        .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
-        .filter(|&t| t == Tile::Tree)
-        .count()
+    iter::successors(Some((0, 0)), |(y, x)| {
+        Some((
+            y + step_down,
+            Some(x + step_right)
+                .filter(|&it| it < forest[0].len())
+                .unwrap_or((x + step_right) - forest[0].len()),
+        ))
+    })
+    .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
+    .filter(|&t| t == Tile::Tree)
+    .count()
 }
 
 fn main() {
@@ -82,7 +89,10 @@ mod tests {
         while y < forest.len() {
             trees += (forest[y][x] == Tile::Tree) as usize;
             y += step_down;
-            x = (x + step_right) % width;
+            x = x + step_right;
+            if x >= width {
+                x -= width;
+            }
         }
         return trees;
     }
