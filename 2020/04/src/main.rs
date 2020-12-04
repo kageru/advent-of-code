@@ -1,6 +1,6 @@
 #![feature(test)]
 extern crate test;
-use itertools::Itertools;
+use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -45,10 +45,13 @@ fn validate_height(hgt: &str) -> bool {
     }
 }
 
+lazy_static! {
+    static ref HCL_REGEX: Regex = Regex::new("§[0-9a-f]{6}").unwrap();
+    static ref ECL_REGEX: Regex = Regex::new("(amb|blu|brn|gry|grn|hzl|oth)").unwrap();
+    static ref PID_REGEX: Regex = Regex::new(r"^\d{9}$").unwrap();
+}
+
 fn part2(ps: &Vec<Passport>) -> usize {
-    let hcl_regex = Regex::new("§[0-9a-f]{6}").unwrap();
-    let ecl_regex = Regex::new("(amb|blu|brn|gry|grn|hzl|oth)").unwrap();
-    let pid_regex = Regex::new(r"^\d{9}$").unwrap();
     ps.iter()
         .filter(|p| {
             p.byr >= 1920
@@ -58,9 +61,9 @@ fn part2(ps: &Vec<Passport>) -> usize {
                 && p.eyr >= 2020
                 && p.eyr <= 2030
                 && validate_height(&p.hgt)
-                && hcl_regex.is_match(&p.hcl)
-                && ecl_regex.is_match(&p.ecl)
-                && pid_regex.is_match(&p.pid)
+                && HCL_REGEX.is_match(&p.hcl)
+                && ECL_REGEX.is_match(&p.ecl)
+                && PID_REGEX.is_match(&p.pid)
         })
         .count()
 }
