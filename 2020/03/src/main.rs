@@ -14,13 +14,15 @@ type Forest = Vec<Vec<Tile>>;
 
 const STEP_RIGHT: [usize; 5] = [1, 3, 5, 7, 1];
 const STEP_DOWN: [usize; 5] = [1, 1, 1, 1, 2];
+const TREE: u8 = '#' as u8;
+const FREE: u8 = '.' as u8;
 
-impl From<char> for Tile {
+impl From<u8> for Tile {
     #[inline]
-    fn from(c: char) -> Self {
-        match c {
-            '.' => Tile::Free,
-            '#' => Tile::Tree,
+    fn from(b: u8) -> Self {
+        match b {
+            FREE => Tile::Free,
+            TREE => Tile::Tree,
             _ => unreachable!(),
         }
     }
@@ -31,7 +33,7 @@ fn read_input() -> String {
 }
 
 fn parse_input(raw: &str) -> Forest {
-    raw.lines().map(|l| l.chars().map_into().collect()).collect()
+    raw.lines().map(|l| l.bytes().map_into().collect()).collect()
 }
 
 fn count_all_paths(forest: &Forest) -> usize {
@@ -48,7 +50,7 @@ fn count_trees(forest: &Forest, step_right: usize, step_down: usize) -> usize {
             y + step_down,
             Some(x + step_right)
                 .filter(|&it| it < forest[0].len())
-                .unwrap_or((x + step_right) - forest[0].len()),
+                .unwrap_or_else(||(x + step_right) - forest[0].len()),
         ))
     })
     .map_while(|(y, x)| forest.get(y).map(|r| r[x]))
@@ -89,10 +91,9 @@ mod tests {
         while y < forest.len() {
             trees += (forest[y][x] == Tile::Tree) as usize;
             y += step_down;
-            x = x + step_right;
-            if x >= width {
-                x -= width;
-            }
+            x += step_right;
+            // branch-free version of if x >= width { x -= width }
+            x -= width * ((x >= width) as usize);
         }
         return trees;
     }
