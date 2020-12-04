@@ -14,8 +14,8 @@ type Forest = Vec<Vec<Tile>>;
 
 const STEP_RIGHT: [usize; 5] = [1, 3, 5, 7, 1];
 const STEP_DOWN: [usize; 5] = [1, 1, 1, 1, 2];
-const TREE: u8 = '#' as u8;
-const FREE: u8 = '.' as u8;
+const TREE: u8 = b'#';
+const FREE: u8 = b'.';
 
 impl From<u8> for Tile {
     #[inline]
@@ -95,7 +95,7 @@ mod tests {
             // branch-free version of if x >= width { x -= width }
             x -= width * ((x >= width) as usize);
         }
-        return trees;
+        trees
     }
 
     #[test]

@@ -51,7 +51,7 @@ lazy_static! {
     static ref PID_REGEX: Regex = Regex::new(r"^\d{9}$").unwrap();
 }
 
-fn part2(ps: &Vec<Passport>) -> usize {
+fn part2(ps: &[Passport]) -> usize {
     ps.iter()
         .filter(|p| {
             p.byr >= 1920

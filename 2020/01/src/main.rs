@@ -10,7 +10,7 @@ fn read_input() -> Vec<usize> {
         .collect()
 }
 
-fn part1(input: &Vec<usize>) -> usize {
+fn part1(input: &[usize]) -> usize {
     input
         .iter()
         .tuple_combinations()
@@ -18,7 +18,7 @@ fn part1(input: &Vec<usize>) -> usize {
         .unwrap()
 }
 
-fn part2(input: &Vec<usize>) -> usize {
+fn part2(input: &[usize]) -> usize {
     let mut p2_table = [None; 2020];
     for (&a, &b) in input.iter().tuple_combinations() {
         if a + b < 2020 {
@@ -26,7 +26,7 @@ fn part2(input: &Vec<usize>) -> usize {
         }
     }
     let (a, b) = input.iter().find_map(|x| p2_table[2020 - x]).unwrap();
-    return a * b * (2020 - a - b);
+    a * b * (2020 - a - b)
 }
 
 fn main() {
