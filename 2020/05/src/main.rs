@@ -1,22 +1,50 @@
 #![feature(test)]
 extern crate test;
+use std::collections::HashSet;
 
-#[derive(Debug, PartialEq)]
+const NUM_ROWS: usize = 128;
+const NUM_COLS: usize = 8;
+
+#[derive(Debug, PartialEq, Hash, Eq)]
 struct Position {
     row: usize,
     col: usize,
 }
 
 fn get_position(pass: &str) -> Position {
-    unimplemented!();
+    Position {
+        row: pass[0..7]
+            .chars()
+            .zip(1..)
+            .filter(|(c, _)| *c == 'B')
+            .fold(0, |acc, (_, n)| acc + (NUM_ROWS >> n)),
+        col: pass[7..]
+            .chars()
+            .zip(1..)
+            .filter(|(c, _)| *c == 'R')
+            .fold(0, |acc, (_, n)| acc + (NUM_COLS >> n)),
+    }
 }
 
 fn calculate_id(p: &Position) -> usize {
-    unimplemented!();
+    p.row * 8 + p.col
 }
 
 fn main() {
-    println!("Hello, world!");
+    let positions: HashSet<_> = read_input().lines().map(get_position).map(|p| calculate_id(&p)).collect();
+    let p1 = positions.iter().max().unwrap();
+    println!("Part 1: {}", p1);
+
+    let p2 = (1..NUM_ROWS - 1)
+        .flat_map(|row| {
+            (0..NUM_COLS)
+                .map(|col| calculate_id(&Position { row, col }))
+                .filter(|id| !positions.contains(&id) && positions.contains(&(id - 1)) && positions.contains(&(id + 1)))
+                .collect::<Vec<_>>()
+        })
+        .next()
+        .unwrap();
+    println!("Part 2: {}", p2);
 }
 
 fn read_input() -> String {
