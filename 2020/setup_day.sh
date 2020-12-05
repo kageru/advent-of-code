@@ -14,4 +14,11 @@ sed -i -e '$a\' input
 
 echo 'fn read_input() -> String {
     std::fs::read_to_string("input").unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::black_box;
+
 }' >> src/main.rs
