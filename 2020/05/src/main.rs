@@ -1,49 +1,51 @@
-#![feature(test)]
+#![feature(test, map_first_last)]
 extern crate test;
-use std::collections::HashSet;
+use itertools::Itertools;
+use std::collections::BTreeSet;
 
 const NUM_ROWS: usize = 128;
 const NUM_COLS: usize = 8;
 
-#[derive(Debug, PartialEq, Hash, Eq)]
+#[derive(Debug, PartialEq)]
 struct Position {
     row: usize,
     col: usize,
 }
 
+#[inline]
 fn get_position(pass: &str) -> Position {
     Position {
-        row: pass[0..7]
-            .chars()
-            .zip(1..)
-            .filter(|(c, _)| *c == 'B')
-            .fold(0, |acc, (_, n)| acc + (NUM_ROWS >> n)),
-        col: pass[7..]
-            .chars()
-            .zip(1..)
-            .filter(|(c, _)| *c == 'R')
-            .fold(0, |acc, (_, n)| acc + (NUM_COLS >> n)),
+        row: find_spot(&pass[0..7], 'B', NUM_ROWS),
+        col: find_spot(&pass[7..], 'R', NUM_COLS),
     }
 }
 
+fn find_spot(s: &str, needle: char, max: usize) -> usize {
+    s.chars()
+        .zip(1..)
+        .filter(|(c, _)| *c == needle)
+        .fold(0, |acc, (_, n)| acc + (max >> n))
+}
+
+#[inline]
 fn calculate_id(p: &Position) -> usize {
     p.row * 8 + p.col
 }
 
+fn collect_ids(s: &str) -> BTreeSet<usize> {
+    s.lines().map(get_position).map(|p| calculate_id(&p)).collect()
+}
+
+fn find_missing(ids: &BTreeSet<usize>) -> usize {
+    ids.iter().tuple_windows().find(|(&a, &b)| b - a == 2).unwrap().0 + 1
+}
+
 fn main() {
-    let positions: HashSet<_> = read_input().lines().map(get_position).map(|p| calculate_id(&p)).collect();
-    let p1 = positions.iter().max().unwrap();
+    let ids = collect_ids(&read_input());
+    let p1 = ids.last().unwrap();
     println!("Part 1: {}", p1);
 
-    let p2 = (1..NUM_ROWS - 1)
-        .flat_map(|row| {
-            (0..NUM_COLS)
-                .map(|col| calculate_id(&Position { row, col }))
-                .filter(|id| !positions.contains(&id) && positions.contains(&(id - 1)) && positions.contains(&(id + 1)))
-                .collect::<Vec<_>>()
-        })
-        .next()
-        .unwrap();
+    let p2 = find_missing(&ids);
     println!("Part 2: {}", p2);
 }
 
@@ -80,5 +82,17 @@ mod tests {
         assert_eq!(calculate_id(&POS_1), SID_1);
         assert_eq!(calculate_id(&POS_2), SID_2);
         assert_eq!(calculate_id(&POS_3), SID_3);
+    }
+
+    #[bench]
+    fn bench_part_1(b: &mut test::Bencher) {
+        let raw = read_input();
+        b.iter(|| assert_eq!(collect_ids(black_box(&raw)).last(), Some(&913)))
+    }
+
+    #[bench]
+    fn bench_part_2(b: &mut test::Bencher) {
+        let ids = collect_ids(&read_input());
+        b.iter(|| assert_eq!(find_missing(black_box(&ids)), 717))
     }
 }
