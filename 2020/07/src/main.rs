@@ -47,9 +47,9 @@ fn read_input() -> String {
     std::fs::read_to_string("input").unwrap()
 }
 
-fn part1<'a>(bags: &[Bag], color: &str, seen: &'a mut HashSet<String>) -> &'a mut HashSet<String> {
+fn part1<'a, 'b>(bags: &'b [Bag], color: &str, seen: &'a mut HashSet<&'b str>) -> &'a mut HashSet<&'b str> {
     for bag in bags.iter().filter(|bag| bag.contents.iter().any(|b| b.color == color)) {
-        seen.insert(bag.color.clone());
+        seen.insert(&bag.color);
         part1(bags, &bag.color, seen);
     }
     seen
