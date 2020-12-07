@@ -2,10 +2,12 @@
 use std::collections::HashSet;
 extern crate test;
 
+const COLOR: &str = "shiny gold";
+
 fn main() {
     let input = parse_input(&read_input());
-    println!("Part 1: {}", part1(&input, "shiny gold", &mut HashSet::new()).len());
-    println!("Part 2: {}", part2(&input, "shiny gold"));
+    println!("Part 1: {}", part1(&input, COLOR, &mut HashSet::new()).len());
+    println!("Part 2: {}", part2(&input, COLOR));
 }
 
 #[derive(Debug)]
@@ -90,7 +92,7 @@ dotted black bags contain no other bags.";
     #[test]
     fn part1_test() {
         let input = parse_input(TEST_INPUT);
-        assert_eq!(part1(&input, "shiny gold", &mut HashSet::new()).len(), 4);
+        assert_eq!(part1(&input, COLOR, &mut HashSet::new()).len(), 4);
     }
 
     const TEST_INPUT_2: &str = "shiny gold bags contain 2 dark red bags.
@@ -104,9 +106,9 @@ dark violet bags contain no other bags.";
     #[test]
     fn part2_test() {
         let input = parse_input(TEST_INPUT);
-        assert_eq!(part2(&input, "shiny gold"), 32);
+        assert_eq!(part2(&input, COLOR), 32);
         let input = parse_input(TEST_INPUT_2);
-        assert_eq!(part2(&input, "shiny gold"), 126);
+        assert_eq!(part2(&input, COLOR), 126);
     }
 
     #[bench]
@@ -118,12 +120,12 @@ dark violet bags contain no other bags.";
     #[bench]
     fn bench_part1(b: &mut test::Bencher) {
         let bags = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&bags), "shiny gold", &mut HashSet::new()).len(), 226))
+        b.iter(|| assert_eq!(part1(black_box(&bags), COLOR, &mut HashSet::new()).len(), 226))
     }
 
     #[bench]
     fn bench_part2(b: &mut test::Bencher) {
         let bags = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&bags), "shiny gold"), 9569))
+        b.iter(|| assert_eq!(part2(black_box(&bags), COLOR), 9569))
     }
 }
