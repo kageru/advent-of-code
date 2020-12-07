@@ -1,7 +1,6 @@
 #![feature(test)]
 use std::collections::HashSet;
 extern crate test;
-use itertools::Itertools;
 
 fn main() {
     let input = parse_input(&read_input());
@@ -49,7 +48,7 @@ fn read_input() -> String {
 }
 
 fn part1<'a>(bags: &[Bag], color: &str, seen: &'a mut HashSet<String>) -> &'a mut HashSet<String> {
-    for bag in bags.iter().filter(|bag| bag.contents.iter().find(|b| b.color == color).is_some()) {
+    for bag in bags.iter().filter(|bag| bag.contents.iter().any(|b| b.color == color)) {
         seen.insert(bag.color.clone());
         part1(bags, &bag.color, seen);
     }
@@ -69,7 +68,7 @@ fn parse_input(s: &str) -> Vec<Bag> {
         .replace(" bag", "")
         .replace('.', "")
         .lines()
-        .map_into()
+        .map(Bag::from)
         .collect()
 }
 
