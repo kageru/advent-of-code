@@ -5,7 +5,7 @@ use itertools::Itertools;
 
 fn main() {
     let input = parse_input(&read_input());
-    println!("Part 1: {}", part1(&input, "shiny gold").len());
+    println!("Part 1: {}", part1(&input, "shiny gold", &mut HashSet::new()).len());
     println!("Part 2: {}", part2(&input, "shiny gold"));
 }
 
@@ -48,16 +48,12 @@ fn read_input() -> String {
     std::fs::read_to_string("input").unwrap()
 }
 
-fn part1(bags: &[Bag], color: &str) -> HashSet<String> {
-    let mut colors = HashSet::new();
+fn part1<'a>(bags: &[Bag], color: &str, seen: &'a mut HashSet<String>) -> &'a mut HashSet<String> {
     for bag in bags.iter().filter(|bag| bag.contents.iter().find(|b| b.color == color).is_some()) {
-        println!("Containing bag: {}", &bag.color);
-        colors.insert(bag.color.clone());
-        for c in part1(bags, &bag.color) {
-            colors.insert(c.to_owned());
-        }
+        seen.insert(bag.color.clone());
+        part1(bags, &bag.color, seen);
     }
-    colors
+    seen
 }
 
 fn part2(bags: &[Bag], color: &str) -> usize {
@@ -95,7 +91,7 @@ dotted black bags contain no other bags.";
     #[test]
     fn part1_test() {
         let input = parse_input(TEST_INPUT);
-        assert_eq!(part1(&input, "shiny gold").len(), 4);
+        assert_eq!(part1(&input, "shiny gold", &mut HashSet::new()).len(), 4);
     }
 
     const TEST_INPUT_2: &str = "shiny gold bags contain 2 dark red bags.
@@ -123,7 +119,7 @@ dark violet bags contain no other bags.";
     #[bench]
     fn bench_part1(b: &mut test::Bencher) {
         let bags = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&bags), "shiny gold").len(), 226))
+        b.iter(|| assert_eq!(part1(black_box(&bags), "shiny gold", &mut HashSet::new()).len(), 226))
     }
 
     #[bench]
