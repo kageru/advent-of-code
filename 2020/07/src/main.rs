@@ -1,6 +1,7 @@
 #![feature(test)]
 use std::collections::HashSet;
 extern crate test;
+use std::env;
 
 const COLOR: &str = "shiny gold";
 
@@ -46,7 +47,7 @@ impl From<&str> for Bag {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string("input").unwrap()
+    std::fs::read_to_string(env::args().nth(1).unwrap_or(String::from("input"))).unwrap()
 }
 
 fn part1<'a, 'b>(bags: &'b [Bag], color: &str, seen: &'a mut HashSet<&'b str>) -> &'a mut HashSet<&'b str> {
@@ -66,8 +67,8 @@ fn part2(bags: &[Bag], color: &str) -> usize {
 
 fn parse_input(s: &str) -> Vec<Bag> {
     s.replace(" bags contain", ",")
-        .replace(" bags", "")
-        .replace(" bag", "")
+        .replace(" bags,", ",")
+        .replace(" bag,", ",")
         .replace('.', "")
         .lines()
         .map(Bag::from)
