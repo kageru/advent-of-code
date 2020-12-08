@@ -61,7 +61,7 @@ fn part2(commands: &Vec<Command>, seen: &mut Vec<bool>, mut index: i32, mut acc:
         seen[index as usize] = true;
         match commands[index as usize] {
             Command::NOP(x) => {
-                if !changed {
+                if !changed && index > -x {
                     if let Some(n) = part2(commands, seen, index + x, acc, true) {
                         return Some(n);
                     }
