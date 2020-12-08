@@ -2,7 +2,7 @@
 #![feature(test)]
 extern crate test;
 use itertools::Itertools;
-use std::iter;
+use std::{env, iter};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Tile {
@@ -29,7 +29,7 @@ impl From<u8> for Tile {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string("input").unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day03"))).unwrap()
 }
 
 fn parse_input(raw: &str) -> Forest {
@@ -50,7 +50,7 @@ fn count_trees(forest: &Forest, step_right: usize, step_down: usize) -> usize {
             y + step_down,
             Some(x + step_right)
                 .filter(|&it| it < forest[0].len())
-                .unwrap_or_else(||(x + step_right) - forest[0].len()),
+                .unwrap_or_else(|| (x + step_right) - forest[0].len()),
         ))
     })
     .map_while(|(y, x)| forest.get(y).map(|r| r[x]))

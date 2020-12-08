@@ -3,6 +3,7 @@ extern crate test;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::env;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Passport {
@@ -17,7 +18,7 @@ struct Passport {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string("input").unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day04"))).unwrap()
 }
 
 /// When I first saw the input and puzzle, I thought

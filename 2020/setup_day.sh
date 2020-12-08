@@ -1,16 +1,10 @@
 #!/bin/sh
 
 today=$(date +%d)
-mkdir "$today"
-cd "$today"
-cargo init --name "day$today"
-echo 'Initialized cargo project'
-cargo add itertools
-
 # this assumes that your puzzle input is already in your clipboard
-xsel -b > input
+xsel -b > inputs/$today
 # add trailing newline if necessary
-sed -i -e '$a\' input
+sed -i -e '$a\' inputs/$today
 
 echo '
 #![feature(test)]
@@ -18,7 +12,7 @@ extern crate test;
 use std::env;
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("input"))).unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day'$today'"))).unwrap()
 }
 
 fn parse_input(raw: &str) -> Vec<!> {
@@ -38,4 +32,4 @@ mod tests {
 
     const TEST_INPUT: &str = "";
 
-}' > src/main.rs
+}' > src/day$today.rs

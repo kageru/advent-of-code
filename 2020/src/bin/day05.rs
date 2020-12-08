@@ -1,7 +1,7 @@
 #![feature(test, map_first_last)]
 extern crate test;
 use itertools::Itertools;
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, env};
 
 const NUM_ROWS: usize = 128;
 const NUM_COLS: usize = 8;
@@ -50,7 +50,7 @@ fn main() {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string("input").unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day05"))).unwrap()
 }
 
 #[cfg(test)]

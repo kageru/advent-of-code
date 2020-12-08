@@ -1,9 +1,10 @@
-#![feature(test,bool_to_option)]
+#![feature(test, bool_to_option)]
 extern crate test;
 use itertools::Itertools;
+use std::env;
 
 fn read_input() -> Vec<usize> {
-    std::fs::read_to_string("input")
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day01")))
         .unwrap()
         .lines()
         .filter_map(|l| l.parse().ok())

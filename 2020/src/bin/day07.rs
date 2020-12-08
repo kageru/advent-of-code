@@ -1,7 +1,6 @@
 #![feature(test)]
-use std::collections::HashSet;
+use std::{collections::HashSet, env};
 extern crate test;
-use std::env;
 
 const COLOR: &str = "shiny gold";
 
@@ -47,7 +46,7 @@ impl From<&str> for Bag {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).unwrap_or(String::from("input"))).unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day07"))).unwrap()
 }
 
 fn part1<'a, 'b>(bags: &'b [Bag], color: &str, seen: &'a mut HashSet<&'b str>) -> &'a mut HashSet<&'b str> {

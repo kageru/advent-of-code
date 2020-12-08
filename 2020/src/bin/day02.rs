@@ -1,7 +1,7 @@
 #![feature(test)]
 extern crate test;
 use itertools::Itertools;
-use std::ops::RangeInclusive;
+use std::{env, ops::RangeInclusive};
 use text_io::scan;
 
 #[derive(Debug)]
@@ -37,12 +37,16 @@ impl PasswordVerification {
         let pw = self.password.as_bytes();
         let (first, second) = (*self.required_quantity.start(), *self.required_quantity.end());
         // 1-based indexing :reeeeeee:
-        (pw[first-1] == self.required_char as u8) ^ (pw[second-1] == self.required_char as u8)
+        (pw[first - 1] == self.required_char as u8) ^ (pw[second - 1] == self.required_char as u8)
     }
 }
 
 fn read_input() -> Vec<PasswordVerification> {
-    std::fs::read_to_string("input").unwrap().lines().map_into().collect()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day02")))
+        .unwrap()
+        .lines()
+        .map_into()
+        .collect()
 }
 
 fn main() {
@@ -71,11 +75,7 @@ mod tests {
     #[test]
     fn test_part2() {
         let pws: Vec<PasswordVerification> = TEST_INPUT.lines().map_into().collect_vec();
-        let pws = pws
-            .into_iter()
-            .filter(|pw| pw.is_valid_part2())
-            .map(|pw| pw.password)
-            .collect_vec();
+        let pws = pws.into_iter().filter(|pw| pw.is_valid_part2()).map(|pw| pw.password).collect_vec();
         assert_eq!(pws, vec![String::from("abcde")]);
     }
 }

@@ -1,7 +1,7 @@
 #![feature(test)]
 extern crate test;
 use std::{
-    collections::HashSet, ops::{BitAnd, BitOr}
+    collections::HashSet, env, ops::{BitAnd, BitOr}
 };
 
 fn main() {
@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string("input").unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day06"))).unwrap()
 }
 
 fn parse_input(raw: &str) -> Vec<Vec<HashSet<char>>> {
