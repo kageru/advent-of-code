@@ -1,7 +1,7 @@
-#![feature(test, map_first_last)]
+#![feature(test, map_first_last,binary_heap_into_iter_sorted)]
 extern crate test;
 use itertools::Itertools;
-use std::{collections::BTreeSet, env};
+use std::{collections::BinaryHeap, env};
 
 const NUM_ROWS: usize = 128;
 const NUM_COLS: usize = 8;
@@ -32,20 +32,20 @@ fn calculate_id(p: &Position) -> usize {
     p.row * 8 + p.col
 }
 
-fn collect_ids(s: &str) -> BTreeSet<usize> {
+fn collect_ids(s: &str) -> BinaryHeap<usize> {
     s.lines().map(get_position).map(|p| calculate_id(&p)).collect()
 }
 
-fn find_missing(ids: &BTreeSet<usize>) -> usize {
-    ids.iter().tuple_windows().find(|(&a, &b)| b - a == 2).unwrap().0 + 1
+fn find_missing(ids: BinaryHeap<usize>) -> usize {
+    ids.into_iter_sorted().tuple_windows().find(|(a, b)| a - b == 2).unwrap().0 - 1
 }
 
 fn main() {
     let ids = collect_ids(&read_input());
-    let p1 = ids.last().unwrap();
+    let p1 = ids.peek().unwrap();
     println!("Part 1: {}", p1);
 
-    let p2 = find_missing(&ids);
+    let p2 = find_missing(ids);
     println!("Part 2: {}", p2);
 }
 
@@ -87,12 +87,12 @@ mod tests {
     #[bench]
     fn bench_part_1(b: &mut test::Bencher) {
         let raw = read_input();
-        b.iter(|| assert_eq!(collect_ids(black_box(&raw)).last(), Some(&913)))
+        b.iter(|| assert_eq!(collect_ids(black_box(&raw)).peek(), Some(&913)))
     }
 
     #[bench]
     fn bench_part_2(b: &mut test::Bencher) {
         let ids = collect_ids(&read_input());
-        b.iter(|| assert_eq!(find_missing(black_box(&ids)), 717))
+        b.iter(|| assert_eq!(find_missing(black_box(ids.clone())), 717))
     }
 }
