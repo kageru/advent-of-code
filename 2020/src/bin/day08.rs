@@ -27,7 +27,7 @@ fn parse_input(raw: &str) -> Vec<Command> {
 fn main() {
     let commands = parse_input(&read_input());
     println!("Part 1: {}", part1(&commands));
-    println!("Part 2: {}", part2(&commands, vec![false; commands.len()], 0, 0, false).unwrap());
+    println!("Part 2: {}", part2(&commands, &mut vec![false; commands.len()], 0, 0, false).unwrap());
 }
 
 fn part1(commands: &Vec<Command>) -> i32 {
@@ -50,19 +50,19 @@ fn part1(commands: &Vec<Command>) -> i32 {
     }
 }
 
-fn part2(commands: &Vec<Command>, mut seen: Vec<bool>, mut index: i32, mut acc: i32, changed: bool) -> Option<i32> {
+fn part2(commands: &Vec<Command>, seen: &mut Vec<bool>, mut index: i32, mut acc: i32, changed: bool) -> Option<i32> {
     loop {
         if index as usize >= commands.len() {
             return Some(acc);
         }
-        if seen[index as usize] {
+        if changed && seen[index as usize] {
             return None;
         }
         seen[index as usize] = true;
         match commands[index as usize] {
             Command::NOP(x) => {
                 if !changed {
-                    if let Some(n) = part2(commands, seen.clone(), index + x, acc, true) {
+                    if let Some(n) = part2(commands, seen, index + x, acc, true) {
                         return Some(n);
                     }
                 }
@@ -75,7 +75,7 @@ fn part2(commands: &Vec<Command>, mut seen: Vec<bool>, mut index: i32, mut acc: 
             Command::JMP(x) => {
                 // is there no way to have regular if and if let in one statement?
                 if !changed {
-                    if let Some(n) = part2(commands, seen.clone(), index + 1, acc, true) {
+                    if let Some(n) = part2(commands, seen, index + 1, acc, true) {
                         return Some(n);
                     }
                 }
@@ -109,7 +109,7 @@ acc +6";
     #[test]
     fn part2_test() {
         let commands = parse_input(TEST_INPUT);
-        assert_eq!(part2(&commands, vec![false; commands.len()], 0, 0, false), Some(8));
+        assert_eq!(part2(&commands, &mut vec![false; commands.len()], 0, 0, false), Some(8));
     }
 
     #[bench]
@@ -121,7 +121,7 @@ acc +6";
     #[bench]
     fn bench_part2(b: &mut test::Bencher) {
         let commands = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&commands), vec![false; commands.len()], 0, 0, false), Some(1033)));
+        b.iter(|| assert_eq!(part2(black_box(&commands), &mut vec![false; commands.len()], 0, 0, false), Some(1033)));
     }
 
     #[bench]
