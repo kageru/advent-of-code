@@ -18,10 +18,10 @@ extern crate test;
 use std::env;
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).unwrap_or(String::from("input"))).unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("input"))).unwrap()
 }
 
-fn parse_input(raw: &str) -> ! {
+fn parse_input(raw: &str) -> Vec<!> {
     unimplemented!()
 }
 
@@ -38,4 +38,4 @@ mod tests {
 
     const TEST_INPUT: &str = "";
 
-}' >> src/main.rs
+}' > src/main.rs
