@@ -80,6 +80,7 @@ mod tests {
     use super::*;
     use aoc2020::*;
     use test::black_box;
+    use paste::paste;
 
     const TEST_INPUT: &str = "light red bags contain 1 bright white bag, 2 muted yellow bags.
 dark orange bags contain 3 bright white bags, 4 muted yellow bags.
@@ -91,12 +92,6 @@ vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
 faded blue bags contain no other bags.
 dotted black bags contain no other bags.";
 
-    #[test]
-    fn part1_test() {
-        let input = parse_input(TEST_INPUT);
-        assert_eq!(part1(&input, COLOR, &mut HashSet::new()).len(), 4);
-    }
-
     const TEST_INPUT_2: &str = "shiny gold bags contain 2 dark red bags.
 dark red bags contain 2 dark orange bags.
 dark orange bags contain 2 dark yellow bags.
@@ -104,6 +99,12 @@ dark yellow bags contain 2 dark green bags.
 dark green bags contain 2 dark blue bags.
 dark blue bags contain 2 dark violet bags.
 dark violet bags contain no other bags.";
+
+    #[test]
+    fn part1_test() {
+        let input = parse_input(TEST_INPUT);
+        assert_eq!(part1(&input, COLOR, &mut HashSet::new()).len(), 4);
+    }
 
     #[test]
     fn part2_test() {
@@ -121,9 +122,5 @@ dark violet bags contain no other bags.";
         b.iter(|| assert_eq!(part1(black_box(&bags), COLOR, &mut HashSet::new()).len(), 226))
     }
 
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let bags = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&bags), COLOR), 9569))
-    }
+    bench!(part2(COLOR) == 9569);
 }

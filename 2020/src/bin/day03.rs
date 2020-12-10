@@ -101,37 +101,13 @@ mod tests {
         trees
     }
 
-    test!(count_all_paths == 336);
-    bench!(count_all_paths == 4723283400);
+
+    test!(count_trees(STEP_RIGHT[1], STEP_DOWN[1]) == 7);
+    test!(count_trees_imperative(STEP_RIGHT[1], STEP_DOWN[1]) == 7);
+    test!(count_all_paths() == 336);
+
+    bench!(count_all_paths() == 4723283400);
+    bench!(count_trees(STEP_RIGHT[1], STEP_DOWN[1]) == 187);
+    bench!(count_trees_imperative(STEP_RIGHT[1], STEP_DOWN[1]) == 187);
     bench_input!(len == 323);
-
-    #[test]
-    fn part1_test_functional() {
-        let forest = parse_input(TEST_INPUT);
-        assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
-    }
-
-    #[test]
-    fn part1_test_imperative() {
-        let forest = parse_input(TEST_INPUT);
-        assert_eq!(count_trees_imperative(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
-    }
-
-    #[bench]
-    fn bench_part_1_functional(b: &mut test::Bencher) {
-        let forest = parse_input(&read_input());
-        b.iter(|| assert_eq!(count_trees(black_box(&forest), STEP_RIGHT[1], STEP_DOWN[1]), 187));
-    }
-
-    #[bench]
-    fn bench_part_1_imperative(b: &mut test::Bencher) {
-        let forest = parse_input(&read_input());
-        b.iter(|| assert_eq!(count_trees_imperative(black_box(&forest), STEP_RIGHT[1], STEP_DOWN[1]), 187));
-    }
-
-    #[bench]
-    fn bench_part_2(b: &mut test::Bencher) {
-        let forest = parse_input(&read_input());
-        b.iter(|| assert_eq!(count_all_paths(black_box(&forest)), 4723283400));
-    }
 }

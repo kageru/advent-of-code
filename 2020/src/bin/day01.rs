@@ -43,6 +43,6 @@ mod tests {
     use paste::paste;
     use test::black_box;
 
-    bench!(part1 == 731731);
-    bench!(part2 == 116115990);
+    bench!(part1() == 731731);
+    bench!(part2() == 116115990);
 }

@@ -76,7 +76,7 @@ ldhc";
     }
 
     bench_input!(len == 490);
-    test!(part1 == 11);
-    bench!(part1 == 6735);
-    bench!(part2 == 3221);
+    test!(part1() == 11);
+    bench!(part1() == 6735);
+    bench!(part2() == 3221);
 }

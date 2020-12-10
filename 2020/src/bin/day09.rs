@@ -54,6 +54,8 @@ fn main() {
 mod tests {
     use super::*;
     use test::black_box;
+    use aoc2020::*;
+    use paste::paste;
 
     const TEST_INPUT: &str = "35
 20
@@ -76,27 +78,8 @@ mod tests {
 309
 576";
 
-    #[test]
-    fn part1_test() {
-        let input = parse_input(TEST_INPUT);
-        assert_eq!(part1(&input, 5), 127);
-    }
-
-    #[test]
-    fn part2_test() {
-        let input = parse_input(TEST_INPUT);
-        assert_eq!(part2(&input, 127), 62);
-    }
-
-    #[bench]
-    fn bench_part1(b: &mut test::Bencher) {
-        let input = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&input), 25), 393911906));
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let input = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&input), 393911906), 59341885));
-    }
+    test!(part1(5) == 127);
+    test!(part2(127) == 62);
+    bench!(part1(25) == 393911906);
+    bench!(part2(393911906) == 59341885);
 }

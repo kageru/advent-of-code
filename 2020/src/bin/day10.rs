@@ -86,9 +86,9 @@ mod tests {
 10
 3";
 
-    test!(part1 == (22, 10));
-    test!(part2 == 19208);
-    bench!(part1 == (69, 24));
-    bench!(part2 == 56693912375296);
+    test!(part1() == (22, 10));
+    test!(part2() == 19208);
+    bench!(part1() == (69, 24));
+    bench!(part2() == 56693912375296);
     bench_input!(len == 93);
 }

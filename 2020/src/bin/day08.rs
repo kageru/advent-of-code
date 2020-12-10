@@ -92,6 +92,8 @@ fn part2(commands: &Vec<Command>, seen: &mut Vec<bool>, mut index: i32, mut acc:
 mod tests {
     use super::*;
     use test::black_box;
+    use aoc2020::*;
+    use paste::paste;
 
     const TEST_INPUT: &str = "nop +0
 acc +1
@@ -103,38 +105,9 @@ acc +1
 jmp -4
 acc +6";
 
-    #[test]
-    fn part1_test() {
-        let commands = parse_input(TEST_INPUT);
-        assert_eq!(part1(&commands), 5);
-    }
-
-    #[test]
-    fn part2_test() {
-        let commands = parse_input(TEST_INPUT);
-        assert_eq!(part2(&commands, &mut vec![false; commands.len()], 0, 0, false), Some(8));
-    }
-
-    #[bench]
-    fn bench_part1(b: &mut test::Bencher) {
-        let commands = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&commands)), 1317));
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let commands = parse_input(&read_input());
-        b.iter(|| {
-            assert_eq!(
-                part2(black_box(&commands), &mut vec![false; commands.len()], 0, 0, false),
-                Some(1033)
-            )
-        });
-    }
-
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let raw = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&raw)).len(), 626))
-    }
+    test!(part1() == 5);
+    test!(part2(&mut vec![false; 9], 0, 0, false) == Some(8));
+    bench!(part1() == 1317);
+    bench!(part2(&mut vec![false; 626], 0, 0, false) == Some(1033));
+    bench_input!(len == 626);
 }
