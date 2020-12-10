@@ -3,7 +3,7 @@ extern crate test;
 use itertools::Itertools;
 use std::env;
 
-fn read_input() -> Vec<usize> {
+fn read_input() -> String {
     std::fs::read_to_string(
         env::args()
             .nth(1)
@@ -11,9 +11,10 @@ fn read_input() -> Vec<usize> {
             .unwrap_or_else(|| String::from("inputs/day01")),
     )
     .unwrap()
-    .lines()
-    .filter_map(|l| l.parse().ok())
-    .collect()
+}
+
+fn parse_input(input: &str) -> Vec<usize> {
+    input.lines().filter_map(|l| l.parse().ok()).collect()
 }
 
 fn part1(input: &[usize]) -> usize {
@@ -36,7 +37,7 @@ fn part2(input: &[usize]) -> usize {
 }
 
 fn main() {
-    let input = read_input();
+    let input = parse_input(&read_input());
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }
@@ -44,17 +45,10 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::{black_box, Bencher};
+    use aoc2020::*;
+    use paste::paste;
+    use test::black_box;
 
-    #[bench]
-    fn bench_part1(b: &mut Bencher) {
-        let input = read_input();
-        b.iter(|| black_box(part1(black_box(&input))));
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut Bencher) {
-        let input = read_input();
-        b.iter(|| black_box(part2(black_box(&input))));
-    }
+    bench!(part1 == 731731);
+    bench!(part2 == 116115990);
 }

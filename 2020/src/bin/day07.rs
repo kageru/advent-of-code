@@ -83,6 +83,7 @@ fn parse_input(s: &str) -> Vec<Bag> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aoc2020::*;
     use test::black_box;
 
     const TEST_INPUT: &str = "light red bags contain 1 bright white bag, 2 muted yellow bags.
@@ -117,11 +118,7 @@ dark violet bags contain no other bags.";
         assert_eq!(part2(&input, COLOR), 126);
     }
 
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let raw = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&raw)).len(), 594))
-    }
+    bench_input!(len == 594);
 
     #[bench]
     fn bench_part1(b: &mut test::Bencher) {

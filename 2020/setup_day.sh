@@ -37,37 +37,15 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aoc2020::*;
+    use paste::paste;
     use test::black_box;
 
     const TEST_INPUT: &str = "";
 
-    #[test]
-    fn part1_test() {
-        let input = parse_input(TEST_INPUT);
-        assert_eq!(part1(&input), 0);
-    }
-
-    #[test]
-    fn part2_test() {
-        let input = parse_input(TEST_INPUT);
-        assert_eq!(part2(&input), 0);
-    }
-
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let raw = read_input();
-        b.iter(|| parse_input(black_box(&raw)))
-    }
-
-    #[bench]
-    fn bench_part1(b: &mut test::Bencher) {
-        let input = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&input)), 0));
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let input = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&input)), 0));
-    }
+    test!(part1 == 0);
+    test!(part2 == 0);
+    bench!(part1 == 0);
+    bench!(part2 == 0);
+    bench_input!(len == 0);
 }' > src/bin/day$today.rs

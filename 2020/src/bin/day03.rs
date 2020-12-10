@@ -75,9 +75,11 @@ fn main() {
 #[allow(unused)]
 mod tests {
     use super::*;
+    use aoc2020::*;
+    use paste::paste;
     use test::{self, black_box};
 
-    const INPUT: &str = "..##.......
+    const TEST_INPUT: &str = "..##.......
 #...#...#..
 .#....#..#.
 ..#.#...#.#
@@ -104,31 +106,20 @@ mod tests {
         trees
     }
 
+    test!(count_all_paths == 336);
+    bench!(count_all_paths == 4723283400);
+    bench_input!(len == 323);
+
     #[test]
     fn part1_test_functional() {
-        let forest = parse_input(INPUT);
+        let forest = parse_input(TEST_INPUT);
         assert_eq!(count_trees(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
     }
 
     #[test]
     fn part1_test_imperative() {
-        let forest = parse_input(INPUT);
+        let forest = parse_input(TEST_INPUT);
         assert_eq!(count_trees_imperative(&forest, STEP_RIGHT[1], STEP_DOWN[1]), 7);
-    }
-
-    #[test]
-    fn part2_test() {
-        let forest = parse_input(INPUT);
-        assert_eq!(count_all_paths(&forest), 336);
-    }
-
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let raw = read_input();
-        b.iter(|| {
-            let forest = parse_input(black_box(&raw));
-            assert_eq!(forest.len(), 323);
-        });
     }
 
     #[bench]

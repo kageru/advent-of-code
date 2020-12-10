@@ -35,6 +35,8 @@ fn part2(answers: &[Vec<HashSet<char>>]) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aoc2020::*;
+    use paste::paste;
     use test::black_box;
 
     const TEST_INPUT: &str = "abc
@@ -68,11 +70,6 @@ hdcl
 hldc
 ldhc";
 
-    #[test]
-    fn part1_test() {
-        assert_eq!(part1(&parse_input(TEST_INPUT)), 11);
-    }
-
     fn part2_help(answers: &[Vec<HashSet<char>>]) -> Vec<usize> {
         answers.iter().map(|v| v.iter().fold(v[0].clone(), |a, b| &a & b).len()).collect()
     }
@@ -83,21 +80,8 @@ ldhc";
         assert_eq!(part2(&parse_input(TEST_INPUT)), 6);
     }
 
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let s = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&s)).len(), 490))
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let i = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&i)), 3221))
-    }
-
-    #[bench]
-    fn bench_part1(b: &mut test::Bencher) {
-        let i = parse_input(&read_input());
-        b.iter(|| assert_eq!(part1(black_box(&i)), 6735))
-    }
+    bench_input!(len == 490);
+    test!(part1 == 11);
+    bench!(part1 == 6735);
+    bench!(part2 == 3221);
 }

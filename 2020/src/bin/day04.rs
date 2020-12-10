@@ -81,6 +81,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aoc2020::*;
+    use paste::paste;
     use test::black_box;
 
     const TEST_INPUT: &str = "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
@@ -138,15 +140,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719";
         assert_eq!(part2(&invalid), 0);
     }
 
-    #[bench]
-    fn bench_input_parsing(b: &mut test::Bencher) {
-        let raw = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&raw)).len(), 235))
-    }
-
-    #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
-        let parsed = parse_input(&read_input());
-        b.iter(|| assert_eq!(black_box(part2(&parsed)), 194))
-    }
+    bench_input!(len == 235);
+    bench!(part2 == 194);
 }
