@@ -13,7 +13,7 @@ fn read_input() -> String {
         env::args()
             .nth(1)
             .filter(|n| n != "--bench")
-            .unwrap_or(String::from("inputs/day06")),
+            .unwrap_or_else(|| String::from("inputs/day06")),
     )
     .unwrap()
 }

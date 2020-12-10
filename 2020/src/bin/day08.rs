@@ -10,7 +10,13 @@ enum Command {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day08"))).unwrap()
+    std::fs::read_to_string(
+        env::args()
+            .nth(1)
+            .filter(|n| n != "--bench")
+            .unwrap_or_else(|| String::from("inputs/day08")),
+    )
+    .unwrap()
 }
 
 fn parse_input(raw: &str) -> Vec<Command> {
@@ -27,7 +33,10 @@ fn parse_input(raw: &str) -> Vec<Command> {
 fn main() {
     let commands = parse_input(&read_input());
     println!("Part 1: {}", part1(&commands));
-    println!("Part 2: {}", part2(&commands, &mut vec![false; commands.len()], 0, 0, false).unwrap());
+    println!(
+        "Part 2: {}",
+        part2(&commands, &mut vec![false; commands.len()], 0, 0, false).unwrap()
+    );
 }
 
 fn part1(commands: &Vec<Command>) -> i32 {
@@ -121,7 +130,12 @@ acc +6";
     #[bench]
     fn bench_part2(b: &mut test::Bencher) {
         let commands = parse_input(&read_input());
-        b.iter(|| assert_eq!(part2(black_box(&commands), &mut vec![false; commands.len()], 0, 0, false), Some(1033)));
+        b.iter(|| {
+            assert_eq!(
+                part2(black_box(&commands), &mut vec![false; commands.len()], 0, 0, false),
+                Some(1033)
+            )
+        });
     }
 
     #[bench]

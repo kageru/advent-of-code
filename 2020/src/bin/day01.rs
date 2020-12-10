@@ -4,11 +4,16 @@ use itertools::Itertools;
 use std::env;
 
 fn read_input() -> Vec<usize> {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day01")))
-        .unwrap()
-        .lines()
-        .filter_map(|l| l.parse().ok())
-        .collect()
+    std::fs::read_to_string(
+        env::args()
+            .nth(1)
+            .filter(|n| n != "--bench")
+            .unwrap_or_else(|| String::from("inputs/day01")),
+    )
+    .unwrap()
+    .lines()
+    .filter_map(|l| l.parse().ok())
+    .collect()
 }
 
 fn part1(input: &[usize]) -> usize {

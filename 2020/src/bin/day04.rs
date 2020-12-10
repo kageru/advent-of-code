@@ -18,7 +18,13 @@ struct Passport {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day04"))).unwrap()
+    std::fs::read_to_string(
+        env::args()
+            .nth(1)
+            .filter(|n| n != "--bench")
+            .unwrap_or_else(|| String::from("inputs/day04")),
+    )
+    .unwrap()
 }
 
 /// When I first saw the input and puzzle, I thought
@@ -38,9 +44,9 @@ fn parse_input(s: &str) -> Vec<Passport> {
 
 fn validate_height(hgt: &str) -> bool {
     if let Some(cm) = hgt.strip_suffix("cm").and_then(|s| s.parse::<usize>().ok()) {
-        cm >= 150 && cm <= 193
+        (150..=193).contains(&cm)
     } else if let Some(inch) = hgt.strip_suffix("in").and_then(|s| s.parse::<usize>().ok()) {
-        inch >= 59 && inch <= 76
+        (59..=76).contains(&inch)
     } else {
         false
     }
@@ -55,12 +61,9 @@ lazy_static! {
 fn part2(ps: &[Passport]) -> usize {
     ps.iter()
         .filter(|p| {
-            p.byr >= 1920
-                && p.byr <= 2002
-                && p.iyr >= 2010
-                && p.iyr <= 2020
-                && p.eyr >= 2020
-                && p.eyr <= 2030
+            (1920..=2002).contains(&p.byr)
+                && (2010..=2020).contains(&p.iyr)
+                && (2020..=2030).contains(&p.eyr)
                 && validate_height(&p.hgt)
                 && HCL_REGEX.is_match(&p.hcl)
                 && ECL_REGEX.is_match(&p.ecl)

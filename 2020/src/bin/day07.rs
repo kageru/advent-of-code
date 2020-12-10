@@ -46,7 +46,13 @@ impl From<&str> for Bag {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day07"))).unwrap()
+    std::fs::read_to_string(
+        env::args()
+            .nth(1)
+            .filter(|n| n != "--bench")
+            .unwrap_or_else(|| String::from("inputs/day07")),
+    )
+    .unwrap()
 }
 
 fn part1<'a, 'b>(bags: &'b [Bag], color: &str, seen: &'a mut HashSet<&'b str>) -> &'a mut HashSet<&'b str> {
@@ -66,8 +72,8 @@ fn part2(bags: &[Bag], color: &str) -> usize {
 
 fn parse_input(s: &str) -> Vec<Bag> {
     s.replace(" bags contain", ",")
-        .replace(" bags,", ",")
-        .replace(" bag,", ",")
+        .replace(" bags", "")
+        .replace(" bag", "")
         .replace('.', "")
         .lines()
         .map(Bag::from)

@@ -10,11 +10,21 @@ echo '#![feature(test)]
 extern crate test;
 use std::env;
 
+type Parsed = Vec<usize>;
+
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day'$today'"))).unwrap()
+    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or_else(||String::from("inputs/day'$today'"))).unwrap()
 }
 
-fn parse_input(raw: &str) -> Vec<!> {
+fn parse_input(raw: &str) -> Parsed {
+    unimplemented!()
+}
+
+fn part1(parsed: &Parsed) -> usize {
+    unimplemented!()
+}
+
+fn part2(parsed: &Parsed) -> usize {
     unimplemented!()
 }
 
@@ -31,4 +41,33 @@ mod tests {
 
     const TEST_INPUT: &str = "";
 
+    #[test]
+    fn part1_test() {
+        let input = parse_input(TEST_INPUT);
+        assert_eq!(part1(&input), 0);
+    }
+
+    #[test]
+    fn part2_test() {
+        let input = parse_input(TEST_INPUT);
+        assert_eq!(part2(&input), 0);
+    }
+
+    #[bench]
+    fn bench_input_parsing(b: &mut test::Bencher) {
+        let raw = read_input();
+        b.iter(|| parse_input(black_box(&raw)))
+    }
+
+    #[bench]
+    fn bench_part1(b: &mut test::Bencher) {
+        let input = parse_input(&read_input());
+        b.iter(|| assert_eq!(part1(black_box(&input)), 0));
+    }
+
+    #[bench]
+    fn bench_part2(b: &mut test::Bencher) {
+        let input = parse_input(&read_input());
+        b.iter(|| assert_eq!(part2(black_box(&input)), 0));
+    }
 }' > src/bin/day$today.rs

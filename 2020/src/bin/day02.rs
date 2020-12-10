@@ -42,11 +42,16 @@ impl PasswordVerification {
 }
 
 fn read_input() -> Vec<PasswordVerification> {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or(String::from("inputs/day02")))
-        .unwrap()
-        .lines()
-        .map_into()
-        .collect()
+    std::fs::read_to_string(
+        env::args()
+            .nth(1)
+            .filter(|n| n != "--bench")
+            .unwrap_or_else(|| String::from("inputs/day02")),
+    )
+    .unwrap()
+    .lines()
+    .map_into()
+    .collect()
 }
 
 fn main() {
