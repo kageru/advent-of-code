@@ -1,6 +1,7 @@
 #![feature(test)]
-use std::{collections::HashSet, env};
+use std::collections::HashSet;
 extern crate test;
+use aoc2020::common::*;
 
 const COLOR: &str = "shiny gold";
 
@@ -46,13 +47,7 @@ impl From<&str> for Bag {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day07")),
-    )
-    .unwrap()
+    read_file(7)
 }
 
 fn part1<'a, 'b>(bags: &'b [Bag], color: &str, seen: &'a mut HashSet<&'b str>) -> &'a mut HashSet<&'b str> {

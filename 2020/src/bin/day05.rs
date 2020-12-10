@@ -1,7 +1,8 @@
 #![feature(test, map_first_last, binary_heap_into_iter_sorted)]
 extern crate test;
+use aoc2020::common::*;
 use itertools::Itertools;
-use std::{collections::BinaryHeap, env};
+use std::collections::BinaryHeap;
 
 const NUM_ROWS: usize = 128;
 const NUM_COLS: usize = 8;
@@ -50,13 +51,7 @@ fn main() {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day05")),
-    )
-    .unwrap()
+    read_file(5)
 }
 
 #[cfg(test)]

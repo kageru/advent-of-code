@@ -8,13 +8,14 @@ sed -i -e '$a\' inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
-use std::env;
+use aoc::common::*;
 
 type Parsed = Vec<usize>;
 
 fn read_input() -> String {
-    std::fs::read_to_string(env::args().nth(1).filter(|n| n != "--bench").unwrap_or_else(||String::from("inputs/day'$today'"))).unwrap()
+    read_file('$today')
 }
+
 
 fn parse_input(raw: &str) -> Parsed {
     unimplemented!()

@@ -1,7 +1,8 @@
 #![feature(test)]
 extern crate test;
+use aoc2020::common::*;
 use itertools::Itertools;
-use std::{env, ops::RangeInclusive};
+use std::ops::RangeInclusive;
 use text_io::scan;
 
 #[derive(Debug)]
@@ -42,16 +43,7 @@ impl PasswordVerification {
 }
 
 fn read_input() -> Vec<PasswordVerification> {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day02")),
-    )
-    .unwrap()
-    .lines()
-    .map_into()
-    .collect()
+    read_file(2).lines().map_into().collect()
 }
 
 fn main() {

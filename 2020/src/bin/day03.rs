@@ -1,8 +1,9 @@
 #![feature(iter_map_while)]
 #![feature(test)]
 extern crate test;
+use aoc2020::common::*;
 use itertools::Itertools;
-use std::{env, iter};
+use std::iter;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Tile {
@@ -29,13 +30,7 @@ impl From<u8> for Tile {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day03")),
-    )
-    .unwrap()
+    read_file(3)
 }
 
 fn parse_input(raw: &str) -> Forest {

@@ -1,16 +1,10 @@
 #![feature(test, bool_to_option)]
 extern crate test;
+use aoc2020::common::*;
 use itertools::Itertools;
-use std::env;
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day01")),
-    )
-    .unwrap()
+    read_file(1)
 }
 
 fn parse_input(input: &str) -> Vec<usize> {

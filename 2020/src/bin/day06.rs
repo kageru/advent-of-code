@@ -1,6 +1,7 @@
 #![feature(test)]
 extern crate test;
-use std::{collections::HashSet, env};
+use aoc2020::common::*;
+use std::collections::HashSet;
 
 fn main() {
     let input = parse_input(&read_input());
@@ -9,13 +10,7 @@ fn main() {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day06")),
-    )
-    .unwrap()
+    read_file(6)
 }
 
 fn parse_input(raw: &str) -> Vec<Vec<HashSet<char>>> {

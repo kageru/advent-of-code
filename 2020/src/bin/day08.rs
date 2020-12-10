@@ -1,6 +1,6 @@
 #![feature(test, str_split_once)]
 extern crate test;
-use std::env;
+use aoc2020::common::*;
 
 #[derive(Debug, PartialEq)]
 enum Command {
@@ -10,13 +10,7 @@ enum Command {
 }
 
 fn read_input() -> String {
-    std::fs::read_to_string(
-        env::args()
-            .nth(1)
-            .filter(|n| n != "--bench")
-            .unwrap_or_else(|| String::from("inputs/day08")),
-    )
-    .unwrap()
+    read_file(8)
 }
 
 fn parse_input(raw: &str) -> Vec<Command> {
