@@ -1,10 +1,12 @@
 #![feature(test)]
 extern crate test;
-use std::{env, iter};
+use std::env;
 
 use itertools::Itertools;
 
 type Parsed = Vec<usize>;
+
+const STEP_SIZE: usize = 3;
 
 fn read_input() -> String {
     std::fs::read_to_string(
@@ -18,35 +20,30 @@ fn read_input() -> String {
 
 fn parse_input(raw: &str) -> Parsed {
     let mut xs: Vec<usize> = raw.lines().map(|l| l.parse().unwrap()).collect();
+    xs.push(0);
     // faster than using sorted() directly on the iterator
     xs.sort_unstable();
     xs
 }
 
 fn part1(input: &Parsed) -> (usize, usize) {
-    iter::once(&0)
-        .chain(input.iter())
-        .tuple_windows()
-        .fold((0, 1), |(one, three), (a, b)| match b - a {
-            1 => (one + 1, three),
-            2 => (one, three),
-            3 => (one, three + 1),
-            _ => unreachable!(),
-        })
+    input.iter().tuple_windows().fold((0, 1), |(one, three), (a, b)| match b - a {
+        1 => (one + 1, three),
+        2 => (one, three),
+        3 => (one, three + 1),
+        _ => unreachable!(),
+    })
 }
 
 fn part2(input: &Parsed) -> usize {
-    let max = *input.last().unwrap();
-    let mut paths = vec![0; max + 4];
+    let mut iter = input.iter().rev();
+    let max = *iter.next().unwrap();
+    let mut paths = vec![0; max + STEP_SIZE];
     paths[max] = 1;
-    for i in input.iter().rev().skip(1) {
-        let mut n = 0;
-        for j in 1..=3 {
-            n += paths[i + j];
-        }
-        paths[*i] = n;
+    for &i in iter {
+        paths[i] = (1..=STEP_SIZE).map(|j| paths[i + j]).sum();
     }
-    paths[1] + paths[2] + paths[3]
+    paths[0]
 }
 
 fn main() {
