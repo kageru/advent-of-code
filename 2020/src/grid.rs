@@ -116,6 +116,8 @@ impl_op!(+ |a: Position2D, b: Direction| -> Position2D { a + match b {
         }
 });
 
+impl_op!(*|a: Position2D, b: i64| -> Position2D { Position2D { x: a.x * b, y: a.y * b } });
+
 impl AddAssign<i8> for Direction {
     fn add_assign(&mut self, rhs: i8) {
         *self = *self + rhs;
