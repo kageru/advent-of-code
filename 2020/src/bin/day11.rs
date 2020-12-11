@@ -23,6 +23,7 @@ impl Display for Tile {
 }
 
 impl From<char> for Tile {
+    #[inline]
     fn from(c: char) -> Self {
         match c {
             '.' => Tile::Floor,
@@ -30,12 +31,6 @@ impl From<char> for Tile {
             '#' => Tile::Occupied,
             _ => unreachable!(),
         }
-    }
-}
-
-impl Default for &Tile {
-    fn default() -> Self {
-        &Tile::Floor
     }
 }
 
@@ -62,15 +57,17 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
+#[inline]
 fn occupied_neighbors(pos: &Position2D, grid: &Parsed) -> usize {
     pos.moore()
         .iter()
-        .filter(|p| grid.get(&p).unwrap_or_default() == &Tile::Occupied)
+        .filter(|p| grid.get(&p).unwrap_or(&Tile::Floor) == &Tile::Occupied)
         .count()
 }
 
 const DIRECTIONS: [(i64, i64); 8] = [(0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1), (-1, 1), (1, -1)];
 
+#[inline]
 fn neighbors_in_vision(pos: &Position2D, grid: &Parsed) -> usize {
     DIRECTIONS
         .iter()
@@ -88,47 +85,40 @@ fn neighbors_in_vision(pos: &Position2D, grid: &Parsed) -> usize {
         .count()
 }
 
-fn make_step<F: Fn(&Position2D, &Parsed) -> usize>(previous: &Parsed, count_neighbors: F, limit: usize) -> (Parsed, bool) {
-    let mut grid = previous.to_owned();
+fn make_step<F: Fn(&Position2D, &Parsed) -> usize>(previous: &mut Parsed, count_neighbors: F, limit: usize) -> bool {
+    let readonly = previous.to_owned();
     let mut changed = false;
-    for (pos, tile) in grid.iter_mut() {
+    for (pos, tile) in previous.iter_mut() {
         match tile {
             Tile::Floor => (),
             Tile::Empty => {
-                if count_neighbors(&pos, &previous) == 0 {
+                if count_neighbors(&pos, &readonly) == 0 {
                     *tile = Tile::Occupied;
                     changed = true;
                 }
             }
             Tile::Occupied => {
-                if count_neighbors(&pos, &previous) >= limit {
+                if count_neighbors(&pos, &readonly) >= limit {
                     *tile = Tile::Empty;
                     changed = true;
                 }
             }
         }
     }
-    (grid, changed)
+    changed
 }
 
-fn move_until_equilibrium<F: Fn(&Position2D, &Parsed) -> usize>(parsed: &Parsed, count_neighbors: F, limit: usize) -> usize {
-    let mut p = parsed.to_owned();
-    loop {
-        let (parsed, changed) = make_step(&p, &count_neighbors, limit);
-        if !changed {
-            break;
-        }
-        p = parsed;
-    }
-    p.iter().filter(|(_, t)| t == &&Tile::Occupied).count()
+fn move_until_equilibrium<F: Fn(&Position2D, &Parsed) -> usize>(mut parsed: Parsed, count_neighbors: F, limit: usize) -> usize {
+    while make_step(&mut parsed, &count_neighbors, limit) {}
+    parsed.iter().filter(|(_, t)| t == &&Tile::Occupied).count()
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    move_until_equilibrium(parsed, occupied_neighbors, 4)
+    move_until_equilibrium(parsed.to_owned(), occupied_neighbors, 4)
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    move_until_equilibrium(parsed, neighbors_in_vision, 5)
+    move_until_equilibrium(parsed.to_owned(), neighbors_in_vision, 5)
 }
 
 fn main() {
@@ -179,15 +169,15 @@ L.L.L..L..
 
     #[test]
     fn step_test() {
-        let input = parse_input(TEST_INPUT);
-        let (first_step, changed) = make_step(&input, occupied_neighbors, 4);
+        let mut grid = parse_input(TEST_INPUT);
+        assert!(make_step(&mut grid, occupied_neighbors, 4));
         let after_first = parse_input(AFTER_1_STEP);
+        assert_eq!(draw_ascii(&grid), draw_ascii(&after_first));
+        assert_eq!(grid, after_first);
 
-        assert_eq!(draw_ascii(&first_step), draw_ascii(&after_first));
-        assert_eq!((&first_step, changed), (&after_first, true));
-        let (second_step, changed) = make_step(&first_step, occupied_neighbors, 4);
+        assert!(make_step(&mut grid, occupied_neighbors, 4));
         let after_second = parse_input(AFTER_2_STEPS);
-        assert_eq!((second_step, changed), (after_second, true));
+        assert_eq!(grid, after_second);
     }
 
     const P2_AFTER_1: &str = "#.##.##.##
@@ -223,21 +213,21 @@ LLL####LL#
 
     #[test]
     fn step_test_part2() {
-        let input = parse_input(TEST_INPUT);
-        let (step_1, changed) = make_step(&input, neighbors_in_vision, 5);
+        let mut grid = parse_input(TEST_INPUT);
+        assert!(make_step(&mut grid, neighbors_in_vision, 5));
         let after_1 = parse_input(P2_AFTER_1);
-        assert_eq!(draw_ascii(&step_1), draw_ascii(&after_1));
-        assert_eq!((&step_1, changed), (&after_1, true));
+        assert_eq!(draw_ascii(&grid), draw_ascii(&after_1));
+        assert_eq!(&grid, &after_1);
 
-        let (step_2, changed) = make_step(&step_1, neighbors_in_vision, 5);
+        assert!( make_step(&mut grid, neighbors_in_vision, 5));
         let after_2 = parse_input(P2_AFTER_2);
-        assert_eq!(draw_ascii(&step_2), draw_ascii(&after_2));
-        assert_eq!((&step_2, changed), (&after_2, true));
+        assert_eq!(draw_ascii(&grid), draw_ascii(&after_2));
+        assert_eq!(&grid, &after_2);
 
-        let (step_3, changed) = make_step(&step_2, neighbors_in_vision, 5);
+        assert!(make_step(&mut grid, neighbors_in_vision, 5));
         let after_3 = parse_input(P2_AFTER_3);
-        assert_eq!(draw_ascii(&step_3), draw_ascii(&after_3));
-        assert_eq!((&step_3, changed), (&after_3, true));
+        assert_eq!(draw_ascii(&grid), draw_ascii(&after_3));
+        assert_eq!(&grid, &after_3);
     }
 
     test!(part1() == 37);
