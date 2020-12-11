@@ -34,12 +34,12 @@ fn get_boundaries(input: &[&Position2D]) -> Boundaries {
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
-pub fn draw_ascii<T: Display, S: BuildHasher>(coordinates: &HashMap<Position2D, T, S>, default: T) -> String {
+pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Position2D, T, S>) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
             (b.x_min..=b.x_max)
-                .map(|x| coordinates.get(&(x, y).into()).unwrap_or(&default).to_string())
+                .map(|x| coordinates.get(&(x, y).into()).unwrap_or(&T::default()).to_string())
                 .collect::<String>()
         }),
         "\n",

@@ -8,7 +8,7 @@ sed -i -e '$a\' inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
-use aoc::common::*;
+use aoc2020::common::*;
 
 type Parsed = Vec<usize>;
 
@@ -44,9 +44,9 @@ mod tests {
 
     const TEST_INPUT: &str = "";
 
-    test!(part1 == 0);
-    test!(part2 == 0);
-    bench!(part1 == 0);
-    bench!(part2 == 0);
+    test!(part1() == 0);
+    test!(part2() == 0);
+    bench!(part1() == 0);
+    bench!(part2() == 0);
     bench_input!(len == 0);
 }' > src/bin/day$today.rs
