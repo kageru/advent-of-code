@@ -76,29 +76,47 @@ impl Direction {
     }
 }
 
+impl From<Direction> for Position2D {
+    fn from(d: Direction) -> Self {
+        match d {
+            Direction::Up => Position2D::from((0, 1)),
+            Direction::Right => Position2D::from((1, 0)),
+            Direction::Left => Position2D::from((-1, 0)),
+            Direction::Down => Position2D::from((0, -1)),
+        }
+    }
+}
+
 impl_op!(+ |a: Direction, b: i8| -> Direction {
         match b {
-            -1 => match a {
+            -1 | 3 => match a {
                 Direction::Up => Direction::Left,
                 Direction::Right => Direction::Up,
                 Direction::Down => Direction::Right,
                 Direction::Left => Direction::Down,
             },
-            1 => match a {
+            1 | -3 => match a {
                 Direction::Up => Direction::Right,
                 Direction::Right => Direction::Down,
                 Direction::Down => Direction::Left,
                 Direction::Left => Direction::Up,
             },
-            0 => a,
+            0 | 4 | -4 => a,
+            2 | -2 => match a {
+                Direction::Up => Direction::Down,
+                Direction::Right => Direction::Left,
+                Direction::Down => Direction::Up,
+                Direction::Left => Direction::Right,
+            },
             n => unreachable!(format!("Illegal turn value: {}", n)),
         }
 });
 
-impl_op!(+ |a: Position2D, b: Position2D| -> Position2D {
+impl_op!(+|a: Position2D, b: Position2D| -> Position2D {
     Position2D {
         x: a.x + b.x,
-        y: a.y + b.y }
+        y: a.y + b.y
+    }
 });
 
 impl_op!(-|a: Position2D, b: Position2D| -> Position2D {
@@ -108,13 +126,11 @@ impl_op!(-|a: Position2D, b: Position2D| -> Position2D {
     }
 });
 
-impl_op!(+ |a: Position2D, b: Direction| -> Position2D { a + match b {
-            Direction::Up => Position2D::from((0, 1)),
-            Direction::Right => Position2D::from((1, 0)),
-            Direction::Left => Position2D::from((-1, 0)),
-            Direction::Down => Position2D::from((0, -1)),
-        }
+impl_op!(+|a: Position2D, b: Direction| -> Position2D {
+    a + Position2D::from(b)
 });
+
+impl_op!(-|a: Position2D, b: Direction| -> Position2D { a - Position2D::from(b) });
 
 impl_op!(*|a: Position2D, b: i64| -> Position2D { Position2D { x: a.x * b, y: a.y * b } });
 
