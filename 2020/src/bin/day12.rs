@@ -32,7 +32,7 @@ fn part1(parsed: &Parsed) -> i64 {
 }
 
 fn rotate_waypoint(mut wp: Position2D, deg: i64) -> Position2D {
-    for _ in 0..((deg / 90 + 4) % 4) {
+    for _ in 0..((deg / 90 + 4) & 3) {
         wp = Position2D { x: wp.y, y: -wp.x };
     }
     wp
