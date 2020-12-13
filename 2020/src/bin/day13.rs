@@ -41,9 +41,12 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1((start, nums): &Parsed) -> i64 {
-    let nums = nums.iter().filter_map(|&n| n).collect_vec();
-    let (eta, line) = (*start..).find_map(|t| nums.iter().find(|&n| t % n == 0).map(|n| (t, n))).unwrap();
-    (eta - start) * line
+    nums.iter()
+        .filter_map(|&n| n)
+        .map(|n| (n, n - (start % n)))
+        .min_by_key(|(_, n)| *n)
+        .map(|(eta, line)| eta * line)
+        .unwrap()
 }
 
 fn part2((_, lines): &Parsed) -> i64 {
