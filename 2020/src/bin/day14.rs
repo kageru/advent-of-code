@@ -1,7 +1,6 @@
 #![feature(test, str_split_once, destructuring_assignment, bool_to_option)]
 extern crate test;
-use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use aoc2020::common::*;
 
@@ -81,28 +80,29 @@ fn states_to_number(bits: &Vec<BitState>) -> usize {
         .fold(0, |acc, (n, _)| acc | 1 << n)
 }
 
-fn get_variations(input: &Vec<BitState>) -> Vec<usize> {
+fn get_variations(input: Vec<BitState>) -> Vec<usize> {
     match input.iter().position(|&b| b == BitState::Floating) {
         Some(i) => {
             let mut ret = vec![];
             for &new in &[BitState::One, BitState::Zero] {
                 let mut changed = input.clone();
                 changed[i] = new;
-                ret.append(&mut get_variations(&changed));
+                ret.append(&mut get_variations(changed));
             }
             ret
         }
-        None => vec![states_to_number(input)],
+        None => vec![states_to_number(&input)],
     }
 }
 
 fn part2<'a>(parsed: &Parsed<'a>) -> usize {
     let mut mask = vec![];
-    let mut mem = HashMap::new();
-    for cmd in parsed {
-        match cmd {
+    parsed
+        .iter()
+        .map(|cmd| match cmd {
             Command::BitMask(bm) => {
                 mask = calc_bitmask_p2(bm);
+                (vec![], 0)
             }
             Command::MemSet { addr, val } => {
                 let masked = format!("{:036b}", addr)
@@ -120,13 +120,13 @@ fn part2<'a>(parsed: &Parsed<'a>) -> usize {
                         }
                     })
                     .collect();
-                for v in get_variations(&masked) {
-                    mem.insert(v, *val);
-                }
+                (get_variations(masked), *val)
             }
-        }
-    }
-    mem.values().sum()
+        })
+        .flat_map(|(addrs, val)| addrs.into_iter().map(move |a| (a, val)))
+        .collect::<HashMap<_, _>>()
+        .values()
+        .sum()
 }
 
 fn main() {
