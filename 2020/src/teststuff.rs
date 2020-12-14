@@ -4,7 +4,8 @@ macro_rules! bench {
         paste! {
             #[bench]
             fn [<$part _bench>](b: &mut test::Bencher) {
-                let input = parse_input(&read_input());
+                    let raw = &read_input();
+                let input = parse_input(&raw);
                 b.iter(|| assert_eq!($part(black_box(&input)$(, $param)*), $expected));
             }
         }
