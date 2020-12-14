@@ -17,20 +17,6 @@ enum BitState {
     Floating,
 }
 
-/*
-impl PartialEq<BitState> for BitState {
-    fn eq(&self, other: &BitState) -> bool {
-        match (self, other) {
-            (BitState::One, BitState::One) => true,
-            (BitState::Zero, BitState::Zero) => true,
-            (BitState::Floating, _) => true,
-            (_, BitState::Floating) => true,
-            _ => false,
-        }
-    }
-}
-*/
-
 type Parsed<'a> = Vec<Command<'a>>;
 
 fn read_input() -> String {
@@ -87,67 +73,66 @@ fn part1<'a>(parsed: &Parsed<'a>) -> usize {
     mem.values().sum()
 }
 
-// TODO: clean this all up or just delete it straight away because whatever I was trying to do here
-// doesn’t work for the real input, and I’m pretty sure it can’t, but I also don’t know what to do.
-fn part2<'a>(parsed: &Parsed<'a>) -> u128 {
-    // let mut ones = 0;
-    let mut floating = vec![];
-    // let mut mem = HashMap::new();
-    let mut floating_mem = vec![];
-    for command in parsed {
-        match command {
+fn states_to_number(bits: &Vec<BitState>) -> usize {
+    bits.iter()
+        .rev()
+        .enumerate()
+        .filter(|(_, &b)| b == BitState::One)
+        .fold(0, |acc, (n, _)| acc | 1 << n)
+}
+
+fn get_variations(input: &Vec<BitState>) -> Vec<usize> {
+    match input.iter().position(|&b| b == BitState::Floating) {
+        Some(i) => {
+            let mut ret = vec![];
+            for &new in &[BitState::One, BitState::Zero] {
+                let mut changed = input.clone();
+                changed[i] = new;
+                ret.append(&mut get_variations(&changed));
+            }
+            ret
+        }
+        None => vec![states_to_number(input)],
+    }
+}
+
+fn part2<'a>(parsed: &Parsed<'a>) -> usize {
+    let mut mask = vec![];
+    let mut mem = HashMap::new();
+    for cmd in parsed {
+        match cmd {
             Command::BitMask(bm) => {
-                // ones = calc_bitmasks_p1(bm).0;
-                floating = calc_bitmask_p2(bm);
+                mask = calc_bitmask_p2(bm);
             }
             Command::MemSet { addr, val } => {
-                let addr = format!("{:036b}", addr)
+                let masked = format!("{:036b}", addr)
                     .bytes()
-                    .zip(floating.iter())
-                    .map(|(b, f)| match (b, f) {
+                    .zip(mask.iter())
+                    .map(|b| match b {
                         (_, BitState::Floating) => BitState::Floating,
-                        (b'1', _) | (_, BitState::One) => BitState::One,
-                        (b'0', _) => BitState::Zero,
-                        _ => unreachable!(),
+                        (_, BitState::One) => BitState::One,
+                        (n, BitState::Zero) => {
+                            if n == b'0' {
+                                BitState::Zero
+                            } else {
+                                BitState::One
+                            }
+                        }
                     })
-                    .collect_vec();
-                // mem.insert(addr, val);
-                floating_mem.push((addr, val));
-                // floating.entry((addr, xs)).or_insert_with(Vec::new).push(val);
+                    .collect();
+                for v in get_variations(&masked) {
+                    mem.insert(v, *val);
+                }
             }
         }
     }
-    let mut sum = 0u128;
-    for i in 0..floating_mem.len() {
-        // for (addr, val) in floating_mem.iter().rev() {
-        let val = *floating_mem[i].1;
-        let volatiles = floating_mem[i..]
-            .iter()
-            .map(|(addr, _)| {
-                addr.iter()
-                    .enumerate()
-                    .filter_map(|(n, &a)| (a == BitState::Floating).then_some(n))
-                    .collect::<HashSet<_>>()
-            })
-            .collect_vec();
-        let mut first = volatiles[0].clone();
-        for r in volatiles.iter().skip(1) {
-            for e in r {
-                first.remove(e);
-            }
-        }
-        // if first.len() != 0 {
-            sum += val as u128 * (1 << first.len()) as u128;
-        // }
-    }
-    sum
+    mem.values().sum()
 }
 
 fn main() {
     let raw = read_input();
     let input = parse_input(&raw);
     println!("Part 1: {}", part1(&input));
-    // 40413886813 is too low
     println!("Part 2: {}", part2(&input));
 }
 
@@ -174,8 +159,14 @@ mem[26] = 1";
         assert_eq!(part2(&parsed), 208);
     }
 
+    #[test]
+    fn test_states_to_number() {
+        let states = vec![BitState::One, BitState::Zero, BitState::One, BitState::Zero];
+        assert_eq!(states_to_number(&states), 10);
+    }
+
     test!(part1() == 165);
     bench!(part1() == 18630548206046);
-    //bench!(part2() == 0);
+    bench!(part2() == 4254673508445);
     bench_input!(len == 577);
 }
