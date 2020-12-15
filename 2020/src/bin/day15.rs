@@ -12,17 +12,16 @@ fn parse_input(raw: &str) -> Parsed {
     raw.split(',').filter_map(|x| x.parse().ok()).collect()
 }
 
-fn part1(parsed: &Parsed, limit: usize) -> usize {
-    (parsed.len()..limit - 1)
-        .fold(
-            (parsed.iter().enumerate().map(|(i, n)| (*n, i)).collect::<HashMap<_, _>>(), 0),
-            |(mut prev, curr), i| {
-                let next = prev.get(&curr).map(|p| i - p).unwrap_or(0);
-                prev.insert(curr, i);
-                (prev, next)
-            },
-        )
-        .1
+#[rustfmt::skip]
+fn part1(initial: &Parsed, limit: usize) -> usize {
+    (initial.len()..limit - 1).fold(
+        (initial.iter().enumerate().map(|(i, n)| (*n, i)).collect::<HashMap<_, _>>(), 0),
+        |(mut prev, curr), i| {
+            let next = prev.get(&curr).map(|p| i - p).unwrap_or(0);
+            prev.insert(curr, i);
+            (prev, next)
+        },
+    ).1
 }
 
 // only here so the test/bench macro works
