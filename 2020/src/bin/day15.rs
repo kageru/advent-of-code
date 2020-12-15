@@ -13,32 +13,20 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed, limit: usize) -> usize {
-    let mut iter = parsed.iter();
-    let mut previous = HashMap::new();
-    let mut current = 0;
-    for i in 0..limit - 1 {
-        if let Some(&n) = iter.next() {
-            current = n;
-            previous.insert(current, i);
-            current = 0;
-            continue;
-        }
-        println!("Adding {} to {:?}", current, previous);
-        match previous.get(&current) {
-            Some(&position) => {
-                previous.insert(current, i);
-                current = i.saturating_sub(position);
-            }
-            None => {
-                previous.insert(current, i);
-                current = 0;
-            }
-        }
-    }
-    current
+    (parsed.len()..limit - 1)
+        .fold(
+            (parsed.iter().enumerate().map(|(i, n)| (*n, i)).collect::<HashMap<_, _>>(), 0),
+            |(mut prev, curr), i| {
+                let next = prev.get(&curr).map(|p| i - p).unwrap_or(0);
+                prev.insert(curr, i);
+                (prev, next)
+            },
+        )
+        .1
 }
 
 // only here so the test/bench macro works
+#[inline]
 fn part2(parsed: &Parsed, limit: usize) -> usize {
     part1(parsed, limit)
 }
@@ -60,7 +48,7 @@ mod tests {
 
     test!(part1(2020) == 436);
     test!(part2(30000000) == 175594);
-    //bench!(part1() == 0);
-    //bench!(part2() == 0);
+    bench!(part1(2020) == 249);
+    // bench!(part2(30000000) == 41687);
     bench_input!(len == 6);
 }
