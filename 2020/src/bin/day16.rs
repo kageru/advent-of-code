@@ -89,6 +89,9 @@ fn part2(parsed: &Parsed, key: &str) -> usize {
     let mut rules = vec![None; len];
     for i in (0..len).cycle() {
         let at_index = only_valid.iter().map(|v| v[i]).collect_vec();
+        if let Some(_) = rules[i] {
+            continue;
+        }
         if let Some(rule) = remaining_rules
             .iter()
             .filter(|r| at_index.iter().all(|i| r.lower.contains(i) || r.upper.contains(i)))
