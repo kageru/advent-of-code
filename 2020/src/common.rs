@@ -9,3 +9,8 @@ pub fn read_file(day: usize) -> String {
     )
     .unwrap()
 }
+
+#[inline]
+pub fn parse_nums(l: &str) -> Vec<usize> {
+    l.split(',').filter_map(|n| n.parse().ok()).collect()
+}

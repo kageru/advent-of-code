@@ -45,23 +45,13 @@ fn parse_input(raw: &str) -> Parsed {
     let (rules, my_ticket, nearby) = raw.split("\n\n").next_tuple().unwrap();
     Parsed {
         rules:          rules.lines().map_into().collect(),
-        my_ticket:      my_ticket
-            .split_once('\n')
-            .unwrap()
-            .1
-            .split(',')
-            .map(|n| n.parse().unwrap())
-            .collect(),
-        nearby_tickets: nearby
-            .lines()
-            .skip(1)
-            .map(|l| l.split(',').map(|n| n.parse().unwrap()).collect())
-            .collect(),
+        my_ticket:      parse_nums(my_ticket.split_once('\n').unwrap().1),
+        nearby_tickets: nearby.lines().skip(1).map(parse_nums).collect(),
     }
 }
 
-// Could be optimized by folding the ranges first to only have one lower and one upper (or even
-// just a single one if they’re continuous), but meh.
+// Could be optimized by merging overlapping ranges into one before checking all the tickets.
+// … or so I thought until I tried, benchmarked, and saw that that takes twice as long.
 fn part1(parsed: &Parsed) -> usize {
     parsed
         .nearby_tickets

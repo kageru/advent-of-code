@@ -1,6 +1,7 @@
 #![feature(test)]
 extern crate test;
 use std::collections::HashMap;
+use aoc2020::common::*;
 
 type Parsed = Vec<usize>;
 
@@ -8,8 +9,9 @@ fn read_input() -> String {
     String::from("15,12,0,14,3,1")
 }
 
+#[inline]
 fn parse_input(raw: &str) -> Parsed {
-    raw.split(',').filter_map(|x| x.parse().ok()).collect()
+    parse_nums(raw)
 }
 
 #[rustfmt::skip]
