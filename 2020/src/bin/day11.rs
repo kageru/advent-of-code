@@ -59,7 +59,7 @@ fn parse_input(raw: &str) -> Parsed {
 
 #[inline]
 fn occupied_neighbors(pos: &Position2D, grid: &Parsed) -> usize {
-    pos.moore()
+    pos.neighbors()
         .iter()
         .filter(|p| grid.get(&p).unwrap_or(&Tile::Floor) == &Tile::Occupied)
         .count()

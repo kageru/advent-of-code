@@ -27,6 +27,7 @@ fn part1(initial: &Parsed, limit: usize) -> usize {
 }
 
 // only here so the test/bench macro works
+#[allow(unused)]
 #[inline]
 fn part2(parsed: &Parsed, limit: usize) -> usize {
     part1(parsed, limit)

@@ -1,6 +1,8 @@
 #![feature(test)]
 extern crate test;
-use aoc2020::{common::*, grid::*};
+use aoc2020::{
+    common::*, grid::{cell::Cell, *}
+};
 
 type Parsed = Grid<Position3D, Cell>;
 
