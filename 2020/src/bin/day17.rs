@@ -1,36 +1,41 @@
-#![feature(test)]
+#![allow(incomplete_features)]
+#![feature(test, const_generics, const_evaluatable_checked)]
 extern crate test;
-use itertools::Itertools;
 use aoc2020::{
     common::*, grid::{cell::Cell, *}
 };
+use itertools::Itertools;
 
 fn read_input() -> String {
     read_file(17)
 }
 
-fn parse_input<P: Position, F: FnMut((usize, usize)) -> P + Copy>(raw: &str, mut pos_gen: F) -> Grid<P, Cell> {
+fn parse_input<const DIMS: usize, F: FnMut((usize, usize)) -> PositionND<DIMS> + Copy>(raw: &str, mut pos_gen: F) -> Grid<DIMS, Cell> {
     raw.lines()
         .enumerate()
-        .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, b)| (pos_gen((x, y)), b.into())))
+        .flat_map(move |(y, l)| {
+            l.bytes()
+                .enumerate()
+                .map(move |(x, b)| (PositionND::<DIMS>::from_padded(&[x as i64, y as i64]), b.into()))
+        })
         .filter(|(_, c)| c == &Cell::Alive)
         .collect()
 }
 
-fn count_live_neighbors<P: Position>(p: &P, grid: &Grid<P, Cell>) -> usize {
+fn count_live_neighbors<const D: usize>(p: PositionND<D>, grid: &Grid<D, Cell>) -> usize {
     p.neighbors().iter().filter(|&n| grid.get(n) == Cell::Alive).count()
 }
 
-fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
+fn make_step<const D: usize>(input: Grid<D, Cell>) -> Grid<D, Cell> {
     let readonly = input.clone();
     input
         .fields
         .keys()
-        .flat_map(|p| p.neighbors())
+        .flat_map(|p| p.neighbors().iter())
         .unique()
         .map(|pos| {
             let cell = readonly.get(&pos);
-            let new = match (&cell, count_live_neighbors(&pos, &readonly)) {
+            let new = match (&cell, count_live_neighbors::<D>(&pos, &readonly)) {
                 (Cell::Alive, 2..=3) => Cell::Alive,
                 (Cell::Dead, 3) => Cell::Alive,
                 _ => Cell::Dead,
@@ -41,7 +46,7 @@ fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
         .collect()
 }
 
-fn solve<P: Position>(parsed: &Grid<P, Cell>, steps: usize) -> usize {
+fn solve<const D: usize>(parsed: &Grid<D, Cell>, steps: usize) -> usize {
     let mut clone = parsed.clone();
     for _ in 0..steps {
         clone = make_step(clone);

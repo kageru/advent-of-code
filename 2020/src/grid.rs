@@ -8,37 +8,37 @@ use itertools::join;
 use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
 
 #[derive(Debug, Clone)]
-pub struct Grid<P: Position, T: Display + Default> {
-    pub fields: HashMap<P, T>,
+pub struct Grid<const D: usize, T: Display + Default> {
+    pub fields: HashMap<PositionND<D>, T>,
 }
 
-impl<P: Position, T: Display + Default + Copy> Grid<P, T> {
-    pub fn get_convert<Pos: Into<P>>(&self, pos: Pos) -> T {
-        self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
-    }
+impl<const D: usize, T: Display + Default + Copy> Grid<D, T> {
+    //pub fn get_convert<Pos: Into<P>>(&self, pos: Pos) -> T {
+        //self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
+    //}
 
-    pub fn get(&self, pos: &P) -> T {
+    pub fn get(&self, pos: &PositionND<D>) -> T {
         self.fields.get(pos).copied().unwrap_or_else(|| T::default())
     }
 
-    pub fn insert<Pos: Into<P>>(&mut self, pos: Pos, t: T) {
+    pub fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, t: T) {
         self.fields.insert(pos.into(), t);
     }
 }
 
-impl<P: Position, T: Display + Default> std::iter::FromIterator<(P, T)> for Grid<P, T> {
-    fn from_iter<I: IntoIterator<Item = (P, T)>>(iter: I) -> Self {
+impl<const D: usize, T: Display + Default> std::iter::FromIterator<(PositionND<D>, T)> for Grid<D, T> {
+    fn from_iter<I: IntoIterator<Item = (PositionND<D>, T)>>(iter: I) -> Self {
         Grid {
             fields: iter.into_iter().collect(),
         }
     }
 }
 
-impl<T: Display + Default + Copy> Grid<Position2D, T> {
-    fn draw_ascii(&self) -> String {
-        draw_ascii(&self.fields)
-    }
-}
+// impl<T: Display + Default + Copy> Grid<Position2D, T> {
+    // fn draw_ascii(&self) -> String {
+        // draw_ascii(&self.fields)
+    // }
+// }
 
 struct Boundaries {
     x_min: i64,
