@@ -24,6 +24,7 @@ fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
     input
         .fields
         .keys()
+        .filter(|&&p| readonly.get(p) == Cell::Alive)
         .flat_map(|p| p.neighbors())
         .map(|pos| {
             let cell = readonly.get(pos);
