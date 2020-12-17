@@ -4,7 +4,7 @@ use itertools::iproduct;
 use std::{convert::TryInto, hash::Hash, ops, ops::AddAssign};
 
 pub trait Position
-where Self: Sized + Hash + Eq
+where Self: Sized + Hash + PartialEq + Eq + Clone + Copy
 {
     fn neighbors(&self) -> Vec<Self>;
 }
@@ -20,6 +20,14 @@ pub struct Position3D {
     pub x: i64,
     pub y: i64,
     pub z: i64,
+}
+
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+pub struct Position4D {
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
+    pub w: i64,
 }
 
 mod p2d {
@@ -127,6 +135,50 @@ mod p3d {
             x: a.x + b.x,
             y: a.y + b.y,
             z: a.z + b.z,
+        }
+    });
+}
+
+mod p4d {
+    use super::*;
+
+    impl Position for Position4D {
+        fn neighbors(&self) -> Vec<Position4D> {
+            iproduct!((-1..=1), (-1..=1), (-1..=1), (-1..=1))
+                .filter(|t| t != &(0, 0, 0, 0))
+                .map(|(x, y, z, w)| *self + Position4D::from((x, y, z, w)))
+                .collect()
+        }
+    }
+
+    impl<I> From<(I, I, I, I)> for Position4D
+    where I: TryInto<i64>
+    {
+        fn from((x, y, z, w): (I, I, I, I)) -> Position4D {
+            Position4D {
+                x: unwrap_number_result(x),
+                y: unwrap_number_result(y),
+                z: unwrap_number_result(z),
+                w: unwrap_number_result(w),
+            }
+        }
+    }
+
+    impl_op!(-|a: Position4D, b: Position4D| -> Position4D {
+        Position4D {
+            x: a.x - b.x,
+            y: a.y - b.y,
+            z: a.z - b.z,
+            w: a.w - b.w,
+        }
+    });
+
+    impl_op!(+|a: Position4D, b: Position4D| -> Position4D {
+        Position4D {
+            x: a.x + b.x,
+            y: a.y + b.y,
+            z: a.z + b.z,
+            w: a.w + b.w,
         }
     });
 }
