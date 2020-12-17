@@ -9,38 +9,32 @@ fn read_input() -> String {
 }
 
 fn parse_input(raw: &str) -> Parsed {
-    // TODO: implement FromIterator for Grid
-    Grid {
-        fields: raw
-            .lines()
-            .enumerate()
-            .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, b)| ((x, y, 0).into(), b.into())))
-            .collect(),
-    }
+    raw.lines()
+        .enumerate()
+        .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, b)| ((x, y, 0).into(), b.into())))
+        .collect()
 }
 
 fn count_live_neighbors(p: &Position3D, grid: &Parsed) -> usize {
     p.neighbors().iter().filter(|&n| grid.get(*n) == Cell::Alive).count()
 }
 
-fn make_step(mut input: Parsed) -> Parsed {
+fn make_step(input: Parsed) -> Parsed {
     let readonly = input.clone();
-    Grid {
-        fields: input
-            .fields
-            .keys()
-            .flat_map(|p| p.neighbors())
-            .map(|pos| {
-                let cell = readonly.get(pos);
-                let new = match (&cell, count_live_neighbors(&pos, &readonly)) {
-                    (Cell::Alive, 2..=3) => Cell::Alive,
-                    (Cell::Dead, 3) => Cell::Alive,
-                    _ =>  Cell::Dead,
-                };
-                (pos, new)
-            })
-            .collect(),
-    }
+    input
+        .fields
+        .keys()
+        .flat_map(|p| p.neighbors())
+        .map(|pos| {
+            let cell = readonly.get(pos);
+            let new = match (&cell, count_live_neighbors(&pos, &readonly)) {
+                (Cell::Alive, 2..=3) => Cell::Alive,
+                (Cell::Dead, 3) => Cell::Alive,
+                _ => Cell::Dead,
+            };
+            (pos, new)
+        })
+        .collect()
 }
 
 fn part1(parsed: &Parsed) -> usize {

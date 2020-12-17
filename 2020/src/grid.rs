@@ -1,5 +1,5 @@
 use impl_ops::*;
-use itertools::{join, Itertools, iproduct};
+use itertools::{iproduct, join, Itertools};
 use std::{
     collections::HashMap, convert::TryInto, fmt::{self, Display, Formatter}, hash::{BuildHasher, Hash}, ops, ops::AddAssign
 };
@@ -81,6 +81,14 @@ impl<P: Position + Eq + Hash, T: Display + Default + Copy> Grid<P, T> {
 
     pub fn insert<Pos: Into<P>>(&mut self, pos: Pos, t: T) {
         self.fields.insert(pos.into(), t);
+    }
+}
+
+impl<P: Position + Hash + Eq, T: Display + Default> std::iter::FromIterator<(P, T)> for Grid<P, T> {
+    fn from_iter<I: IntoIterator<Item = (P, T)>>(iter: I) -> Self {
+        Grid {
+            fields: iter.into_iter().collect(),
+        }
     }
 }
 
