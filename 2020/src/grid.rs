@@ -13,8 +13,12 @@ pub struct Grid<P: Position, T: Display + Default> {
 }
 
 impl<P: Position, T: Display + Default + Copy> Grid<P, T> {
-    pub fn get<Pos: Into<P>>(&self, pos: Pos) -> T {
+    pub fn get_convert<Pos: Into<P>>(&self, pos: Pos) -> T {
         self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
+    }
+
+    pub fn get(&self, pos: &P) -> T {
+        self.fields.get(pos).copied().unwrap_or_else(|| T::default())
     }
 
     pub fn insert<Pos: Into<P>>(&mut self, pos: Pos, t: T) {

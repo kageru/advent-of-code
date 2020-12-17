@@ -12,11 +12,12 @@ fn parse_input<P: Position, F: FnMut((usize, usize)) -> P + Copy>(raw: &str, mut
     raw.lines()
         .enumerate()
         .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, b)| (pos_gen((x, y)), b.into())))
+        .filter(|(_, c)| c == &Cell::Alive)
         .collect()
 }
 
 fn count_live_neighbors<P: Position>(p: &P, grid: &Grid<P, Cell>) -> usize {
-    p.neighbors().iter().filter(|&n| grid.get(*n) == Cell::Alive).count()
+    p.neighbors().iter().filter(|&n| grid.get(n) == Cell::Alive).count()
 }
 
 fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
@@ -24,10 +25,9 @@ fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
     input
         .fields
         .keys()
-        .filter(|&&p| readonly.get(p) == Cell::Alive)
         .flat_map(|p| p.neighbors())
         .map(|pos| {
-            let cell = readonly.get(pos);
+            let cell = readonly.get(&pos);
             let new = match (&cell, count_live_neighbors(&pos, &readonly)) {
                 (Cell::Alive, 2..=3) => Cell::Alive,
                 (Cell::Dead, 3) => Cell::Alive,
@@ -35,6 +35,7 @@ fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
             };
             (pos, new)
         })
+        .filter(|(_, c)| c == &Cell::Alive)
         .collect()
 }
 
@@ -79,14 +80,14 @@ mod tests {
     #[bench]
     fn bench_3d_parse(b: &mut test::Bencher) {
         let raw = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&raw), |(x, y)| Position3D::from((x, y, 0))).fields.len(), 64));
+        b.iter(|| assert_eq!(parse_input(black_box(&raw), |(x, y)| Position3D::from((x, y, 0))).fields.len(), 43));
     }
 
     #[bench]
     #[rustfmt::skip]
     fn bench_4d_parse(b: &mut test::Bencher) {
         let raw = read_input();
-        b.iter(|| assert_eq!(parse_input(black_box(&raw), |(x, y)| Position4D::from((x, y, 0, 0))).fields.len(), 64));
+        b.iter(|| assert_eq!(parse_input(black_box(&raw), |(x, y)| Position4D::from((x, y, 0, 0))).fields.len(), 43));
     }
 
     #[bench]
