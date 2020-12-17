@@ -1,5 +1,6 @@
 #![feature(test)]
 extern crate test;
+use itertools::Itertools;
 use aoc2020::{
     common::*, grid::{cell::Cell, *}
 };
@@ -26,6 +27,7 @@ fn make_step<P: Position>(input: Grid<P, Cell>) -> Grid<P, Cell> {
         .fields
         .keys()
         .flat_map(|p| p.neighbors())
+        .unique()
         .map(|pos| {
             let cell = readonly.get(&pos);
             let new = match (&cell, count_live_neighbors(&pos, &readonly)) {
