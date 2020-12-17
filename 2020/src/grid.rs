@@ -1,11 +1,29 @@
 use impl_ops::*;
-use itertools::join;
-use std::{collections::HashMap, fmt::Display, hash::BuildHasher, ops, ops::AddAssign};
+use itertools::{join, Itertools, iproduct};
+use std::{
+    collections::HashMap, convert::TryInto, fmt::{self, Display, Formatter}, hash::{BuildHasher, Hash}, ops, ops::AddAssign
+};
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct Position2D {
     pub x: i64,
     pub y: i64,
+}
+
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+pub struct Position3D {
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
+}
+
+impl Position3D {
+    pub fn neighbors(&self) -> Vec<Position3D> {
+        iproduct!((-1..=1), (-1..=1), (-1..=1))
+            .filter(|t| t != &(0, 0, 0))
+            .map(|(x, y, z)| *self + Position3D::from((x, y, z)))
+            .collect()
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -14,6 +32,62 @@ pub enum Direction {
     Down,
     Left,
     Right,
+}
+
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum Cell {
+    Alive,
+    Dead,
+}
+
+impl From<u8> for Cell {
+    fn from(b: u8) -> Self {
+        match b {
+            b'.' => Cell::Dead,
+            b'#' => Cell::Alive,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Display for Cell {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Cell::Alive => ".",
+            Cell::Dead => "#",
+        })
+    }
+}
+
+impl Default for Cell {
+    fn default() -> Self {
+        Cell::Dead
+    }
+}
+
+pub trait Position {}
+impl Position for Position2D {}
+impl Position for Position3D {}
+
+#[derive(Debug, Clone)]
+pub struct Grid<P: Position, T: Display + Default> {
+    pub fields: HashMap<P, T>,
+}
+
+impl<P: Position + Eq + Hash, T: Display + Default + Copy> Grid<P, T> {
+    pub fn get<Pos: Into<P>>(&self, pos: Pos) -> T {
+        self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
+    }
+
+    pub fn insert<Pos: Into<P>>(&mut self, pos: Pos, t: T) {
+        self.fields.insert(pos.into(), t);
+    }
+}
+
+impl<T: Display + Default + Copy> Grid<Position2D, T> {
+    fn draw_ascii(&self) -> String {
+        draw_ascii(&self.fields)
+    }
 }
 
 pub const ALL_DIRECTIONS: [Direction; 4] = [Direction::Up, Direction::Down, Direction::Left, Direction::Right];
@@ -126,6 +200,22 @@ impl_op!(-|a: Position2D, b: Position2D| -> Position2D {
     }
 });
 
+impl_op!(-|a: Position3D, b: Position3D| -> Position3D {
+    Position3D {
+        x: a.x - b.x,
+        y: a.y - b.y,
+        z: a.z - b.z,
+    }
+});
+
+impl_op!(+|a: Position3D, b: Position3D| -> Position3D {
+    Position3D {
+        x: a.x + b.x,
+        y: a.y + b.y,
+        z: a.z + b.z,
+    }
+});
+
 impl_op!(+|a: Position2D, b: Direction| -> Position2D {
     a + Position2D::from(b)
 });
@@ -152,27 +242,30 @@ impl AddAssign for Position2D {
     }
 }
 
-impl From<(usize, usize)> for Position2D {
-    fn from(tuple: (usize, usize)) -> Position2D {
-        Position2D {
-            x: tuple.0 as i64,
-            y: tuple.1 as i64,
+impl<I> From<(I, I, I)> for Position3D
+where I: TryInto<i64>
+{
+    fn from((x, y, z): (I, I, I)) -> Position3D {
+        Position3D {
+            x: unwrap_number_result(x),
+            y: unwrap_number_result(y),
+            z: unwrap_number_result(z),
         }
     }
 }
 
-impl From<(i32, i32)> for Position2D {
-    fn from(tuple: (i32, i32)) -> Position2D {
-        Position2D {
-            x: tuple.0 as i64,
-            y: tuple.1 as i64,
-        }
+// because calling .unwrap() on a TryInto result isn’t possible without trait bounds on the
+// associated Error type.
+fn unwrap_number_result<I: TryInto<i64>>(i: I) -> i64 {
+    match i.try_into() {
+        Ok(i) => return i,
+        _ => panic!("Bad coordinate"),
     }
 }
 
-impl From<(i64, i64)> for Position2D {
-    fn from(tuple: (i64, i64)) -> Position2D {
-        Position2D { x: tuple.0, y: tuple.1 }
+impl<I: Into<i64>> From<(I, I)> for Position2D {
+    fn from((x, y): (I, I)) -> Position2D {
+        Position2D { x: x.into(), y: y.into() }
     }
 }
 
