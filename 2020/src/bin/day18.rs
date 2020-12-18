@@ -2,6 +2,7 @@
 extern crate test;
 use aoc2020::common::*;
 use itertools::Itertools;
+use std::collections::VecDeque;
 
 type Parsed = Vec<Vec<Operation>>;
 
@@ -36,39 +37,16 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    parsed.iter().map(|l| p1_rec(l)).sum()
+    parsed.iter().map(|l| build_stack(l, execute_stack_p1)).sum()
 }
 
-fn p1_rec(ops: &[Operation]) -> usize {
-    // dbg!(ops);
-    let mut stack = vec![];
-    let mut parens = 0;
-    for i in 0..ops.len() {
-        match ops[i] {
-            Operation::OpenParen if parens > 0 => {
-                parens += 1;
-            }
-            Operation::CloseParen if parens > 0 => {
-                parens -= 1;
-            }
-            _ if parens > 0 => continue,
-            Operation::Add => stack.push(ops[i]),
-            Operation::Multiply => stack.push(ops[i]),
-            Operation::Number(n) => stack.push(Operation::Number(n)),
-            Operation::OpenParen => {
-                stack.push(Operation::Number(p1_rec(&ops[i + 1..])));
-                parens += 1;
-            }
-            Operation::CloseParen => break,
-        }
-        while stack.len() > 2 {
-            let drained = stack.drain(..3).collect_vec();
-            // dbg!(&drained, parens);
-            match drained[..] {
-                [Operation::Number(x), Operation::Add, Operation::Number(y)] => stack.push(Operation::Number(x + y)),
-                [Operation::Number(x), Operation::Multiply, Operation::Number(y)] => stack.push(Operation::Number(x * y)),
-                _ => unreachable!("Invalid stack: {:?} of size {}", drained, drained.len()),
-            }
+fn execute_stack_p1(mut stack: VecDeque<Operation>) -> usize {
+    while stack.len() > 2 {
+        let drained = stack.drain(..3).collect_vec();
+        match drained[..] {
+            [Operation::Number(x), Operation::Add, Operation::Number(y)] => stack.push_front(Operation::Number(x + y)),
+            [Operation::Number(x), Operation::Multiply, Operation::Number(y)] => stack.push_front(Operation::Number(x * y)),
+            _ => unreachable!("Invalid stack: {:?}", drained),
         }
     }
     if let Operation::Number(n) = stack[0] {
@@ -78,8 +56,52 @@ fn p1_rec(ops: &[Operation]) -> usize {
     }
 }
 
+fn execute_stack_p2(mut stack: VecDeque<Operation>) -> usize {
+    while let Some(i) = stack.iter().position(|o| o == &Operation::Add) {
+        let drained = stack.drain(i - 1..=i + 1).collect_vec();
+        match drained[..] {
+            [Operation::Number(x), Operation::Add, Operation::Number(y)] => stack.insert(i - 1, Operation::Number(x + y)),
+            _ => unreachable!("Invalid stack: {:?}", drained),
+        }
+    }
+    while stack.len() > 2 {
+        let drained = stack.drain(..3).collect_vec();
+        match drained[..] {
+            [Operation::Number(x), Operation::Multiply, Operation::Number(y)] => stack.push_front(Operation::Number(x * y)),
+            _ => unreachable!("Invalid stack: {:?}", drained),
+        }
+    }
+    if let Operation::Number(n) = stack[0] {
+        n
+    } else {
+        unreachable!()
+    }
+}
+
+fn build_stack<F: FnOnce(VecDeque<Operation>) -> usize + Copy>(ops: &[Operation], execute_stack: F) -> usize {
+    let mut stack = VecDeque::new();
+    let mut parens = 0;
+    for i in 0..ops.len() {
+        match ops[i] {
+            Operation::OpenParen if parens > 0 => parens += 1,
+            #[rustfmt::skip]
+            Operation::CloseParen => if parens > 0 { parens -= 1 } else { break },
+            // skip the entries that one of the recursive children is already processing
+            _ if parens > 0 => continue,
+            Operation::Add => stack.push_back(ops[i]),
+            Operation::Multiply => stack.push_back(ops[i]),
+            Operation::Number(n) => stack.push_back(Operation::Number(n)),
+            Operation::OpenParen => {
+                stack.push_back(Operation::Number(build_stack(&ops[i + 1..], execute_stack)));
+                parens += 1;
+            }
+        }
+    }
+    execute_stack(stack)
+}
+
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    parsed.iter().map(|l| build_stack(l, execute_stack_p2)).sum()
 }
 
 fn main() {
@@ -98,8 +120,8 @@ mod tests {
     const TEST_INPUT: &str = "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2";
 
     test!(part1() == 13632);
-    //test!(part2() == 0);
-    //bench!(part1() == 0);
-    //bench!(part2() == 0);
-    //bench_input!(len == 0);
+    test!(part2() == 23340);
+    bench!(part1() == 510009915468);
+    bench!(part2() == 321176691637769);
+    bench_input!(len == 375);
 }
