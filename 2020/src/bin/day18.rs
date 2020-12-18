@@ -29,7 +29,7 @@ fn parse_input(raw: &str) -> Parsed {
                     b'*' => Operation::Multiply,
                     b'(' => Operation::OpenParen,
                     b')' => Operation::CloseParen,
-                    n => Operation::Number((n - 48) as usize),
+                    n => Operation::Number((n - b'0') as usize),
                 })
                 .collect()
         })
@@ -42,12 +42,12 @@ fn part1(parsed: &Parsed) -> usize {
 
 fn execute_stack_p1(mut stack: VecDeque<Operation>) -> usize {
     while stack.len() > 2 {
-        let drained = stack.drain(..3).collect_vec();
-        match drained[..] {
-            [Operation::Number(x), Operation::Add, Operation::Number(y)] => stack.push_front(Operation::Number(x + y)),
-            [Operation::Number(x), Operation::Multiply, Operation::Number(y)] => stack.push_front(Operation::Number(x * y)),
-            _ => unreachable!("Invalid stack: {:?}", drained),
-        }
+        let res = match stack.drain(..3).next_tuple() {
+            Some((Operation::Number(x), Operation::Add, Operation::Number(y))) => Operation::Number(x + y),
+            Some((Operation::Number(x), Operation::Multiply, Operation::Number(y))) => Operation::Number(x * y),
+            x => unreachable!("Invalid stack: {:?}", x),
+        };
+        stack.push_front(res);
     }
     if let Operation::Number(n) = stack[0] {
         n
@@ -58,18 +58,18 @@ fn execute_stack_p1(mut stack: VecDeque<Operation>) -> usize {
 
 fn execute_stack_p2(mut stack: VecDeque<Operation>) -> usize {
     while let Some(i) = stack.iter().position(|o| o == &Operation::Add) {
-        let drained = stack.drain(i - 1..=i + 1).collect_vec();
-        match drained[..] {
-            [Operation::Number(x), Operation::Add, Operation::Number(y)] => stack.insert(i - 1, Operation::Number(x + y)),
-            _ => unreachable!("Invalid stack: {:?}", drained),
-        }
+        let res = match stack.drain(i - 1..=i + 1).next_tuple() {
+            Some((Operation::Number(x), Operation::Add, Operation::Number(y))) => Operation::Number(x + y),
+            x => unreachable!("Invalid stack: {:?}", x),
+        };
+        stack.insert(i - 1, res);
     }
     while stack.len() > 2 {
-        let drained = stack.drain(..3).collect_vec();
-        match drained[..] {
-            [Operation::Number(x), Operation::Multiply, Operation::Number(y)] => stack.push_front(Operation::Number(x * y)),
-            _ => unreachable!("Invalid stack: {:?}", drained),
-        }
+        let res = match stack.drain(..3).next_tuple() {
+            Some((Operation::Number(x), Operation::Multiply, Operation::Number(y))) => Operation::Number(x * y),
+            x => unreachable!("Invalid stack: {:?}", x),
+        };
+        stack.push_front(res);
     }
     if let Operation::Number(n) = stack[0] {
         n
