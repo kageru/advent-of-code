@@ -23,29 +23,42 @@ type Parsed<'a> = (RuleSet, &'a str);
 struct RuleSet(Vec<Rule>);
 
 impl RuleSet {
-    fn matches(&self, s: &str, rule: Rule) -> Option<usize> {
+    fn matches(&self, s: &str, rule: Rule) -> Vec<usize> {
         if s.len() == 0 {
-            return None;
+            return vec![];
         }
-        let res = match rule {
-            Rule::Char(c) => (s.as_bytes().first() == Some(&c)).then_some(1),
+        match rule {
+            Rule::Char(c) => (s.as_bytes().first() == Some(&c)).then(|| vec![1]).unwrap_or_else(Vec::new),
             Rule::And((r1, r2)) => self
                 .matches(s, self.0[r1])
-                .and_then(|i| self.matches(&s[i..], self.0[r2]).map(|j| i + j)),
+                .into_iter()
+                .flat_map(|i| self.matches(&s[i..], self.0[r2]).into_iter().map(move |j| i + j))
+                .collect(),
             Rule::AndOr((r1, r2), (r3, r4)) => self
                 .matches(s, Rule::And((r1, r2)))
-                .or_else(|| self.matches(s, Rule::And((r3, r4)))),
-            Rule::Or((r1, r2)) => self.matches(s, Rule::Useless(r1)).or_else(|| self.matches(s, self.0[r2])),
+                .into_iter()
+                .chain(self.matches(s, Rule::And((r3, r4))))
+                .collect(),
+            Rule::Or((r1, r2)) => self.matches(s, self.0[r1]).into_iter().chain(self.matches(s, self.0[r2])).collect(),
             Rule::Useless(r) => self.matches(s, self.0[r]),
             // part 2 shit below:
-            Rule::Special8(first, second) => self.matches(s, self.0[first]).or_else(|| self.matches(s, Rule::And(second))),
-            Rule::Special11(first, second) => self.matches(s, Rule::And(first)).or_else(|| self.matches(s, Rule::Triple(second))),
+            Rule::Special8(first, second) => self
+                .matches(s, self.0[first])
+                .into_iter()
+                .chain(self.matches(s, Rule::And(second)))
+                .collect(),
+            Rule::Special11(first, second) => self
+                .matches(s, Rule::And(first))
+                .into_iter()
+                .chain(self.matches(s, Rule::Triple(second)))
+                .collect(),
             Rule::Triple((r1, r2, r3)) => self
                 .matches(s, self.0[r1])
-                .and_then(|i| self.matches(&s[i..], self.0[r2]).map(|j| i + j))
-                .and_then(|i| self.matches(&s[i..], self.0[r3]).map(|j| i + j)),
-        };
-        res
+                .into_iter()
+                .flat_map(|i| self.matches(&s[i..], self.0[r2]).into_iter().map(move |j| i + j))
+                .flat_map(|i| self.matches(&s[i..], self.0[r3]).into_iter().map(move |j| i + j))
+                .collect(),
+        }
     }
 }
 
@@ -81,7 +94,7 @@ fn parse_input<'a>(raw: &'a str) -> Parsed<'a> {
 }
 
 fn part1((rules, input): &Parsed) -> usize {
-    input.lines().filter(|l| rules.matches(l, rules.0[0]) == Some(l.len())).count()
+    input.lines().filter(|l| rules.matches(l, rules.0[0]).contains(&l.len())).count()
 }
 
 fn part2(parsed: &Parsed) -> usize {
@@ -89,14 +102,13 @@ fn part2(parsed: &Parsed) -> usize {
     rules.0[8] = Rule::Special8(42, (42, 8));
     rules.0[11] = Rule::Special11((42, 31), (42, 11, 31));
     dbg!(parsed.1.lines().map(|l| (l, rules.matches(l, rules.0[0]))).collect_vec());
-    parsed.1.lines().filter(|l| rules.matches(l, rules.0[0]) == Some(l.len())).count()
+    parsed.1.lines().filter(|l| rules.matches(l, rules.0[0]).contains(&l.len())).count()
 }
 
 fn main() {
     let raw = read_input();
     let input = parse_input(&raw);
     println!("Part 1: {}", part1(&input));
-    // 265 too low, 395 too high. apparently 379? no idea how that’s supposed to work
     println!("Part 2: {}", part2(&input));
 }
 
@@ -170,6 +182,6 @@ aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"#;
     test!(part1() == 3);
     test!(part2() == 12);
     bench!(part1() == 235);
-    // bench!(part2() == 0);
+    bench!(part2() == 379);
     // bench_input!(0.len == 0);
 }
