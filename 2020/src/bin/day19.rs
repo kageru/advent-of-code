@@ -24,6 +24,9 @@ struct RuleSet(Vec<Rule>);
 
 impl RuleSet {
     fn matches(&self, s: &str, rule: Rule) -> Option<usize> {
+        if s.len() == 0 {
+            return None;
+        }
         let res = match rule {
             Rule::Char(c) => (s.as_bytes().first() == Some(&c)).then_some(1),
             Rule::And((r1, r2)) => self
@@ -32,10 +35,10 @@ impl RuleSet {
             Rule::AndOr((r1, r2), (r3, r4)) => self
                 .matches(s, Rule::And((r1, r2)))
                 .or_else(|| self.matches(s, Rule::And((r3, r4)))),
-            Rule::Or((r1, r2)) => self.matches(s, Rule::Useless(r1)).or_else(|| self.matches(s, Rule::Useless(r2))),
+            Rule::Or((r1, r2)) => self.matches(s, Rule::Useless(r1)).or_else(|| self.matches(s, self.0[r2])),
             Rule::Useless(r) => self.matches(s, self.0[r]),
             // part 2 shit below:
-            Rule::Special8(first, second) => self.matches(s, Rule::Useless(first)).or_else(|| self.matches(s, Rule::And(second))),
+            Rule::Special8(first, second) => self.matches(s, self.0[first]).or_else(|| self.matches(s, Rule::And(second))),
             Rule::Special11(first, second) => self.matches(s, Rule::And(first)).or_else(|| self.matches(s, Rule::Triple(second))),
             Rule::Triple((r1, r2, r3)) => self
                 .matches(s, self.0[r1])
@@ -163,7 +166,7 @@ aaaabbaaaabbaaa
 aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
 babaaabbbaaabaababbaabababaaab
 aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"#;
-    
+
     test!(part1() == 3);
     test!(part2() == 12);
     bench!(part1() == 235);
