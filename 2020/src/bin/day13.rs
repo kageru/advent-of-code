@@ -18,7 +18,7 @@ fn chinese_remainder(divs: Vec<i64>, rems: Vec<i64>) -> i64 {
         if x1 < 0 {
             x1 += b0;
         }
-        return x1;
+        x1
     }
     let mut sum = 0;
     let prod: i64 = divs.iter().product();
@@ -26,7 +26,7 @@ fn chinese_remainder(divs: Vec<i64>, rems: Vec<i64>) -> i64 {
         let p = prod / div;
         sum += rem * mul_inv(p, *div) * p;
     }
-    return sum % prod;
+    sum % prod
 }
 
 type Parsed = (i64, Vec<Option<i64>>);

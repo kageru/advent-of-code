@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(clippy::ptr_arg)]
 extern crate test;
 use std::collections::HashMap;
 use aoc2020::common::*;

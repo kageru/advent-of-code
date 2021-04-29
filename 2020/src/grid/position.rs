@@ -187,7 +187,7 @@ mod p4d {
 // associated Error type.
 fn unwrap_number_result<I: TryInto<i64>>(i: I) -> i64 {
     match i.try_into() {
-        Ok(i) => return i,
+        Ok(i) => i,
         _ => panic!("Bad coordinate"),
     }
 }

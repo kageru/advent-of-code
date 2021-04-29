@@ -1,4 +1,4 @@
-#![feature(test, str_split_once, bool_to_option)]
+#![feature(test, bool_to_option)]
 extern crate test;
 use aoc2020::common::*;
 use itertools::Itertools;
@@ -34,7 +34,7 @@ impl RuleSet {
     }
 
     fn matches(&self, s: &str, rule: Rule) -> Vec<usize> {
-        if s.len() == 0 {
+        if s.is_empty() {
             return vec![];
         }
         match rule {
@@ -60,7 +60,7 @@ fn read_input() -> String {
     read_file(19)
 }
 
-fn parse_input<'a>(raw: &'a str) -> Parsed<'a> {
+fn parse_input(raw: &'_ str) -> Parsed<'_> {
     let (rules, inputs) = raw.split_once("\n\n").unwrap();
     let rules = RuleSet(
         rules
@@ -78,7 +78,7 @@ fn parse_input<'a>(raw: &'a str) -> Parsed<'a> {
                         .or_else(|| split.next_tuple().map(|(a, b)| Rule::Any(vec![a, b])))
                         .unwrap()
                 }
-                chr if chr.contains('"') => Rule::Char(chr.bytes().skip_while(|&b| b != b'"').skip(1).next().unwrap()),
+                chr if chr.contains('"') => Rule::Char(chr.bytes().skip_while(|&b| b != b'"').nth(1).unwrap()),
                 and if and.contains(' ') => Rule::And(and.split(' ').map(|s| s.parse().unwrap()).collect()),
                 useless => Rule::Useless(useless.parse().unwrap()),
             })

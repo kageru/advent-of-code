@@ -1,5 +1,6 @@
 #![feature(iter_map_while)]
 #![feature(test)]
+#![allow(clippy::ptr_arg)]
 extern crate test;
 use aoc2020::common::*;
 use itertools::Itertools;

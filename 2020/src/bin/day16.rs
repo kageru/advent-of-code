@@ -1,4 +1,4 @@
-#![feature(test, str_split_once)]
+#![feature(test)]
 extern crate test;
 use aoc2020::common::*;
 use itertools::Itertools;
@@ -79,7 +79,7 @@ fn part2(parsed: &Parsed, key: &str) -> usize {
     let mut rules = vec![None; len];
     for i in (0..len).cycle() {
         let at_index = only_valid.iter().map(|v| v[i]).collect_vec();
-        if let Some(_) = rules[i] {
+        if rules[i].is_some() {
             continue;
         }
         if let Some(rule) = remaining_rules

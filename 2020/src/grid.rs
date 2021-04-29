@@ -14,11 +14,11 @@ pub struct Grid<P: Position, T: Display + Default> {
 
 impl<P: Position, T: Display + Default + Copy> Grid<P, T> {
     pub fn get_convert<Pos: Into<P>>(&self, pos: Pos) -> T {
-        self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
+        self.fields.get(&pos.into()).copied().unwrap_or_default()
     }
 
     pub fn get(&self, pos: &P) -> T {
-        self.fields.get(pos).copied().unwrap_or_else(|| T::default())
+        self.fields.get(pos).copied().unwrap_or_default()
     }
 
     pub fn insert<Pos: Into<P>>(&mut self, pos: Pos, t: T) {
@@ -35,7 +35,7 @@ impl<P: Position, T: Display + Default> std::iter::FromIterator<(P, T)> for Grid
 }
 
 impl<T: Display + Default + Copy> Grid<Position2D, T> {
-    fn draw_ascii(&self) -> String {
+    pub fn draw_ascii(&self) -> String {
         draw_ascii(&self.fields)
     }
 }

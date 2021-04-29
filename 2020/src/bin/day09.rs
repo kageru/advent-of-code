@@ -40,7 +40,7 @@ fn sum_up_to(input: &[usize], n: usize) -> Option<usize> {
             return None;
         }
     }
-    return None;
+    None
 }
 
 fn main() {

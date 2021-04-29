@@ -1,4 +1,5 @@
-#![feature(test, str_split_once)]
+#![feature(test)]
+#![allow(clippy::ptr_arg, clippy::upper_case_acronyms)]
 extern crate test;
 use aoc2020::common::*;
 

@@ -1,4 +1,5 @@
-#![feature(test, str_split_once, destructuring_assignment, bool_to_option)]
+#![feature(test, destructuring_assignment, bool_to_option)]
+#![allow(clippy::ptr_arg)]
 extern crate test;
 use std::collections::HashMap;
 
@@ -22,7 +23,7 @@ fn read_input() -> String {
     read_file(14)
 }
 
-fn parse_input<'a>(raw: &'a str) -> Parsed<'a> {
+fn parse_input(raw: &'_ str) -> Parsed<'_> {
     raw.lines()
         .map(|l| {
             if let Some(l) = l.strip_prefix("mask = ") {
@@ -58,7 +59,7 @@ fn calc_bitmasks_p1(b: &str) -> (usize, usize) {
     (calc_bitmask(b, |(_, b)| *b == b'1'), calc_bitmask(b, |(_, b)| *b != b'0'))
 }
 
-fn part1<'a>(parsed: &Parsed<'a>) -> usize {
+fn part1(parsed: &Parsed<'_>) -> usize {
     let (mut ones, mut zeros) = (0, 0);
     let mut mem = HashMap::new();
     for command in parsed {
@@ -72,7 +73,7 @@ fn part1<'a>(parsed: &Parsed<'a>) -> usize {
     mem.values().sum()
 }
 
-fn states_to_number(bits: &Vec<BitState>) -> usize {
+fn states_to_number(bits: &[BitState]) -> usize {
     bits.iter()
         .rev()
         .enumerate()
@@ -95,7 +96,7 @@ fn get_variations(input: Vec<BitState>) -> Vec<usize> {
     }
 }
 
-fn part2<'a>(parsed: &Parsed<'a>) -> usize {
+fn part2(parsed: &Parsed<'_>) -> usize {
     let mut mask = vec![];
     parsed
         .iter()
