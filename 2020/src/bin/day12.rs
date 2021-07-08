@@ -18,23 +18,23 @@ fn parse_input(raw: &str) -> Parsed {
 fn part1(parsed: &Parsed) -> i64 {
     let end_pos = parsed
         .iter()
-        .fold((Direction::Right, Position2D { x: 0, y: 0 }), |(dir, pos), (cmd, dist)| match cmd {
-            'N' => (dir, pos + Position2D::from((0, *dist))),
-            'S' => (dir, pos - Position2D::from((0, *dist))),
-            'E' => (dir, pos + Position2D::from((*dist, 0))),
-            'W' => (dir, pos - Position2D::from((*dist, 0))),
+        .fold((Direction::Right, PositionND::from([0, 0])), |(dir, pos), (cmd, dist)| match cmd {
+            'N' => (dir, pos + PositionND::from([0, *dist])),
+            'S' => (dir, pos - PositionND::from([0, *dist])),
+            'E' => (dir, pos + PositionND::from([*dist, 0])),
+            'W' => (dir, pos - PositionND::from([*dist, 0])),
             'R' => (dir + (dist / 90) as i8, pos),
             'L' => (dir + -(dist / 90) as i8, pos),
-            'F' => (dir, pos + Position2D::from(dir) * *dist),
+            'F' => (dir, pos + PositionND::from(dir) * *dist),
             _ => unreachable!(),
         })
         .1;
-    end_pos.x.abs() + end_pos.y.abs()
+    end_pos.points[0].abs() + end_pos.points[1].abs()
 }
 
-fn rotate_waypoint(mut wp: Position2D, deg: i64) -> Position2D {
+fn rotate_waypoint(mut wp: PositionND<2>, deg: i64) -> PositionND<2> {
     for _ in 0..((deg / 90 + 4) & 3) {
-        wp = Position2D { x: wp.y, y: -wp.x };
+        wp = PositionND::from([wp.points[1], -wp.points[0]]);
     }
     wp
 }
@@ -43,12 +43,12 @@ fn part2(parsed: &Parsed) -> i64 {
     let end_pos = parsed
         .iter()
         .fold(
-            (Position2D { x: 10, y: 1 }, Position2D { x: 0, y: 0 }),
+            (PositionND::from([10, 1]), PositionND::from([0, 0])),
             |(wp, pos), (cmd, dist)| match cmd {
-                'N' => (wp + Position2D::from((0, *dist)), pos),
-                'S' => (wp - Position2D::from((0, *dist)), pos),
-                'E' => (wp + Position2D::from((*dist, 0)), pos),
-                'W' => (wp - Position2D::from((*dist, 0)), pos),
+                'N' => (wp + PositionND::from([0, *dist]), pos),
+                'S' => (wp - PositionND::from([0, *dist]), pos),
+                'E' => (wp + PositionND::from([*dist, 0]), pos),
+                'W' => (wp - PositionND::from([*dist, 0]), pos),
                 'R' => (rotate_waypoint(wp, *dist), pos),
                 'L' => (rotate_waypoint(wp, -dist), pos),
                 'F' => (wp, pos + wp * *dist),
@@ -56,7 +56,7 @@ fn part2(parsed: &Parsed) -> i64 {
             },
         )
         .1;
-    end_pos.x.abs() + end_pos.y.abs()
+    end_pos.points[0].abs() + end_pos.points[1].abs()
 }
 
 fn main() {

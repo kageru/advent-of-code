@@ -3,7 +3,7 @@ use super::direction::*;
 use impl_ops::*;
 use itertools::iproduct;
 use std::{
-    convert::TryInto, hash::Hash, ops::{self, Add, AddAssign, Mul}
+    convert::TryInto, hash::Hash, ops::{self, Add, AddAssign, Mul, Sub}
 };
 
 pub trait Position
@@ -148,6 +148,29 @@ impl<const D: usize> Add<PositionND<D>> for PositionND<D> {
             points[i] = self.points[i] + rhs.points[i];
         }
         PositionND { points }
+    }
+}
+
+impl<const D: usize> Sub<PositionND<D>> for PositionND<D> {
+    type Output = PositionND<D>;
+
+    fn sub(self, rhs: PositionND<D>) -> Self::Output {
+        let mut points = [0; D];
+        for i in 0..D {
+            points[i] = self.points[i] - rhs.points[i];
+        }
+        PositionND { points }
+    }
+}
+
+impl From<Direction> for PositionND<2> {
+    fn from(d: Direction) -> Self {
+        match d {
+            Direction::Up => PositionND::from([0, 1]),
+            Direction::Right => PositionND::from([1, 0]),
+            Direction::Left => PositionND::from([-1, 0]),
+            Direction::Down => PositionND::from([0, -1]),
+        }
     }
 }
 
