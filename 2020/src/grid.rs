@@ -61,9 +61,22 @@ pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Po
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_add() {
         assert_eq!(PositionND::from([0, 2]) + PositionND::from([-1, 0]), [-1, 2].into());
         assert_eq!(PositionND::from([0, -1]) + PositionND::from(Direction::Up), [0, 0].into());
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(PositionND::from([0, 2]) - PositionND::from([-1, 0]), [1, 2].into());
+        assert_eq!(PositionND::from([0, -1]) - PositionND::from([0, -1]), [0, 0].into());
+    }
+
+    #[test]
+    fn test_mul() {
+        assert_eq!(PositionND::from([0, 2]) * 5, [0, 10].into());
+        assert_eq!(PositionND::from([0, -1]) * -2, [0, 2].into());
     }
 }

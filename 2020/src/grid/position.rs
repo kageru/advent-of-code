@@ -117,36 +117,33 @@ impl<const DIMS: usize> PositionND<DIMS> {
 impl<const D: usize> Mul<i64> for PositionND<D> {
     type Output = PositionND<D>;
 
-    fn mul(self, rhs: i64) -> Self::Output {
-        let mut points = [0; D];
-        for i in 0..D {
-            points[i] = self.points[i] * rhs;
+    fn mul(mut self, rhs: i64) -> Self::Output {
+        for p in self.points.iter_mut() {
+            *p *= rhs;
         }
-        PositionND { points }
+        self
     }
 }
 
 impl<const D: usize> Add<PositionND<D>> for PositionND<D> {
     type Output = PositionND<D>;
 
-    fn add(self, rhs: PositionND<D>) -> Self::Output {
-        let mut points = [0; D];
-        for i in 0..D {
-            points[i] = self.points[i] + rhs.points[i];
+    fn add(mut self, rhs: PositionND<D>) -> Self::Output {
+        for (x, y) in self.points.iter_mut().zip(rhs.points) {
+            *x += y;
         }
-        PositionND { points }
+        self
     }
 }
 
 impl<const D: usize> Sub<PositionND<D>> for PositionND<D> {
     type Output = PositionND<D>;
 
-    fn sub(self, rhs: PositionND<D>) -> Self::Output {
-        let mut points = [0; D];
-        for i in 0..D {
-            points[i] = self.points[i] - rhs.points[i];
+    fn sub(mut self, rhs: PositionND<D>) -> Self::Output {
+        for (x, y) in self.points.iter_mut().zip(rhs.points) {
+            *x -= y;
         }
-        PositionND { points }
+        self
     }
 }
 
