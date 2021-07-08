@@ -7,16 +7,12 @@ pub use position::*;
 use itertools::join;
 use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Grid<const D: usize, T: Display + Default> {
     pub fields: HashMap<PositionND<D>, T>,
 }
 
 impl<const D: usize, T: Display + Default + Copy> Grid<D, T> {
-    //pub fn get_convert<Pos: Into<P>>(&self, pos: Pos) -> T {
-        //self.fields.get(&pos.into()).copied().unwrap_or_else(|| T::default())
-    //}
-
     pub fn get(&self, pos: &PositionND<D>) -> T {
         self.fields.get(pos).copied().unwrap_or_else(|| T::default())
     }
@@ -35,9 +31,9 @@ impl<const D: usize, T: Display + Default> std::iter::FromIterator<(PositionND<D
 }
 
 // impl<T: Display + Default + Copy> Grid<Position2D, T> {
-    // fn draw_ascii(&self) -> String {
-        // draw_ascii(&self.fields)
-    // }
+// fn draw_ascii(&self) -> String {
+// draw_ascii(&self.fields)
+// }
 // }
 
 struct Boundaries {

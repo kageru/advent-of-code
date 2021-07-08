@@ -1,3 +1,4 @@
+extern crate test;
 use super::direction::*;
 use impl_ops::*;
 use itertools::iproduct;
@@ -34,7 +35,7 @@ pub struct Position4D {
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct PositionND<const DIMS: usize> {
-    points: [i64; DIMS],
+    pub points: [i64; DIMS],
 }
 
 impl<const D: usize, I> From<[I; D]> for PositionND<D>
@@ -49,7 +50,7 @@ where I: TryInto<i64> + Copy
     }
 }
 
-const fn num_neighbors(d: usize) -> usize {
+pub const fn num_neighbors(d: usize) -> usize {
     3usize.pow(d as u32) - 1
 }
 
@@ -70,13 +71,14 @@ impl<const DIMS: usize> PositionND<DIMS> {
     pub fn neighbors(&self) -> [PositionND<DIMS>; num_neighbors(DIMS)]
     where
         [PositionND<DIMS>; num_neighbors(DIMS)]: Sized,
+        [(); num_neighbors(DIMS)]: Sized,
     {
         let mut out = [PositionND::zero(); num_neighbors(DIMS)];
         match DIMS {
             2 => {
                 for (i, n) in iproduct!((-1..=1), (-1..=1))
                     .filter(|t| t != &(0, 0))
-                    .map(|(x, y)| PositionND::<DIMS>::from_padded(&[x, y]))
+                    .map(|(x, y)| PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y]))
                     .enumerate()
                 {
                     out[i] = n;
@@ -85,7 +87,7 @@ impl<const DIMS: usize> PositionND<DIMS> {
             3 => {
                 for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1))
                     .filter(|t| t != &(0, 0, 0))
-                    .map(|(x, y, z)| PositionND::<DIMS>::from_padded(&[x, y, z]))
+                    .map(|(x, y, z)| PositionND::<DIMS>::from_padded(&[self.points[0]+x, self.points[1]+y, self.points[2]+z]))
                     .enumerate()
                 {
                     out[i] = n;
@@ -94,7 +96,7 @@ impl<const DIMS: usize> PositionND<DIMS> {
             4 => {
                 for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1), (-1..=1))
                     .filter(|t| t != &(0, 0, 0, 0))
-                    .map(|(x, y, z, w)| PositionND::<DIMS>::from_padded(&[x, y, z, w]))
+                    .map(|(x, y, z, w)| PositionND::<DIMS>::from_padded(&[self.points[0]+x, self.points[1]+y, self.points[2]+z, self.points[3]+w]))
                     .enumerate()
                 {
                     out[i] = n;
@@ -294,5 +296,82 @@ fn unwrap_number_result<I: TryInto<i64>>(i: I) -> i64 {
     match i.try_into() {
         Ok(i) => return i,
         _ => panic!("Bad coordinate"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_neighbors_2d() {
+        let p = PositionND { points: [0, 0] };
+        let n = p.neighbors();
+        assert_eq!(
+            n,
+            [
+                PositionND { points: [-1, -1] },
+                PositionND { points: [-1, 0] },
+                PositionND { points: [-1, 1] },
+                PositionND { points: [0, -1] },
+                PositionND { points: [0, 1] },
+                PositionND { points: [1, -1] },
+                PositionND { points: [1, 0] },
+                PositionND { points: [1, 1] },
+            ]
+        );
+
+        let p = PositionND { points: [1, 1] };
+        let n = p.neighbors();
+        assert_eq!(
+            n,
+            [
+                PositionND { points: [0, 0] },
+                PositionND { points: [0, 1] },
+                PositionND { points: [0, 2] },
+                PositionND { points: [1, 0] },
+                PositionND { points: [1, 2] },
+                PositionND { points: [2, 0] },
+                PositionND { points: [2, 1] },
+                PositionND { points: [2, 2] },
+            ]
+        )
+    }
+
+    #[test]
+    fn test_neighbors_3d() {
+        let p = PositionND { points: [0, 0, 0] };
+        let n = p.neighbors();
+        assert_eq!(
+            n,
+            [
+                PositionND { points: [-1, -1, -1] },
+                PositionND { points: [-1, -1, 0] },
+                PositionND { points: [-1, -1, 1] },
+                PositionND { points: [-1, 0, -1] },
+                PositionND { points: [-1, 0, 0] },
+                PositionND { points: [-1, 0, 1] },
+                PositionND { points: [-1, 1, -1] },
+                PositionND { points: [-1, 1, 0] },
+                PositionND { points: [-1, 1, 1] },
+                PositionND { points: [0, -1, -1] },
+                PositionND { points: [0, -1, 0] },
+                PositionND { points: [0, -1, 1] },
+                PositionND { points: [0, 0, -1] },
+                PositionND { points: [0, 0, 1] },
+                PositionND { points: [0, 1, -1] },
+                PositionND { points: [0, 1, 0] },
+                PositionND { points: [0, 1, 1] },
+                PositionND { points: [1, -1, -1] },
+                PositionND { points: [1, -1, 0] },
+                PositionND { points: [1, -1, 1] },
+                PositionND { points: [1, 0, -1] },
+                PositionND { points: [1, 0, 0] },
+                PositionND { points: [1, 0, 1] },
+                PositionND { points: [1, 1, -1] },
+                PositionND { points: [1, 1, 0] },
+                PositionND { points: [1, 1, 1] },
+            ]
+        );
     }
 }
