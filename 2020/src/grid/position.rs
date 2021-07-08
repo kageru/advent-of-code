@@ -1,5 +1,6 @@
 extern crate test;
 use super::direction::*;
+use lazy_static::lazy_static;
 use std::{
     convert::TryInto, hash::Hash, ops::{Add, Mul, Sub}
 };
@@ -55,6 +56,40 @@ impl<const DIMS: usize> PositionND<DIMS> {
 
     pub fn neighbors(&self) -> [PositionND<DIMS>; num_neighbors(DIMS)]
     where [PositionND<DIMS>; num_neighbors(DIMS) + 1]: Sized {
+        // Day 17 gets 25% faster if we cheat by using these cached vectors
+        if DIMS < 5 {
+            return match DIMS {
+                1 => {
+                    let mut out = [*self; num_neighbors(DIMS)];
+                    for (out, dir) in out.iter_mut().zip(NEIGHBOR_VECTORS_1D.iter()) {
+                        *out = *out + PositionND::from_padded(dir);
+                    }
+                    out
+                }
+                2 => {
+                    let mut out = [*self; num_neighbors(DIMS)];
+                    for (out, dir) in out.iter_mut().zip(NEIGHBOR_VECTORS_2D.iter()) {
+                        *out = *out + PositionND::from_padded(dir);
+                    }
+                    out
+                }
+                3 => {
+                    let mut out = [*self; num_neighbors(DIMS)];
+                    for (out, dir) in out.iter_mut().zip(NEIGHBOR_VECTORS_3D.iter()) {
+                        *out = *out + PositionND::from_padded(dir);
+                    }
+                    out
+                }
+                4 => {
+                    let mut out = [*self; num_neighbors(DIMS)];
+                    for (out, dir) in out.iter_mut().zip(NEIGHBOR_VECTORS_4D.iter()) {
+                        *out = *out + PositionND::from_padded(dir);
+                    }
+                    out
+                }
+                _ => unreachable!(),
+            };
+        }
         let ns = neighbor_vectors::<DIMS>();
         let mut out = [*self; num_neighbors(DIMS)];
         for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[0; DIMS])) {
@@ -62,6 +97,18 @@ impl<const DIMS: usize> PositionND<DIMS> {
         }
         out
     }
+}
+
+fn build_neighbor_cache<const D: usize>() -> Vec<[i64; D]>
+where [(); num_neighbors(D) + 1]:  {
+    IntoIterator::into_iter(neighbor_vectors::<D>()).filter(|n| n != &[0; D]).collect()
+}
+
+lazy_static! {
+    static ref NEIGHBOR_VECTORS_1D: Vec<[i64; 1]> = build_neighbor_cache::<1>();
+    static ref NEIGHBOR_VECTORS_2D: Vec<[i64; 2]> = build_neighbor_cache::<2>();
+    static ref NEIGHBOR_VECTORS_3D: Vec<[i64; 3]> = build_neighbor_cache::<3>();
+    static ref NEIGHBOR_VECTORS_4D: Vec<[i64; 4]> = build_neighbor_cache::<4>();
 }
 
 #[macro_export]
