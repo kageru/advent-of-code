@@ -40,7 +40,7 @@ impl Default for Tile {
     }
 }
 
-type Parsed = HashMap<Position2D, Tile>;
+type Parsed = HashMap<PositionND<2>, Tile>;
 
 fn read_input() -> String {
     read_file(11)
@@ -50,15 +50,20 @@ fn parse_input(raw: &str) -> Parsed {
     raw.lines()
         .enumerate()
         .flat_map(move |(y, l)| {
-            l.chars()
-                .enumerate()
-                .map(move |(x, c)| (Position2D { x: x as i64, y: y as i64 }, Tile::from(c)))
+            l.chars().enumerate().map(move |(x, c)| {
+                (
+                    PositionND {
+                        points: [x as i64, y as i64],
+                    },
+                    Tile::from(c),
+                )
+            })
         })
         .collect()
 }
 
 #[inline]
-fn occupied_neighbors(pos: &Position2D, grid: &Parsed) -> usize {
+fn occupied_neighbors(pos: &PositionND<2>, grid: &Parsed) -> usize {
     pos.neighbors()
         .iter()
         .filter(|p| grid.get(&p).unwrap_or(&Tile::Floor) == &Tile::Occupied)
@@ -68,10 +73,9 @@ fn occupied_neighbors(pos: &Position2D, grid: &Parsed) -> usize {
 const DIRECTIONS: [(i64, i64); 8] = [(0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1), (-1, 1), (1, -1)];
 
 #[inline]
-fn neighbors_in_vision(pos: &Position2D, grid: &Parsed) -> usize {
-    DIRECTIONS
-        .iter()
-        .map(|t| Position2D::from(*t))
+fn neighbors_in_vision(pos: &PositionND<2>, grid: &Parsed) -> usize {
+    IntoIterator::into_iter(DIRECTIONS)
+        .map(|(x, y)| PositionND { points: [x, y] })
         .map(|p| {
             (1..)
                 .find_map(|n| match grid.get(&(*pos + (p * n))) {
@@ -85,7 +89,7 @@ fn neighbors_in_vision(pos: &Position2D, grid: &Parsed) -> usize {
         .count()
 }
 
-fn make_step<F: Fn(&Position2D, &Parsed) -> usize>(previous: &mut Parsed, count_neighbors: F, limit: usize) -> bool {
+fn make_step<F: Fn(&PositionND<2>, &Parsed) -> usize>(previous: &mut Parsed, count_neighbors: F, limit: usize) -> bool {
     let readonly = previous.to_owned();
     let mut changed = false;
     for (pos, tile) in previous.iter_mut() {
@@ -108,7 +112,7 @@ fn make_step<F: Fn(&Position2D, &Parsed) -> usize>(previous: &mut Parsed, count_
     changed
 }
 
-fn move_until_equilibrium<F: Fn(&Position2D, &Parsed) -> usize>(mut parsed: Parsed, count_neighbors: F, limit: usize) -> usize {
+fn move_until_equilibrium<F: Fn(&PositionND<2>, &Parsed) -> usize>(mut parsed: Parsed, count_neighbors: F, limit: usize) -> usize {
     while make_step(&mut parsed, &count_neighbors, limit) {}
     parsed.iter().filter(|(_, t)| t == &&Tile::Occupied).count()
 }
@@ -219,7 +223,7 @@ LLL####LL#
         assert_eq!(draw_ascii(&grid), draw_ascii(&after_1));
         assert_eq!(&grid, &after_1);
 
-        assert!( make_step(&mut grid, neighbors_in_vision, 5));
+        assert!(make_step(&mut grid, neighbors_in_vision, 5));
         let after_2 = parse_input(P2_AFTER_2);
         assert_eq!(draw_ascii(&grid), draw_ascii(&after_2));
         assert_eq!(&grid, &after_2);

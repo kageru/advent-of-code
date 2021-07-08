@@ -3,7 +3,7 @@ use super::direction::*;
 use impl_ops::*;
 use itertools::iproduct;
 use std::{
-    convert::TryInto, hash::Hash, ops, ops::{Add, AddAssign}
+    convert::TryInto, hash::Hash, ops::{self, Add, AddAssign, Mul}
 };
 
 pub trait Position
@@ -87,7 +87,7 @@ impl<const DIMS: usize> PositionND<DIMS> {
             3 => {
                 for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1))
                     .filter(|t| t != &(0, 0, 0))
-                    .map(|(x, y, z)| PositionND::<DIMS>::from_padded(&[self.points[0]+x, self.points[1]+y, self.points[2]+z]))
+                    .map(|(x, y, z)| PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y, self.points[2] + z]))
                     .enumerate()
                 {
                     out[i] = n;
@@ -96,7 +96,9 @@ impl<const DIMS: usize> PositionND<DIMS> {
             4 => {
                 for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1), (-1..=1))
                     .filter(|t| t != &(0, 0, 0, 0))
-                    .map(|(x, y, z, w)| PositionND::<DIMS>::from_padded(&[self.points[0]+x, self.points[1]+y, self.points[2]+z, self.points[3]+w]))
+                    .map(|(x, y, z, w)| {
+                        PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y, self.points[2] + z, self.points[3] + w])
+                    })
                     .enumerate()
                 {
                     out[i] = n;
@@ -123,6 +125,18 @@ impl<const DIMS: usize> PositionND<DIMS> {
         out
     }
     */
+}
+
+impl<const D: usize> Mul<i64> for PositionND<D> {
+    type Output = PositionND<D>;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        let mut points = [0; D];
+        for i in 0..D {
+            points[i] = self.points[i] * rhs;
+        }
+        PositionND { points }
+    }
 }
 
 impl<const D: usize> Add<PositionND<D>> for PositionND<D> {

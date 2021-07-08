@@ -38,20 +38,20 @@ struct Boundaries {
 }
 
 #[rustfmt::skip]
-fn get_boundaries(input: &[&Position2D]) -> Boundaries {
-    let x_min = input.iter().min_by_key(|k| k.x).map(|p| p.x).unwrap_or(0);
-    let x_max = input.iter().max_by_key(|k| k.x).map(|p| p.x).unwrap_or(0);
-    let y_min = input.iter().min_by_key(|k| k.y).map(|p| p.y).unwrap_or(0);
-    let y_max = input.iter().max_by_key(|k| k.y).map(|p| p.y).unwrap_or(0);
+fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
+    let x_min = input.iter().min_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);
+    let x_max = input.iter().max_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);
+    let y_min = input.iter().min_by_key(|k| k.points[1]).map(|p| p.points[1]).unwrap_or(0);
+    let y_max = input.iter().max_by_key(|k| k.points[1]).map(|p| p.points[1]).unwrap_or(0);
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
-pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Position2D, T, S>) -> String {
+pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<PositionND<2>, T, S>) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
             (b.x_min..=b.x_max)
-                .map(|x| coordinates.get(&(x, y).into()).unwrap_or(&T::default()).to_string())
+                .map(|x| coordinates.get(&PositionND { points: [x, y] }).unwrap_or(&T::default()).to_string())
                 .collect::<String>()
         }),
         "\n",
