@@ -45,12 +45,11 @@ where [(); grid::num_neighbors(D)]: Sized {
 fn next_state<const D: usize>(pos: &PositionND<D>, grid: &Grid<D, Cell>) -> Cell
 where [(); grid::num_neighbors(D)]: Sized {
     let cell = grid.get(pos);
-    let new = match (&cell, count_live_neighbors::<D>(pos, &grid)) {
+    match (&cell, count_live_neighbors::<D>(pos, grid)) {
         (Cell::Alive, 2..=3) => Cell::Alive,
         (Cell::Dead, 3) => Cell::Alive,
         _ => Cell::Dead,
-    };
-    new
+    }
 }
 
 fn solve<const D: usize>(parsed: &Grid<D, Cell>, steps: usize) -> usize

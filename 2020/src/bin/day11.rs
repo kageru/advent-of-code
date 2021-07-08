@@ -66,7 +66,7 @@ fn parse_input(raw: &str) -> Parsed {
 fn occupied_neighbors(pos: &PositionND<2>, grid: &Parsed) -> usize {
     pos.neighbors()
         .iter()
-        .filter(|p| grid.get(&p).unwrap_or(&Tile::Floor) == &Tile::Occupied)
+        .filter(|p| grid.get(p).unwrap_or(&Tile::Floor) == &Tile::Occupied)
         .count()
 }
 
@@ -96,13 +96,13 @@ fn make_step<F: Fn(&PositionND<2>, &Parsed) -> usize>(previous: &mut Parsed, cou
         match tile {
             Tile::Floor => (),
             Tile::Empty => {
-                if count_neighbors(&pos, &readonly) == 0 {
+                if count_neighbors(pos, &readonly) == 0 {
                     *tile = Tile::Occupied;
                     changed = true;
                 }
             }
             Tile::Occupied => {
-                if count_neighbors(&pos, &readonly) >= limit {
+                if count_neighbors(pos, &readonly) >= limit {
                     *tile = Tile::Empty;
                     changed = true;
                 }

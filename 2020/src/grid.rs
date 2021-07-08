@@ -14,7 +14,7 @@ pub struct Grid<const D: usize, T: Display + Default> {
 
 impl<const D: usize, T: Display + Default + Copy> Grid<D, T> {
     pub fn get(&self, pos: &PositionND<D>) -> T {
-        self.fields.get(pos).copied().unwrap_or_else(|| T::default())
+        self.fields.get(pos).copied().unwrap_or_else(T::default)
     }
 
     pub fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, t: T) {
@@ -63,7 +63,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_add() {
-        assert_eq!(Position2D { x: 0, y: 2 } + Position2D { x: -1, y: 0 }, (-1, 2).into());
-        assert_eq!(Position2D { x: 0, y: -1 } + Direction::Up, (0, 0).into());
+        assert_eq!(PositionND::from([0, 2]) + PositionND::from([-1, 0]), [-1, 2].into());
+        assert_eq!(PositionND::from([0, -1]) + PositionND::from(Direction::Up), [0, 0].into());
     }
 }
