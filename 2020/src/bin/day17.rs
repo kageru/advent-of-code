@@ -23,14 +23,14 @@ fn parse_input<const DIMS: usize>(raw: &str) -> Grid<DIMS, Cell> {
 }
 
 fn count_live_neighbors<const D: usize>(p: &PositionND<D>, grid: &Grid<D, Cell>) -> usize
-where [(); grid::num_neighbors(D)]: Sized {
+where [(); grid::num_neighbors(D) + 1]: Sized {
     IntoIterator::into_iter(p.neighbors())
         .filter(|n| grid.get(n) == Cell::Alive)
         .count()
 }
 
 fn make_step<const D: usize>(input: Grid<D, Cell>) -> Grid<D, Cell>
-where [(); grid::num_neighbors(D)]: Sized {
+where [(); grid::num_neighbors(D) + 1]: Sized {
     let readonly = input.clone();
     input
         .fields
@@ -43,7 +43,7 @@ where [(); grid::num_neighbors(D)]: Sized {
 }
 
 fn next_state<const D: usize>(pos: &PositionND<D>, grid: &Grid<D, Cell>) -> Cell
-where [(); grid::num_neighbors(D)]: Sized {
+where [(); grid::num_neighbors(D) + 1]: Sized {
     let cell = grid.get(pos);
     match (&cell, count_live_neighbors::<D>(pos, grid)) {
         (Cell::Alive, 2..=3) => Cell::Alive,
@@ -53,7 +53,7 @@ where [(); grid::num_neighbors(D)]: Sized {
 }
 
 fn solve<const D: usize>(parsed: &Grid<D, Cell>, steps: usize) -> usize
-where [(); grid::num_neighbors(D)]: Sized {
+where [(); grid::num_neighbors(D) + 1]: Sized {
     let mut clone = parsed.clone();
     for _ in 0..steps {
         clone = make_step(clone);

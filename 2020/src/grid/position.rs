@@ -1,6 +1,5 @@
 extern crate test;
 use super::direction::*;
-use itertools::iproduct;
 use std::{
     convert::TryInto, hash::Hash, ops::{Add, Mul, Sub}
 };
@@ -54,64 +53,60 @@ impl<const DIMS: usize> PositionND<DIMS> {
         PositionND { points }
     }
 
-    // until I can figure out how to properly do that, here’s a “good enough” solution :^)
     pub fn neighbors(&self) -> [PositionND<DIMS>; num_neighbors(DIMS)]
-    where
-        [PositionND<DIMS>; num_neighbors(DIMS)]: Sized,
-        [(); num_neighbors(DIMS)]: Sized,
-    {
-        let mut out = [PositionND::zero(); num_neighbors(DIMS)];
-        match DIMS {
-            2 => {
-                for (i, n) in iproduct!((-1..=1), (-1..=1))
-                    .filter(|t| t != &(0, 0))
-                    .map(|(x, y)| PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y]))
-                    .enumerate()
-                {
-                    out[i] = n;
-                }
-            }
-            3 => {
-                for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1))
-                    .filter(|t| t != &(0, 0, 0))
-                    .map(|(x, y, z)| PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y, self.points[2] + z]))
-                    .enumerate()
-                {
-                    out[i] = n;
-                }
-            }
-            4 => {
-                for (i, n) in iproduct!((-1..=1), (-1..=1), (-1..=1), (-1..=1))
-                    .filter(|t| t != &(0, 0, 0, 0))
-                    .map(|(x, y, z, w)| {
-                        PositionND::<DIMS>::from_padded(&[self.points[0] + x, self.points[1] + y, self.points[2] + z, self.points[3] + w])
-                    })
-                    .enumerate()
-                {
-                    out[i] = n;
-                }
-            }
-            _ => unimplemented!(),
+    where [PositionND<DIMS>; num_neighbors(DIMS) + 1]: Sized {
+        let ns = neighbor_vectors::<DIMS>();
+        let mut out = [*self; num_neighbors(DIMS)];
+        for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[0; DIMS])) {
+            *out = *out + PositionND::from(dir);
         }
         out
     }
+}
 
-    // Maybe one day :(
-    /*
-    fn neighbors_inner<const D: usize>(existing: [i64; DIMS]) -> [[i64; DIMS]; (DIMS - D).pow(3)] {
-        let out = [[0; DIMS]; (DIMS - D).pow(3)];
-        let mut index = 0;
-        for i in -1..=1 {
-            existing[D] = i;
-            // I guess that means no recursion with const generics?
-            for xs in neighbors_inner(existing.clone()) {
-                out[index] = xs;
-                index += 1;
+#[macro_export]
+macro_rules! dim {
+    ($d: expr) => {{
+        let mut out = [[0; D]; num_neighbors(D) + 1];
+        let mut i = 0;
+        for offset in -1..=1 {
+            for inner in neighbor_vectors::<$d>() {
+                out[i][0] = offset;
+                let mut j = 1;
+                for e in inner {
+                    out[i][j] = e;
+                    j += 1;
+                }
+                i += 1;
             }
         }
         out
+    }};
+}
+
+fn neighbor_vectors<const D: usize>() -> [[i64; D]; num_neighbors(D) + 1]
+where
+{
+    // I would love to just call neighbor_vectors::<D-1>(), but it seems to be impossible to get the
+    // correct constraints for that.
+    match D {
+        0 => unreachable!(),
+        1 => {
+            let mut out = [[0; D]; num_neighbors(D) + 1];
+            out[0] = [-1; D];
+            out[1] = [0; D];
+            out[2] = [1; D];
+            out
+        }
+        2 => dim!(1),
+        3 => dim!(2),
+        4 => dim!(3),
+        5 => dim!(4),
+        6 => dim!(5),
+        7 => dim!(6),
+        // Adding more causes a stackoverflow. How curious.
+        _ => unimplemented!(),
     }
-    */
 }
 
 impl<const D: usize> Mul<i64> for PositionND<D> {
@@ -232,5 +227,31 @@ mod tests {
                 PositionND { points: [1, 1, 1] },
             ]
         );
+    }
+
+    #[test]
+    fn test_neighbor_vectors() {
+        let n = neighbor_vectors::<2>();
+        assert_eq!(n, [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 0], [0, 1], [1, -1], [1, 0], [1, 1],]);
+    }
+
+    #[bench]
+    fn bench_neighbor_vectors_2d(b: &mut test::Bencher) {
+        b.iter(|| test::black_box(neighbor_vectors::<2>()))
+    }
+
+    #[bench]
+    fn bench_neighbor_vectors_3d(b: &mut test::Bencher) {
+        b.iter(|| test::black_box(neighbor_vectors::<3>()))
+    }
+
+    #[bench]
+    fn bench_neighbor_vectors_4d(b: &mut test::Bencher) {
+        b.iter(|| test::black_box(neighbor_vectors::<4>()))
+    }
+
+    #[bench]
+    fn bench_neighbor_vectors_5d(b: &mut test::Bencher) {
+        b.iter(|| test::black_box(neighbor_vectors::<5>()))
     }
 }
