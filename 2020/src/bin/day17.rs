@@ -1,5 +1,5 @@
 #![allow(incomplete_features)]
-#![feature(test, const_generics, const_evaluatable_checked)]
+#![feature(test, generic_const_exprs)]
 extern crate test;
 use aoc2020::{
     common::*, grid::{self, cell::Cell, *}

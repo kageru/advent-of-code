@@ -1,5 +1,5 @@
 #![allow(incomplete_features)]
-#![feature(const_generics, const_evaluatable_checked, test)]
+#![feature(generic_const_exprs, test)]
 pub mod common;
 pub mod grid;
 pub mod teststuff;
