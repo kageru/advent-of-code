@@ -6,7 +6,7 @@ use aoc2021::common::{parse_nums, *};
 type Parsed = Vec<usize>;
 
 fn read_input() -> String {
-    read_file(01)
+    read_file(1)
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -31,8 +31,6 @@ fn main() {
 mod tests {
     use super::*;
     use aoc2021::*;
-    use paste::paste;
-    use test::black_box;
 
     const TEST_INPUT: &str = "199
 200

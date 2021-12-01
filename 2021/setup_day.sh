@@ -36,8 +36,6 @@ fn main() {
 mod tests {
     use super::*;
     use aoc2021::*;
-    use paste::paste;
-    use test::black_box;
 
     const TEST_INPUT: &str = "";
 
