@@ -1,7 +1,7 @@
+#![feature(array_windows)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::{parse_nums, *};
-use itertools::Itertools;
 
 type Parsed = Vec<usize>;
 
@@ -14,23 +14,11 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    parsed.iter().tuple_windows().filter(|(a, b)| a < b).count()
+    parsed.array_windows().filter(|[a, b]| a < b).count()
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    let mut inc = 0;
-    let mut w = parsed.iter().tuple_windows();
-    let mut p = {
-        let (a, b, c) = w.next().unwrap();
-        a + b + c
-    };
-    for (a, b, c) in w {
-        if a + b + c > p {
-            inc += 1
-        }
-        p = a + b + c;
-    }
-    inc
+    parsed.array_windows().filter(|[a, _, _, b]| a < b).count()
 }
 
 fn main() {
