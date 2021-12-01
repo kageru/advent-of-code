@@ -1,14 +1,7 @@
 #!/bin/sh
 
 today=$(date +%d)
-# this assumes that your puzzle input is already in your clipboard
-if [ -n "$WAYLAND_DISPLAY" ]; then
-  wl-paste > inputs/day$today
-else
-  xsel -b > inputs/day$today
-fi
-# add trailing newline if necessary
-sed -i -e '$a\' inputs/day$today
+aocd > inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
