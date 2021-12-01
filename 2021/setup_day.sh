@@ -12,7 +12,7 @@ sed -i -e '$a\' inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
-use aoc2020::common::*;
+use aoc2021::common::*;
 
 type Parsed = Vec<usize>;
 
@@ -42,7 +42,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use aoc2020::*;
+    use aoc2021::*;
     use paste::paste;
     use test::black_box;
 

@@ -1,7 +1,6 @@
 #[macro_export]
 macro_rules! bench {
     ($part: ident ($($param: expr),*) == $expected:expr) => {
-        use paste::paste;
         paste! {
             #[bench]
             fn [<$part _bench>](b: &mut test::Bencher) {
@@ -27,7 +26,6 @@ macro_rules! bench_input {
 #[macro_export]
 macro_rules! test {
     ($part: ident ($($param: expr),*) == $expected:expr) => {
-        use paste::paste;
         paste! {
             #[test]
             fn [<$part _test>]() {
