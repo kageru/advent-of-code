@@ -3,11 +3,8 @@
 extern crate test;
 use aoc2021::common::{parse_nums, *};
 
+const DAY: usize = 1;
 type Parsed = Vec<usize>;
-
-fn read_input() -> String {
-    read_file(1)
-}
 
 fn parse_input(raw: &str) -> Parsed {
     parse_nums(raw)
@@ -22,7 +19,7 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 fn main() {
-    let input = parse_input(&read_input());
+    let input = parse_input(&read_file(DAY));
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }

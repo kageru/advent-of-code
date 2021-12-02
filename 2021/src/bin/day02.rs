@@ -2,17 +2,14 @@
 extern crate test;
 use aoc2021::common::*;
 
+const DAY: usize = 2;
+type Parsed = Vec<Movement>;
+
 #[derive(Debug, Clone, Copy)]
 enum Movement {
     Up(i64),
     Down(i64),
     Forward(i64),
-}
-
-type Parsed = Vec<Movement>;
-
-fn read_input() -> String {
-    read_file(2)
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -46,7 +43,7 @@ fn part2(parsed: &Parsed) -> i64 {
 }
 
 fn main() {
-    let input = parse_input(&read_input());
+    let input = parse_input(&read_file(DAY));
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }

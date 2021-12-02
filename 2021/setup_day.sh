@@ -7,12 +7,8 @@ echo '#![feature(test)]
 extern crate test;
 use aoc2021::common::*;
 
+const DAY: usize = '$today'
 type Parsed = Vec<usize>;
-
-fn read_input() -> String {
-    read_file('$today')
-}
-
 
 fn parse_input(raw: &str) -> Parsed {
     unimplemented!()
@@ -27,7 +23,7 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 fn main() {
-    let input = parse_input(&read_input());
+    let input = parse_input(&read_file(DAY));
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
 }
