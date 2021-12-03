@@ -39,10 +39,11 @@ fn part2(parsed: &Parsed, bits: usize) -> usize {
         let gamma = most_common_at(&matching_gamma, i);
         let epsilon = !most_common_at(&matching_epsilon, i);
         // TODO: Find out why retain is significantly slower than filter().collect()
-        matching_gamma.retain(|&n| bit_at(n, i) == gamma);
-        // matching_gamma = matching_gamma.into_iter().filter(|&n| bit_at(n, i) == gamma).collect();
+        // matching_gamma.retain(|&n| bit_at(n, i) == gamma);
+        matching_gamma = matching_gamma.into_iter().filter(|&n| bit_at(n, i) == gamma).collect();
         if matching_epsilon.len() > 1 {
-            matching_epsilon.retain(|&n| bit_at(n, i) == epsilon);
+            // matching_epsilon.retain(|&n| bit_at(n, i) == epsilon);
+            matching_epsilon = matching_epsilon.into_iter().filter(|&n| bit_at(n, i) == epsilon).collect();
         }
     }
     debug_assert_eq!(matching_gamma.len(), 1);
