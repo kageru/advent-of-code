@@ -7,7 +7,7 @@ echo '#![feature(test)]
 extern crate test;
 use aoc2021::common::*;
 
-const DAY: usize = '$today'
+const DAY: usize = '$today';
 type Parsed = Vec<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
