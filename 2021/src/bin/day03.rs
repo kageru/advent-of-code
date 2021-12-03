@@ -1,9 +1,8 @@
-#![feature(int_log)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
 
-const DAY: usize = 03;
+const DAY: usize = 3;
 type Parsed = Vec<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
@@ -22,13 +21,13 @@ fn most_common_at(parsed: &Parsed, n: usize) -> bool {
     parsed.iter().filter(|&&x| bit_at(x, n)).count() * 2 >= parsed.len()
 }
 
-fn invert(n: usize) -> usize {
-    !n & ((1 << n.log2()) - 1)
+fn invert(n: usize, bits: usize) -> usize {
+    !n & ((1 << bits) - 1)
 }
 
 fn part1(parsed: &Parsed, bits: usize) -> usize {
     let gamma = most_common(parsed, bits);
-    let epsilon = invert(gamma);
+    let epsilon = invert(gamma, bits);
     gamma * epsilon
 }
 
@@ -39,7 +38,9 @@ fn part2(parsed: &Parsed, bits: usize) -> usize {
     for i in (0..bits).rev() {
         let gamma = most_common_at(&matching_gamma, i);
         let epsilon = !most_common_at(&matching_epsilon, i);
+        // TODO: Find out why retain is significantly slower than filter().collect()
         matching_gamma.retain(|&n| bit_at(n, i) == gamma);
+        // matching_gamma = matching_gamma.into_iter().filter(|&n| bit_at(n, i) == gamma).collect();
         if matching_epsilon.len() > 1 {
             matching_epsilon.retain(|&n| bit_at(n, i) == epsilon);
         }
@@ -50,9 +51,11 @@ fn part2(parsed: &Parsed, bits: usize) -> usize {
 }
 
 fn main() {
-    let input = parse_input(&read_file(DAY));
-    println!("Part 1: {}", part1(&input, 12));
-    println!("Part 2: {}", part2(&input, 12));
+    let raw = read_file(DAY);
+    let input = parse_input(&raw);
+    let line_length = raw.find('\n').unwrap();
+    println!("Part 1: {}", part1(&input, line_length));
+    println!("Part 2: {}", part2(&input, line_length));
 }
 
 #[cfg(test)]
@@ -82,7 +85,7 @@ mod tests {
     #[test]
     fn invert_test() {
         let gamma = 0b10110;
-        assert_eq!(invert(gamma), 0b01001);
+        assert_eq!(invert(gamma, 4), 0b01001);
     }
 
     #[test]
