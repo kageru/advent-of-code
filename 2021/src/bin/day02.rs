@@ -64,5 +64,5 @@ forward 2";
     test!(part2() == 900);
     bench!(part1() == 1698735);
     bench!(part2() == 1594785890);
-    bench_input!(len == 1000);
+    bench_input!(Vec::len => 1000);
 }

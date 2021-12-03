@@ -44,5 +44,5 @@ mod tests {
     test!(part2() == 5);
     bench!(part1() == 1316);
     bench!(part2() == 1344);
-    bench_input!(len == 2000);
+    bench_input!(Vec::len => 2000);
 }

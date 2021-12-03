@@ -39,5 +39,5 @@ mod tests {
     test!(part2() == 0);
     bench!(part1() == 0);
     bench!(part2() == 0);
-    bench_input!(len == 0);
+    bench_input!(Vec::len => 0);
 }' > src/bin/day$today.rs

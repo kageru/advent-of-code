@@ -108,5 +108,5 @@ mod tests {
     test!(part2(5) == 230);
     bench!(part1(12) == 3549854);
     bench!(part2(12) == 3765399);
-    bench_input!(len == 1000);
+    bench_input!(Vec::len => 1000);
 }

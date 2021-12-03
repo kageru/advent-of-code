@@ -14,11 +14,11 @@ macro_rules! bench {
 
 #[macro_export]
 macro_rules! bench_input {
-    ($fn:ident == $expected_len:expr) => {
+    ($fn:expr => $expected:expr) => {
         #[bench]
         fn bench_input_parsing(b: &mut test::Bencher) {
             let raw = &read_file(DAY);
-            b.iter(|| assert_eq!(parse_input(test::black_box(&raw)).$fn(), $expected_len));
+            b.iter(|| assert_eq!($fn(&parse_input(test::black_box(&raw))), $expected));
         }
     };
 }
