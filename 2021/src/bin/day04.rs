@@ -5,8 +5,23 @@ use itertools::Itertools;
 
 const DAY: usize = 4;
 const BOARD_SIZE: usize = 5;
-const NUMBERS_PER_BOARD: usize = BOARD_SIZE * BOARD_SIZE;
 type Board = Vec<Vec<u8>>;
+
+const WINNING_INDICES: [[usize; BOARD_SIZE]; BOARD_SIZE * 2] = {
+    let mut out = [[0; BOARD_SIZE]; BOARD_SIZE * 2];
+    let mut i = 0;
+    while i < BOARD_SIZE {
+        // tfw there are no for loops in const fn
+        let mut j = 0;
+        while j < BOARD_SIZE {
+            out[i][j] = i * 5 + j;
+            out[BOARD_SIZE + i][j] = i + j * 5;
+            j += 1;
+        }
+        i += 1;
+    }
+    out
+};
 
 #[derive(Debug, Clone)]
 struct BingoGame {
@@ -47,15 +62,8 @@ fn parse_input(raw: &str) -> BingoGame {
         .split("\n\n")
         .map(|b| b.split_ascii_whitespace().map(|n| n.parse().unwrap()).collect())
         .map(|v: Vec<u8>| {
-            debug_assert_eq!(v.len(), NUMBERS_PER_BOARD);
-            // This seems way too complicated. What am I missing?
-            (0..NUMBERS_PER_BOARD)
-                .chain((0..BOARD_SIZE).flat_map(|i| (i..NUMBERS_PER_BOARD).step_by(BOARD_SIZE)))
-                .map(|i| v[i])
-                .chunks(BOARD_SIZE)
-                .into_iter()
-                .map(|c| c.collect())
-                .collect()
+            debug_assert_eq!(v.len(), BOARD_SIZE * BOARD_SIZE);
+            WINNING_INDICES.map(|row_or_col| row_or_col.map(|i| v[i]).to_vec()).to_vec()
         })
         .collect();
     BingoGame { input_numbers, boards }
