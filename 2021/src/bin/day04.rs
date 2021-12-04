@@ -8,7 +8,6 @@ use itertools::Itertools;
 const DAY: usize = 4;
 const BOARD_SIZE: usize = 5;
 const NUMBERS_PER_BOARD: usize = BOARD_SIZE * BOARD_SIZE;
-type Parsed = BingoGame;
 type Board = Vec<HashSet<u8>>;
 
 #[derive(Debug, Clone)]
@@ -41,7 +40,7 @@ fn has_won(board: &Board) -> bool {
     board.iter().any(|s| s.is_empty())
 }
 
-fn parse_input(raw: &str) -> Parsed {
+fn parse_input(raw: &str) -> BingoGame {
     let (input_numbers, boards) = raw.split_once("\n\n").unwrap();
     let input_numbers = input_numbers.split(',').map(|n| n.parse().unwrap()).collect();
     let boards = boards
@@ -63,11 +62,11 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn board_score(board: &Board, current_number: u8) -> usize {
-    let remainder: usize = board.into_iter().flatten().unique().map(|&n| n as usize).sum();
+    let remainder: usize = board.iter().flatten().unique().map(|&n| n as usize).sum();
     remainder * (current_number as usize)
 }
 
-fn part1(parsed: &Parsed) -> usize {
+fn part1(parsed: &BingoGame) -> usize {
     let mut game = parsed.to_owned();
     for n in &game.input_numbers.clone() {
         game.mark_number(n);
@@ -78,7 +77,7 @@ fn part1(parsed: &Parsed) -> usize {
     unreachable!("Game should have ended at some point")
 }
 
-fn part2(parsed: &Parsed) -> usize {
+fn part2(parsed: &BingoGame) -> usize {
     let mut game = parsed.to_owned();
     for n in &game.input_numbers.clone() {
         game.mark_number(n);
