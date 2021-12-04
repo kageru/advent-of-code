@@ -1,14 +1,12 @@
 #![feature(test)]
 extern crate test;
-use std::collections::HashSet;
-
 use aoc2021::common::*;
 use itertools::Itertools;
 
 const DAY: usize = 4;
 const BOARD_SIZE: usize = 5;
 const NUMBERS_PER_BOARD: usize = BOARD_SIZE * BOARD_SIZE;
-type Board = Vec<HashSet<u8>>;
+type Board = Vec<Vec<u8>>;
 
 #[derive(Debug, Clone)]
 struct BingoGame {
@@ -19,8 +17,10 @@ struct BingoGame {
 impl BingoGame {
     fn mark_number(&mut self, n: &u8) {
         for board in self.boards.iter_mut() {
+            // Actually using sets instead of vectors here takes twice as long,
+            // so just pretend these are actually sets.
             for winning_set in board.iter_mut() {
-                winning_set.remove(n);
+                winning_set.retain(|e| e != n);
             }
         }
     }
