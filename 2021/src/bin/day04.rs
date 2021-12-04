@@ -7,6 +7,7 @@ use itertools::Itertools;
 
 const DAY: usize = 4;
 const BOARD_SIZE: usize = 5;
+const NUMBERS_PER_BOARD: usize = BOARD_SIZE * BOARD_SIZE;
 type Parsed = BingoGame;
 type Board = Vec<HashSet<u8>>;
 
@@ -28,6 +29,12 @@ impl BingoGame {
     fn find_winner(&self) -> Option<&Board> {
         self.boards.iter().find(|b| has_won(b))
     }
+
+    // For assertions in the bechmark
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.boards.len()
+    }
 }
 
 fn has_won(board: &Board) -> bool {
@@ -41,17 +48,15 @@ fn parse_input(raw: &str) -> Parsed {
         .split("\n\n")
         .map(|b| b.split_ascii_whitespace().map(|n| n.parse().unwrap()).collect())
         .map(|v: Vec<u8>| {
-            debug_assert_eq!(v.len(), 25);
-            let mut rows: Vec<HashSet<u8>> = v.chunks_exact(BOARD_SIZE).map(|s| s.into_iter().copied().collect()).collect();
-            rows.extend(
-                (0..BOARD_SIZE)
-                    .flat_map(|i| (0..BOARD_SIZE).map(move |j| i + BOARD_SIZE * j))
-                    .map(|i| v[i])
-                    .chunks(5)
-                    .into_iter()
-                    .map(|c| c.collect()),
-            );
-            rows
+            debug_assert_eq!(v.len(), NUMBERS_PER_BOARD);
+            // This seems way too complicated. What am I missing?
+            (0..NUMBERS_PER_BOARD)
+                .chain((0..BOARD_SIZE).flat_map(|i| (i..NUMBERS_PER_BOARD).step_by(BOARD_SIZE)))
+                .map(|i| v[i])
+                .chunks(BOARD_SIZE)
+                .into_iter()
+                .map(|c| c.collect())
+                .collect()
         })
         .collect();
     BingoGame { input_numbers, boards }
@@ -77,13 +82,10 @@ fn part2(parsed: &Parsed) -> usize {
     let mut game = parsed.to_owned();
     for n in &game.input_numbers.clone() {
         game.mark_number(n);
-        if game.boards.len() > 1 {
-            game.boards.retain(|b| !has_won(b));
-        } else {
-            if let Some(board) = game.find_winner() {
-                return board_score(board, *n);
-            }
+        if game.boards.len() == 1 && has_won(&game.boards[0]) {
+            return board_score(&game.boards[0], *n);
         }
+        game.boards.retain(|b| !has_won(b));
     }
     unreachable!("Game should have ended at some point")
 }
@@ -122,7 +124,7 @@ mod tests {
 
     test!(part1() == 4512);
     test!(part2() == 1924);
-    bench!(part1() == 0);
-    bench!(part2() == 0);
-    // bench_input!(Vec::len => 0);
+    bench!(part1() == 74320);
+    bench!(part2() == 17884);
+    bench_input!(BingoGame::len => 100);
 }
