@@ -1,12 +1,12 @@
+#![feature(int_abs_diff)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
 use fnv::FnvHashMap;
-use itertools::Itertools;
-use std::collections::HashMap;
 
 const DAY: usize = 5;
-type Parsed = Vec<((usize, usize), (usize, usize))>;
+type Coordinate = (i16, i16); // twice as fast as using i64s ¯\_(ツ)_/¯
+type Parsed = Vec<(Coordinate, Coordinate)>;
 
 fn parse_input(raw: &str) -> Parsed {
     raw.lines()
@@ -16,34 +16,43 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
-fn part1(parsed: &Parsed) -> usize {
-    let mut map: HashMap<_, _, _> = FnvHashMap::default();
+fn solve<F: FnMut(&(Coordinate, Coordinate)) -> Vec<Coordinate>>(parsed: &Parsed, f: F) -> usize {
     parsed
         .iter()
-        .flat_map(|cs| match cs {
-            ((x1, y1), (x2, y2)) if x1 == x2 => (*y1.min(y2)..=*y1.max(y2)).map(|y| (*x1, y)).collect(),
-            ((x1, y1), (x2, y2)) if y1 == y2 => (*x1.min(x2)..=*x1.max(x2)).map(|x| (x, *y1)).collect(),
-            _ => vec![],
+        .flat_map(f)
+        .fold(FnvHashMap::default(), |mut map, c| {
+            *map.entry(c).or_insert(0) += 1;
+            map
         })
-        .for_each(|c| *map.entry(c).or_insert(0) += 1);
-    map.values().filter(|&&n| n > 1).count()
+        .values()
+        .filter(|&&n| n > 1)
+        .count()
+}
+
+fn part1(parsed: &Parsed) -> usize {
+    solve(parsed, |&cs| match cs {
+        ((x1, y1), (x2, y2)) if x1 == x2 => (y1.min(y2)..=y1.max(y2)).map(|y| (x1, y)).collect(),
+        ((x1, y1), (x2, y2)) if y1 == y2 => (x1.min(x2)..=x1.max(x2)).map(|x| (x, y1)).collect(),
+        _ => vec![],
+    })
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    let mut map: HashMap<_, _, _> = FnvHashMap::default();
-    parsed
-        .iter()
-        .flat_map(|cs| match cs {
-            ((x1, y1), (x2, y2)) if x1 == x2 => (*y1.min(y2)..=*y1.max(y2)).map(|y| (*x1, y)).collect_vec(),
-            ((x1, y1), (x2, y2)) if y1 == y2 => (*x1.min(x2)..=*x1.max(x2)).map(|x| (x, *y1)).collect(),
-            ((x1, y1), (x2, y2)) if x1 < x2 && y1 < y2 => (*x1..=*x2).zip(*y1..=*y2).collect(),
-            ((x1, y1), (x2, y2)) if x1 < x2 && y1 > y2 => (*x1..=*x2).zip((*y2..=*y1).rev()).collect(),
-            ((x1, y1), (x2, y2)) if x1 > x2 && y1 < y2 => (*x2..=*x1).rev().zip(*y1..=*y2).collect(),
-            ((x1, y1), (x2, y2)) if x1 > x2 && y1 > y2 => (*x2..=*x1).rev().zip((*y2..=*y1).rev()).collect(),
-            _ => unreachable!(),
-        })
-        .for_each(|c| *map.entry(c).or_insert(0) += 1);
-    map.values().filter(|&&n| n > 1).count()
+    let offset = |x1, x2| (x1 < x2) as i16 - (x1 > x2) as i16;
+    solve(parsed, |&((mut x1, mut y1), (x2, y2))| {
+        let mut coords = Vec::with_capacity(x1.abs_diff(x2).max(y1.abs_diff(y2)) as usize + 1);
+        let x_offset = offset(x1, x2);
+        let y_offset = offset(y1, y2);
+        loop {
+            coords.push((x1, y1));
+            if x1 == x2 && y1 == y2 {
+                break;
+            }
+            x1 += x_offset;
+            y1 += y_offset;
+        }
+        coords
+    })
 }
 
 fn main() {
