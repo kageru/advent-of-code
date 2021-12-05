@@ -7,6 +7,15 @@ const DAY: usize = 5;
 type Coordinate = (i16, i16); // twice as fast as using i64s ¯\_(ツ)_/¯
 type Parsed = Vec<(Coordinate, Coordinate)>;
 
+// Memes :pepeHype:
+/*
+macro_rules! parse {
+    ($($x1: literal, $y1: literal -> $x2: literal, $y2: literal)*) => {
+        [ $((($x1, $y1), ($x2, $y2)),)* ]
+    };
+}
+*/
+
 fn parse_input(raw: &str) -> Parsed {
     raw.lines()
         .filter_map(|line| line.split_once(" -> "))
