@@ -2,7 +2,8 @@
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
-use fnv::FnvHashMap;
+use fnv::{FnvHashMap, FnvHasher};
+use std::hash::BuildHasherDefault;
 
 const DAY: usize = 5;
 type Coordinate = (i16, i16); // twice as fast as using i64s ¯\_(ツ)_/¯
@@ -16,11 +17,11 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
-fn solve<F: FnMut(&(Coordinate, Coordinate)) -> Vec<Coordinate>>(parsed: &Parsed, f: F) -> usize {
+fn solve<F: FnMut(&(Coordinate, Coordinate)) -> Vec<Coordinate>>(parsed: &Parsed, capacity: usize, f: F) -> usize {
     parsed
         .iter()
         .flat_map(f)
-        .fold(FnvHashMap::default(), |mut map, c| {
+        .fold(FnvHashMap::with_capacity_and_hasher(capacity, BuildHasherDefault::<FnvHasher>::default()), |mut map, c| {
             *map.entry(c).or_insert(0) += 1;
             map
         })
@@ -30,7 +31,7 @@ fn solve<F: FnMut(&(Coordinate, Coordinate)) -> Vec<Coordinate>>(parsed: &Parsed
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    solve(parsed, |&cs| match cs {
+    solve(parsed, parsed.len() * 200, |&cs| match cs {
         ((x1, y1), (x2, y2)) if x1 == x2 => (y1.min(y2)..=y1.max(y2)).map(|y| (x1, y)).collect(),
         ((x1, y1), (x2, y2)) if y1 == y2 => (x1.min(x2)..=x1.max(x2)).map(|x| (x, y1)).collect(),
         _ => vec![],
@@ -39,7 +40,7 @@ fn part1(parsed: &Parsed) -> usize {
 
 fn part2(parsed: &Parsed) -> usize {
     let offset = |x1, x2| (x1 < x2) as i16 - (x1 > x2) as i16;
-    solve(parsed, |&((mut x1, mut y1), (x2, y2))| {
+    solve(parsed, parsed.len() * 400, |&((mut x1, mut y1), (x2, y2))| {
         let mut coords = Vec::with_capacity(x1.abs_diff(x2).max(y1.abs_diff(y2)) as usize + 1);
         let x_offset = offset(x1, x2);
         let y_offset = offset(y1, y2);
