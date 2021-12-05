@@ -1,0 +1,76 @@
+#![feature(test)]
+extern crate test;
+use aoc2021::common::*;
+use fnv::FnvHashMap;
+use itertools::Itertools;
+use std::collections::HashMap;
+
+const DAY: usize = 5;
+type Parsed = Vec<((usize, usize), (usize, usize))>;
+
+fn parse_input(raw: &str) -> Parsed {
+    raw.lines()
+        .filter_map(|line| line.split_once(" -> "))
+        .filter_map(|(c1, c2)| c1.split_once(',').zip(c2.split_once(',')))
+        .map(|((x1, y1), (x2, y2))| ((x1.parse().unwrap(), y1.parse().unwrap()), (x2.parse().unwrap(), y2.parse().unwrap())))
+        .collect()
+}
+
+fn part1(parsed: &Parsed) -> usize {
+    let mut map: HashMap<_, _, _> = FnvHashMap::default();
+    parsed
+        .iter()
+        .flat_map(|cs| match cs {
+            ((x1, y1), (x2, y2)) if x1 == x2 => (*y1.min(y2)..=*y1.max(y2)).map(|y| (*x1, y)).collect(),
+            ((x1, y1), (x2, y2)) if y1 == y2 => (*x1.min(x2)..=*x1.max(x2)).map(|x| (x, *y1)).collect(),
+            _ => vec![],
+        })
+        .for_each(|c| *map.entry(c).or_insert(0) += 1);
+    map.values().filter(|&&n| n > 1).count()
+}
+
+fn part2(parsed: &Parsed) -> usize {
+    let mut map: HashMap<_, _, _> = FnvHashMap::default();
+    parsed
+        .iter()
+        .flat_map(|cs| match cs {
+            ((x1, y1), (x2, y2)) if x1 == x2 => (*y1.min(y2)..=*y1.max(y2)).map(|y| (*x1, y)).collect_vec(),
+            ((x1, y1), (x2, y2)) if y1 == y2 => (*x1.min(x2)..=*x1.max(x2)).map(|x| (x, *y1)).collect(),
+            ((x1, y1), (x2, y2)) if x1 < x2 && y1 < y2 => (*x1..=*x2).zip(*y1..=*y2).collect(),
+            ((x1, y1), (x2, y2)) if x1 < x2 && y1 > y2 => (*x1..=*x2).zip((*y2..=*y1).rev()).collect(),
+            ((x1, y1), (x2, y2)) if x1 > x2 && y1 < y2 => (*x2..=*x1).rev().zip(*y1..=*y2).collect(),
+            ((x1, y1), (x2, y2)) if x1 > x2 && y1 > y2 => (*x2..=*x1).rev().zip((*y2..=*y1).rev()).collect(),
+            _ => unreachable!(),
+        })
+        .for_each(|c| *map.entry(c).or_insert(0) += 1);
+    map.values().filter(|&&n| n > 1).count()
+}
+
+fn main() {
+    let input = parse_input(&read_file(DAY));
+    println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aoc2021::*;
+
+    const TEST_INPUT: &str = "0,9 -> 5,9
+8,0 -> 0,8
+9,4 -> 3,4
+2,2 -> 2,1
+7,0 -> 7,4
+6,4 -> 2,0
+0,9 -> 2,9
+3,4 -> 1,4
+0,0 -> 8,8
+5,5 -> 8,2";
+
+    test!(part1() == 5);
+    test!(part2() == 12);
+    bench!(part1() == 5280);
+    bench!(part2() == 16716);
+    bench_input!(Vec::len => 500);
+}
