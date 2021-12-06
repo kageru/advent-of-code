@@ -20,15 +20,10 @@ fn simulate<const LIMIT: usize>(parsed: &Parsed) -> usize {
             next_child += FERTILITY_CYCLE;
         }
     }
-    let mut adult_from_day = vec![1; LIMIT];
-    for i in (0..LIMIT).rev() {
-        let mut child_at = i + FERTILITY_CYCLE;
-        while child_at < LIMIT {
-            adult_from_day[i] += fish_from_day[child_at];
-            child_at += FERTILITY_CYCLE;
-        }
-    }
-    parsed.iter().map(|&i| adult_from_day[i] + fish_from_day[i]).sum()
+    let adult_from_day: Vec<usize> = (0..FERTILITY_CYCLE)
+        .map(|i| std::iter::successors(Some(i), |i| Some(i + FERTILITY_CYCLE).filter(|i| i < &LIMIT)).map(|i| fish_from_day[i]).sum())
+        .collect();
+    parsed.iter().map(|&i| 1 + adult_from_day[i]).sum()
 }
 
 fn main() {
