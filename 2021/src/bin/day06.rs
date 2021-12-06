@@ -1,10 +1,11 @@
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
+use std::iter;
 
 const DAY: usize = 6;
 const FERTILITY_CYCLE: usize = 7;
-const DAYS_TO_FERTILITY: usize = 2;
+const INITIAL_DELAY: usize = FERTILITY_CYCLE + 2;
 type Parsed = Vec<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
@@ -12,17 +13,13 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn simulate<const LIMIT: usize>(parsed: &Parsed) -> usize {
+    let next_fertile_day = |day: &usize| Some(day + FERTILITY_CYCLE).filter(|n| n < &LIMIT);
     let mut fish_from_day = [1; LIMIT];
-    for i in (0..LIMIT).rev() {
-        let mut next_child = i + FERTILITY_CYCLE + DAYS_TO_FERTILITY;
-        while next_child < LIMIT {
-            fish_from_day[i] += fish_from_day[next_child];
-            next_child += FERTILITY_CYCLE;
-        }
+    for i in (0..LIMIT - INITIAL_DELAY).rev() {
+        fish_from_day[i] += iter::successors(Some(i + INITIAL_DELAY), next_fertile_day).map(|n| fish_from_day[n]).sum::<usize>()
     }
-    let adult_from_day: Vec<usize> = (0..FERTILITY_CYCLE)
-        .map(|i| std::iter::successors(Some(i), |i| Some(i + FERTILITY_CYCLE).filter(|i| i < &LIMIT)).map(|i| fish_from_day[i]).sum())
-        .collect();
+    let adult_from_day: Vec<usize> =
+        (0..FERTILITY_CYCLE).map(|i| iter::successors(Some(i), next_fertile_day).map(|i| fish_from_day[i]).sum()).collect();
     parsed.iter().map(|&i| 1 + adult_from_day[i]).sum()
 }
 
