@@ -6,10 +6,14 @@ pub fn read_file(day: usize) -> String {
 
 #[inline]
 pub fn parse_nums(l: &str) -> Vec<usize> {
-    l.lines().filter_map(|n| n.parse().ok()).collect()
+    l.lines().map(parse_num).collect()
 }
 
 #[inline]
 pub fn parse_nums_comma(l: &str) -> Vec<usize> {
-    l.split(',').filter_map(|n| n.parse().ok()).collect()
+    l.split(',').map(parse_num).collect()
+}
+
+fn parse_num(s: &str) -> usize {
+    s.trim().parse().unwrap_or_else(|e| panic!("Invalid number {s}: {e:?}"))
 }
