@@ -1,42 +1,40 @@
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
-use std::iter;
 
 const DAY: usize = 6;
-const DAYS_PER_CHILD: usize = 6;
-const DAYS_UNTIL_FERTILE: usize = 2;
+const FERTILITY_CYCLE: usize = 7;
+const DAYS_TO_FERTILITY: usize = 2;
 type Parsed = Vec<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
     parse_nums_comma(raw)
 }
 
-fn part1(parsed: &Parsed, generations: usize) -> usize {
-    iter::successors(Some(parsed.to_owned()), |fish| {
-        let fish = fish
-            .into_iter()
-            .flat_map(|n| match n {
-                0 => vec![DAYS_PER_CHILD, DAYS_PER_CHILD + DAYS_UNTIL_FERTILE],
-                &n => vec![n - 1],
-            })
-            .collect();
-        Some(fish)
-    })
-    .take(generations + 1)
-    .last()
-    .unwrap()
-    .len()
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn simulate<const LIMIT: usize>(parsed: &Parsed) -> usize {
+    let mut fish_from_day = [1; LIMIT];
+    for i in (0..LIMIT).rev() {
+        let mut next_child = i + FERTILITY_CYCLE + DAYS_TO_FERTILITY;
+        while next_child < LIMIT {
+            fish_from_day[i] += fish_from_day[next_child];
+            next_child += FERTILITY_CYCLE;
+        }
+    }
+    let mut adult_from_day = vec![1; LIMIT];
+    for i in (0..LIMIT).rev() {
+        let mut child_at = i + FERTILITY_CYCLE;
+        while child_at < LIMIT {
+            adult_from_day[i] += fish_from_day[child_at];
+            child_at += FERTILITY_CYCLE;
+        }
+    }
+    parsed.iter().map(|&i| adult_from_day[i] + fish_from_day[i]).sum()
 }
 
 fn main() {
     let input = parse_input(&read_file(DAY));
-    println!("Part 1: {}", part1(&input, 80));
-    println!("Part 2: {}", part2(&input));
+    println!("Part 1: {}", simulate::<80>(&input));
+    println!("Part 2: {}", simulate::<256>(&input));
 }
 
 #[cfg(test)]
@@ -46,9 +44,9 @@ mod tests {
 
     const TEST_INPUT: &str = "3,4,3,1,2";
 
-    test!(part1(80) == 5934);
-    test!(part2() == 0);
-    bench!(part1(80) == 364461);
-    bench!(part2() == 0);
-    bench_input!(Vec::len => 0);
+    test!(simulate<80>() == 5934);
+    test!(simulate<256>() == 26984457539);
+    bench!(simulate<80>() == 365862);
+    bench!(simulate<256>() == 1653250886439);
+    bench_input!(Vec::len => 300);
 }
