@@ -12,8 +12,7 @@ fn parse_input(raw: &str) -> Parsed {
 
 fn part1(parsed: &Parsed) -> usize {
     let mut nums = parsed.to_owned();
-    nums.sort();
-    let median = nums[nums.len() / 2];
+    let median = *nums.select_nth_unstable(parsed.len() / 2).1;
     parsed.iter().map(|p| p.abs_diff(median)).sum()
 }
 
