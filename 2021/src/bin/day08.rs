@@ -1,4 +1,5 @@
 #![feature(array_from_fn)]
+#![feature(array_zip)]
 #![feature(once_cell)]
 #![feature(test)]
 extern crate test;
@@ -13,15 +14,7 @@ const VALID_DISPLAYS: Lazy<[SSD; 10]> =
     Lazy::new(|| ["abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg"].map(SSD::from));
 
 #[derive(Debug, PartialEq)]
-struct SSD {
-    a: bool,
-    b: bool,
-    c: bool,
-    d: bool,
-    e: bool,
-    f: bool,
-    g: bool,
-}
+struct SSD([bool; 7]);
 
 struct Mapping([char; 7]);
 
@@ -33,40 +26,24 @@ impl Mapping {
 
 impl From<&str> for SSD {
     fn from(s: &str) -> Self {
-        SSD {
-            a: s.contains('a'),
-            b: s.contains('b'),
-            c: s.contains('c'),
-            d: s.contains('d'),
-            e: s.contains('e'),
-            f: s.contains('f'),
-            g: s.contains('g'),
-        }
+        SSD([s.contains('a'), s.contains('b'), s.contains('c'), s.contains('d'), s.contains('e'), s.contains('f'), s.contains('g')])
     }
 }
 
 impl ops::Sub<&SSD> for &SSD {
     type Output = SSD;
     fn sub(self, rhs: &SSD) -> Self::Output {
-        Self::Output {
-            a: self.a && !rhs.a,
-            b: self.b && !rhs.b,
-            c: self.c && !rhs.c,
-            d: self.d && !rhs.d,
-            e: self.e && !rhs.e,
-            f: self.f && !rhs.f,
-            g: self.g && !rhs.g,
-        }
+        SSD(self.0.zip(rhs.0).map(|(l, r)| l && !r))
     }
 }
 
 impl SSD {
     fn active_digits(&self) -> u8 {
-        self.a as u8 + self.b as u8 + self.c as u8 + self.d as u8 + self.e as u8 + self.f as u8 + self.g as u8
+        self.0.iter().map(|&b| b as u8).sum()
     }
 
     fn to_array(&self) -> [bool; 7] {
-        [self.a, self.b, self.c, self.d, self.e, self.f, self.g]
+        self.0
     }
 }
 
