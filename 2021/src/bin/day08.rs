@@ -5,16 +5,15 @@
 extern crate test;
 use aoc2021::common::*;
 use itertools::{iproduct, Itertools};
-use std::{array, lazy::Lazy, ops};
+use std::{array, lazy::Lazy};
 
-const DAY: usize = 08;
+const DAY: usize = 8;
 type Parsed<'a> = Vec<([&'a str; 10], [&'a str; 4])>;
 
 const VALID_DISPLAYS: Lazy<[SSD; 10]> =
-    Lazy::new(|| ["abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg"].map(SSD::from));
+    Lazy::new(|| ["abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg"].map(parse));
 
-#[derive(Debug, PartialEq)]
-struct SSD([bool; 7]);
+type SSD = [bool; 7];
 
 struct Mapping([char; 7]);
 
@@ -24,27 +23,12 @@ impl Mapping {
     }
 }
 
-impl From<&str> for SSD {
-    fn from(s: &str) -> Self {
-        SSD([s.contains('a'), s.contains('b'), s.contains('c'), s.contains('d'), s.contains('e'), s.contains('f'), s.contains('g')])
-    }
+fn parse(s: &str) -> SSD {
+    [s.contains('a'), s.contains('b'), s.contains('c'), s.contains('d'), s.contains('e'), s.contains('f'), s.contains('g')]
 }
 
-impl ops::Sub<&SSD> for &SSD {
-    type Output = SSD;
-    fn sub(self, rhs: &SSD) -> Self::Output {
-        SSD(self.0.zip(rhs.0).map(|(l, r)| l && !r))
-    }
-}
-
-impl SSD {
-    fn active_digits(&self) -> u8 {
-        self.0.iter().map(|&b| b as u8).sum()
-    }
-
-    fn to_array(&self) -> [bool; 7] {
-        self.0
-    }
+fn difference(lhs: &SSD, rhs: &SSD) -> SSD {
+    lhs.zip(*rhs).map(|(l, r)| l && !r)
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -66,18 +50,15 @@ fn part2<'a>(parsed: &Parsed<'a>) -> usize {
     parsed
         .iter()
         .map(|(raw_input, raw_output)| {
-            let input = raw_input.map(SSD::from);
-            let one = input.iter().find(|d| d.active_digits() == 2).unwrap();
-            let four = input.iter().find(|d| d.active_digits() == 4).unwrap();
-            let seven = input.iter().find(|d| d.active_digits() == 3).unwrap();
+            let [one, four, seven] = [2, 4, 3].map(|n| raw_input.iter().find(|s| s.len() == n).unwrap()).map(|&s| parse(s));
             // We know the position of a for sure because it’s the only difference between 7 and 1
-            let a = (seven - one).to_array().iter().position(|&b| b).unwrap();
+            let a = difference(&seven, &one).iter().position(|&b| b).unwrap();
             // And c and f are these two (both used in 1).
             // Countrary to the name, these two values are both c_or_f,
             // so we know c and f are these two, but we don’t know which is which.
-            let (c, f) = one.to_array().iter().positions(|&b| b).next_tuple().unwrap();
+            let (c, f) = one.iter().positions(|&b| b).next_tuple().unwrap();
             // 4 uses b, c, d, f, but we already know c and f from 1, so this leaves b and d.
-            let (b, d) = (four - one).to_array().iter().positions(|&b| b).next_tuple().unwrap();
+            let (b, d) = difference(&four, &one).iter().positions(|&b| b).next_tuple().unwrap();
             // Now e and g have to be in the remaining two positions.
             let (e, g) = (0..7).filter(|n| ![a, b, c, d, f].contains(n)).next_tuple().unwrap();
             debug_assert_eq!([a, b, c, d, e, f, g].into_iter().sorted().collect_vec(), (0..7).collect_vec());
@@ -97,7 +78,7 @@ fn part2<'a>(parsed: &Parsed<'a>) -> usize {
                 .find(|m| {
                     raw_input.iter().all(|i| {
                         let translated: String = i.chars().map(|n| m.translate(n)).collect();
-                        let ssd = SSD::from(translated.as_ref());
+                        let ssd = parse(&translated);
                         VALID_DISPLAYS.iter().any(|d| d == &ssd)
                     })
                 })
@@ -105,7 +86,7 @@ fn part2<'a>(parsed: &Parsed<'a>) -> usize {
             raw_output
                 .iter()
                 .map(|i| i.chars().map(|n| mapping.translate(n)).collect::<String>())
-                .map(|t| SSD::from(t.as_ref()))
+                .map(|t| parse(&t))
                 .map(|ssd| VALID_DISPLAYS.iter().position(|d| &ssd == d).unwrap())
                 .fold(0, |acc, n| (acc + n) * 10)
                 / 10
