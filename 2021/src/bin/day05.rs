@@ -20,7 +20,7 @@ fn parse_input(raw: &str) -> Parsed {
     raw.lines()
         .filter_map(|line| line.split_once(" -> "))
         .filter_map(|(c1, c2)| c1.split_once(',').zip(c2.split_once(',')))
-        .map(|((x1, y1), (x2, y2))| ((x1.parse().unwrap(), y1.parse().unwrap()), (x2.parse().unwrap(), y2.parse().unwrap())))
+        .map(|((x1, y1), (x2, y2))| ((parse_num(x1), parse_num(y1)), (parse_num(x2), parse_num(y2))))
         .collect()
 }
 

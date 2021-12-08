@@ -57,10 +57,10 @@ fn has_won(board: &Board) -> bool {
 
 fn parse_input(raw: &str) -> BingoGame {
     let (input_numbers, boards) = raw.split_once("\n\n").unwrap();
-    let input_numbers = input_numbers.split(',').map(|n| n.parse().unwrap()).collect();
+    let input_numbers = input_numbers.split(',').map(parse_num).collect();
     let boards = boards
         .split("\n\n")
-        .map(|b| b.split_ascii_whitespace().map(|n| n.parse().unwrap()).collect())
+        .map(|b| b.split_ascii_whitespace().map(parse_num).collect())
         .map(|v: Vec<u8>| {
             debug_assert_eq!(v.len(), BOARD_SIZE * BOARD_SIZE);
             WINNING_INDICES.map(|row_or_col| row_or_col.map(|i| v[i]).to_vec()).to_vec()
