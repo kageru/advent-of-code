@@ -7,29 +7,31 @@ use itertools::Itertools;
 use std::array;
 
 const DAY: usize = 8;
-type Parsed = Vec<([SSD; 10], [SSD; 4])>;
+type Parsed = Vec<([Ssd; 10], [Ssd; 4])>;
 
-const VALID_DISPLAYS: [SSD; 10] = [119, 36, 93, 109, 46, 107, 123, 37, 127, 111];
+const VALID_DISPLAYS: [Ssd; 10] = [119, 36, 93, 109, 46, 107, 123, 37, 127, 111];
 
-type SSD = u32;
+type Ssd = u32;
 
-struct Mapping([SSD; 7]);
+struct Mapping([Ssd; 7]);
 
 impl Mapping {
-    fn translate(&self, i: usize) -> SSD {
+    fn translate(&self, i: usize) -> Ssd {
         1 << self.0[i]
     }
 }
 
-fn parse(s: &str) -> SSD {
-    ['g', 'f', 'e', 'd', 'c', 'b', 'a'].iter().map(|&c| s.contains(c)).fold(0, |acc, b| (acc | (b as SSD)) << 1) >> 1
+const INPUT_MASK: [Ssd; 8] = [1, 2, 4, 8, 16, 32, 64, 128];
+
+fn parse(s: &str) -> Ssd {
+    s.bytes().map(|b| INPUT_MASK[(b - b'a') as usize]).sum()
 }
 
-fn bit_at(x: SSD, n: usize) -> bool {
+fn bit_at(x: Ssd, n: usize) -> bool {
     (x >> n) & 1 != 0
 }
 
-fn difference(lhs: SSD, rhs: SSD) -> SSD {
+fn difference(lhs: Ssd, rhs: Ssd) -> Ssd {
     lhs & !rhs
 }
 
@@ -67,15 +69,17 @@ fn part2(parsed: &Parsed) -> usize {
             let (e, g) = if input.iter().filter(|&&i| bit_at(i, e)).count() == 4 { (e, g) } else { (g, e) };
             let mut m = [0; 7];
             let mut cur = 0;
+            #[allow(clippy::explicit_counter_loop)] // it’s faster this way
             for i in [a, b, c, d, e, f, g] {
-                m[i] = cur;
+                // We know they’re all in range, and this is actually a few % faster.
+                unsafe { *m.get_unchecked_mut(i) = cur };
                 cur += 1;
             }
             let mapping = Mapping(m);
             output
                 .iter()
-                .map(|&i| (0..7).map(|n| (bit_at(i, n) as SSD) * mapping.translate(n)).sum())
-                .map(|ssd: SSD| VALID_DISPLAYS.iter().position(|d| &ssd == d).unwrap())
+                .map(|&i| (0..7).map(|n| (bit_at(i, n) as Ssd) * mapping.translate(n)).sum())
+                .map(|ssd: Ssd| VALID_DISPLAYS.iter().position(|d| &ssd == d).unwrap())
                 .fold(0, |acc, n| (acc + n) * 10)
                 / 10
         })
