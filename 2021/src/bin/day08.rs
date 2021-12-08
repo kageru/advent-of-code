@@ -1,34 +1,36 @@
 #![feature(array_from_fn)]
 #![feature(array_zip)]
-#![feature(once_cell)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
-use itertools::{iproduct, Itertools};
-use std::{array, lazy::Lazy};
+use itertools::Itertools;
+use std::array;
 
 const DAY: usize = 8;
-type Parsed<'a> = Vec<([&'a str; 10], [&'a str; 4])>;
+type Parsed<'a> = Vec<([SSD; 10], [SSD; 4])>;
 
-const VALID_DISPLAYS: Lazy<[SSD; 10]> =
-    Lazy::new(|| ["abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg"].map(parse));
+const VALID_DISPLAYS: [SSD; 10] = [119, 36, 93, 109, 46, 107, 123, 37, 127, 111];
 
-type SSD = [bool; 7];
+type SSD = u32;
 
-struct Mapping([char; 7]);
+struct Mapping([SSD; 7]);
 
 impl Mapping {
-    fn translate(&self, c: char) -> char {
-        self.0[(c as u8 - b'a') as usize]
+    fn translate(&self, i: SSD) -> SSD {
+        1 << self.0[i as usize]
     }
 }
 
 fn parse(s: &str) -> SSD {
-    [s.contains('a'), s.contains('b'), s.contains('c'), s.contains('d'), s.contains('e'), s.contains('f'), s.contains('g')]
+    ['g', 'f', 'e', 'd', 'c', 'b', 'a'].iter().map(|&c| s.contains(c)).fold(0, |acc, b| (acc | (b as SSD)) << 1) >> 1
 }
 
-fn difference(lhs: &SSD, rhs: &SSD) -> SSD {
-    lhs.zip(*rhs).map(|(l, r)| l && !r)
+fn bit_at(x: SSD, n: SSD) -> bool {
+    (x >> n) & 1 != 0
+}
+
+fn difference(lhs: SSD, rhs: SSD) -> SSD {
+    lhs & !rhs
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -37,57 +39,52 @@ fn parse_input(raw: &str) -> Parsed {
         .map(|(input, output)| {
             let mut input = input.split(' ').map_into();
             let mut output = output.split(' ').map_into();
-            (array::from_fn(|_| input.next().unwrap()), array::from_fn(|_| output.next().unwrap()))
+            (array::from_fn(|_| parse(input.next().unwrap())), array::from_fn(|_| parse(output.next().unwrap())))
         })
         .collect()
 }
 
 fn part1<'a>(parsed: &Parsed<'a>) -> usize {
-    parsed.iter().flat_map(|(_, output)| output).filter(|&&input| [2, 3, 4, 7].contains(&input.len())).count()
+    parsed.iter().flat_map(|(_, output)| output).filter(|&&input| [2, 3, 4, 7].contains(&input.count_ones())).count()
 }
 
 fn part2<'a>(parsed: &Parsed<'a>) -> usize {
     parsed
         .iter()
-        .map(|(raw_input, raw_output)| {
-            let [one, four, seven] = [2, 4, 3].map(|n| raw_input.iter().find(|s| s.len() == n).unwrap()).map(|&s| parse(s));
+        .map(|(input, raw_output)| {
+            let [&one, &four, &seven] = [2, 4, 3].map(|n| input.iter().find(|s| s.count_ones() == n).unwrap());
             // We know the position of a for sure because it’s the only difference between 7 and 1
-            let a = difference(&seven, &one).iter().position(|&b| b).unwrap();
+            let a = (0..7).position(|n| bit_at(difference(seven, one), n)).unwrap();
             // And c and f are these two (both used in 1).
-            // Countrary to the name, these two values are both c_or_f,
+            // Contrary to the name, these two values are both c_or_f,
             // so we know c and f are these two, but we don’t know which is which.
-            let (c, f) = one.iter().positions(|&b| b).next_tuple().unwrap();
+            let (c, f) = (0..7).positions(|n| bit_at(one, n)).next_tuple().unwrap();
             // 4 uses b, c, d, f, but we already know c and f from 1, so this leaves b and d.
-            let (b, d) = difference(&four, &one).iter().positions(|&b| b).next_tuple().unwrap();
+            let (b, d) = (0..7).positions(|n| bit_at(difference(four, one), n)).next_tuple().unwrap();
             // Now e and g have to be in the remaining two positions.
             let (e, g) = (0..7).filter(|n| ![a, b, c, d, f].contains(n)).next_tuple().unwrap();
-            debug_assert_eq!([a, b, c, d, e, f, g].into_iter().sorted().collect_vec(), (0..7).collect_vec());
             // Now there are 8 possible combinations from multiplying the 3 x_or_y we constructed above.
-            let mapping = iproduct!([[b, d], [d, b]], [[c, f], [f, c]], [[e, g], [g, e]])
-                .map(|([b, d], [c, f], [e, g])| {
-                    let mut m = [' '; 7];
-                    m[a] = 'a';
-                    m[b] = 'b';
-                    m[c] = 'c';
-                    m[d] = 'd';
-                    m[e] = 'e';
-                    m[f] = 'f';
-                    m[g] = 'g';
+            // This is a manual implementation of itertools::iproduct specialized for 3 small
+            // arrays because it’s much faster this way.
+            let mapping = [[c, f], [f, c]]
+                .into_iter()
+                .flat_map(|[c, f]| [[c, f, b, d], [c, f, d, b]])
+                .flat_map(|[c, f, b, d]| [[c, f, b, d, e, g], [c, f, b, d, g, e]])
+                .map(|[c, f, b, d, e, g]| {
+                    let mut m = [0; 7];
+                    let mut cur = 0;
+                    for i in [a, b, c, d, e, f, g] {
+                        m[i] = cur;
+                        cur += 1;
+                    }
                     Mapping(m)
                 })
-                .find(|m| {
-                    raw_input.iter().all(|i| {
-                        let translated: String = i.chars().map(|n| m.translate(n)).collect();
-                        let ssd = parse(&translated);
-                        VALID_DISPLAYS.iter().any(|d| d == &ssd)
-                    })
-                })
+                .find(|m| input.iter().all(|&i| VALID_DISPLAYS.contains(&(0..7).map(|n| (bit_at(i, n) as SSD) * m.translate(n)).sum())))
                 .unwrap();
             raw_output
                 .iter()
-                .map(|i| i.chars().map(|n| mapping.translate(n)).collect::<String>())
-                .map(|t| parse(&t))
-                .map(|ssd| VALID_DISPLAYS.iter().position(|d| &ssd == d).unwrap())
+                .map(|&i| (0..7).map(|n| (bit_at(i, n) as SSD) * mapping.translate(n)).sum())
+                .map(|ssd: SSD| VALID_DISPLAYS.iter().position(|d| &ssd == d).unwrap())
                 .fold(0, |acc, n| (acc + n) * 10)
                 / 10
         })
@@ -116,6 +113,11 @@ dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbc
 bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
 egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
 gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce";
+
+    #[test]
+    fn test_parse() {
+        assert_eq!(parse("cgeb"), 86);
+    }
 
     test!(part1() == 26);
     test!(part2() == 61229);
