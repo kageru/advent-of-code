@@ -15,9 +15,8 @@ fn part1(parsed: &Parsed) -> usize {
         .filter_map(|(x, y)| {
             // There’s gotta be some incomplete_windows or similar that makes this not as horrible
             let cur = parsed[x][y];
-            [Step::XP, Step::XM, Step::YP, Step::YM]
+            all_neighbors(x, y)
                 .into_iter()
-                .filter_map(|s| try_step(x, y, s))
                 .filter_map(|(x, y)| parsed.get(x).and_then(|ys| ys.get(y)))
                 .all(|&n| n > cur)
                 .then(|| cur as usize + 1)
@@ -25,16 +24,11 @@ fn part1(parsed: &Parsed) -> usize {
         .sum()
 }
 
-#[rustfmt::skip]
-enum Step { XP, XM, YP, YM }
-
-fn try_step(x: usize, y: usize, step: Step) -> Option<(usize, usize)> {
-    match step {
-        Step::XP => Some((x.checked_add(1)?, y)),
-        Step::XM => Some((x.checked_sub(1)?, y)),
-        Step::YP => Some((x, y.checked_add(1)?)),
-        Step::YM => Some((x, y.checked_sub(1)?)),
-    }
+fn all_neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
+    [x.checked_add(1).map(|x| (x, y)), x.checked_sub(1).map(|x| (x, y)), y.checked_add(1).map(|y| (x, y)), y.checked_sub(1).map(|y| (x, y))]
+        .into_iter()
+        .flatten()
+        .collect()
 }
 
 fn part2(parsed: &Parsed) -> usize {
