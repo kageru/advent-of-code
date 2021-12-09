@@ -1,5 +1,7 @@
 #![feature(test)]
 extern crate test;
+use std::collections::HashSet;
+
 use aoc2021::common::*;
 
 const DAY: usize = 09;
@@ -10,18 +12,18 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> usize {
+    find_lows(parsed).into_iter().map(|(x, y)| parsed[x][y] as usize + 1).sum()
+}
+
+fn find_lows(parsed: &Parsed) -> Vec<(usize, usize)> {
     (0..parsed.len())
         .flat_map(|x| (0..parsed[x].len()).map(move |y| (x, y)))
-        .filter_map(|(x, y)| {
+        .filter(|&(x, y)| {
             // There’s gotta be some incomplete_windows or similar that makes this not as horrible
             let cur = parsed[x][y];
-            all_neighbors(x, y)
-                .into_iter()
-                .filter_map(|(x, y)| parsed.get(x).and_then(|ys| ys.get(y)))
-                .all(|&n| n > cur)
-                .then(|| cur as usize + 1)
+            all_neighbors(x, y).into_iter().filter_map(|(x, y)| parsed.get(x).and_then(|ys| ys.get(y))).all(|&n| n > cur)
         })
-        .sum()
+        .collect()
 }
 
 fn all_neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
@@ -31,8 +33,34 @@ fn all_neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
         .collect()
 }
 
+fn grow_basin(parsed: &Parsed, points_in_basin: &mut HashSet<(usize, usize)>, (x, y): (usize, usize)) -> bool {
+    let cur = parsed[x][y];
+    let mut new_points = Vec::new();
+    for (x, y) in all_neighbors(x, y).into_iter().filter(|p| !points_in_basin.contains(p)) {
+        if parsed.get(x).and_then(|ys| ys.get(y)).unwrap_or(&0) > &cur {
+            new_points.push((x, y));
+        }
+    }
+    if new_points.iter().any(|&p| grow_basin(parsed, points_in_basin, p)) {
+        points_in_basin.insert((x, y));
+        true
+    } else {
+        false
+    }
+}
+
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    let lows = find_lows(parsed);
+    let mut basins = Vec::new();
+    for (x, y) in lows {
+        let mut points_in_basin = HashSet::new();
+        grow_basin(parsed, &mut points_in_basin, (x, y));
+        basins.push(points_in_basin);
+    }
+    basins.sort_unstable_by_key(HashSet::len);
+    basins.reverse();
+    println!("{basins:?}");
+    basins.iter().take(3).map(|b| b.len()).product()
 }
 
 fn main() {
@@ -53,8 +81,8 @@ mod tests {
 9899965678";
 
     test!(part1() == 15);
-    test!(part2() == 0);
+    test!(part2() == 1134);
     bench!(part1() == 478);
-    bench!(part2() == 0);
+    // bench!(part2() == 0);
     bench_input!(Vec::len => 100);
 }
