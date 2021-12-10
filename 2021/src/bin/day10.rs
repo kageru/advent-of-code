@@ -23,15 +23,18 @@ fn solve(input: &str) -> (usize, usize) {
 
 fn is_well_formed<'a>(line: &str, stack: &'a mut Vec<u8>) -> Result<&'a mut Vec<u8>, usize> {
     for c in line.bytes() {
-        match (stack.last(), c) {
-            (_, b'(' | b'[' | b'<' | b'{') => stack.push(c),
-            (Some(b'('), b')') | (Some(b'['), b']') | (Some(b'{'), b'}') | (Some(b'<'), b'>') => {
+        match c {
+            b'(' | b'[' | b'<' | b'{' => stack.push(c),
+            b']' | b'}' | b'>' if stack.last().unwrap() + 2 == c => {
                 stack.pop();
             }
-            (_, b')') => return Err(3),
-            (_, b']') => return Err(57),
-            (_, b'}') => return Err(1197),
-            (_, b'>') => return Err(25137),
+            b')' if stack.last().unwrap() == &b'(' => {
+                stack.pop();
+            }
+            b')' => return Err(3),
+            b']' => return Err(57),
+            b'}' => return Err(1197),
+            b'>' => return Err(25137),
             _ => unreachable!(),
         }
     }
