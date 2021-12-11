@@ -3,15 +3,15 @@
 extern crate test;
 use aoc2021::{
     common::*,
-    grid::{Grid, PositionND},
+    grid::{Grid, HashGrid, PositionND},
 };
 
 const DAY: usize = 11;
 const ROUNDS: usize = 100;
-type Parsed = Grid<u8, 2>;
+type Parsed = HashGrid<u8, 2>;
 
 fn parse_input(raw: &str) -> Parsed {
-    Grid::<u8, 2>::from_bytes_2d(raw, |b: u8| b - b'0')
+    HashGrid::<u8, 2>::from_bytes_2d(raw, |b: u8| b - b'0')
 }
 
 fn part1(parsed: &Parsed) -> usize {
@@ -80,5 +80,5 @@ mod tests {
     test!(part2() == 195);
     bench!(part1() == 1741);
     bench!(part2() == 440);
-    bench_input!(Grid::len => 100);
+    bench_input!(HashGrid::len => 100);
 }

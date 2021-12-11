@@ -2,40 +2,50 @@ pub mod cell;
 pub mod direction;
 pub mod position;
 pub use direction::*;
-pub use position::*;
-
 use itertools::join;
+pub use position::*;
 use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
 
+#[allow(clippy::len_without_is_empty)] // I mainly have this for assertions in benchmarks
+pub trait Grid<T, const D: usize> {
+    fn get(&self, pos: &PositionND<D>) -> Option<&T>;
+
+    fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, element: T);
+
+    fn len(&self) -> usize;
+}
+
 #[derive(Debug, Clone, PartialEq)]
-pub struct Grid<T: Default, const D: usize> {
+pub struct HashGrid<T: Default, const D: usize> {
     pub fields: HashMap<PositionND<D>, T>,
 }
 
-impl<T: Default + Copy, const D: usize> Grid<T, D> {
-    pub fn get(&self, pos: &PositionND<D>) -> T {
-        self.fields.get(pos).copied().unwrap_or_else(T::default)
+impl<T: Default, const D: usize> Grid<T, D> for HashGrid<T, D> {
+    fn get(&self, pos: &PositionND<D>) -> Option<&T> {
+        self.fields.get(pos)
     }
 
-    pub fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, t: T) {
+    fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, t: T) {
         self.fields.insert(pos.into(), t);
     }
 
-    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> Grid<T, 2> {
+    fn len(&self) -> usize {
+        self.fields.len()
+    }
+}
+
+impl<T: Default + Copy, const D: usize> HashGrid<T, D> {
+    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> HashGrid<T, 2> {
         raw.lines()
             .enumerate()
             .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, c)| (PositionND { points: [x as i64, y as i64] }, f(c))))
             .collect()
     }
-
-    pub fn len(&self) -> usize {
-        self.fields.len()
-    }
 }
 
-impl<T: Default, const D: usize> std::iter::FromIterator<(PositionND<D>, T)> for Grid<T, D> {
+impl<T: Default, const D: usize> std::iter::FromIterator<(PositionND<D>, T)> for HashGrid<T, D> {
     fn from_iter<I: IntoIterator<Item = (PositionND<D>, T)>>(iter: I) -> Self {
-        Grid { fields: iter.into_iter().collect() }
+        HashGrid { fields: iter.into_iter().collect() }
     }
 }
 
@@ -46,7 +56,6 @@ struct Boundaries {
     y_max: i64,
 }
 
-#[rustfmt::skip]
 fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
     let x_min = input.iter().min_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);
     let x_max = input.iter().max_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);

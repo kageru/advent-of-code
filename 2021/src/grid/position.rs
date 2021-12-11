@@ -49,6 +49,7 @@ impl<const DIMS: usize> PositionND<DIMS> {
 
     pub fn from_padded(slice: &[i64]) -> PositionND<DIMS> {
         let mut points = [0; DIMS];
+        #[allow(clippy::manual_memcpy)]
         for i in 0..(DIMS.min(slice.len())) {
             points[i] = slice[i];
         }

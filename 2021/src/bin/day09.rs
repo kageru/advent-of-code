@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use aoc2021::common::*;
 
-const DAY: usize = 09;
+const DAY: usize = 9;
 type Parsed = Vec<Vec<u8>>;
 
 fn parse_input(raw: &str) -> Parsed {
