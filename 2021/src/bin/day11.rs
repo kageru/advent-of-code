@@ -1,8 +1,6 @@
+#![feature(bool_to_option)]
 #![feature(test)]
 extern crate test;
-
-use std::time::Duration;
-
 use aoc2021::{
     common::*,
     grid::{Grid, PositionND},
@@ -18,59 +16,42 @@ fn parse_input(raw: &str) -> Parsed {
 
 fn part1(parsed: &Parsed) -> usize {
     let mut grid = parsed.to_owned();
-    let mut flashed = Vec::new();
-    let mut flashes = 0;
-    for _ in 0..ROUNDS {
-        for (p, energy) in grid.fields.iter_mut() {
-            *energy += 1;
-            if energy == &10 {
-                flashed.push(*p);
-            }
-        }
-        for p in flashed.clone() {
-            flash(&mut grid, p, &mut flashed);
-        }
-        flashes += flashed.len();
-        for p in flashed.drain(..) {
-            *grid.fields.get_mut(&p).unwrap() = 0;
-        }
-    }
-    flashes
+    (0..ROUNDS).map(|_| make_step(&mut grid)).sum()
 }
 
-fn flash(grid: &mut Parsed, position: PositionND<2>, flashed: &mut Vec<PositionND<2>>) {
+fn part2(parsed: &Parsed) -> usize {
+    let mut grid = parsed.to_owned();
+    (0..).position(|_| make_step(&mut grid) == parsed.len()).unwrap() + 1
+}
+
+fn make_step(grid: &mut Parsed) -> usize {
+    let mut flashed: Vec<_> = grid
+        .fields
+        .iter_mut()
+        .filter_map(|(p, energy)| {
+            *energy += 1;
+            (*energy == 10).then_some(*p)
+        })
+        .collect();
+    for p in flashed.clone() {
+        flash(grid, &p, &mut flashed);
+    }
+    for p in &flashed {
+        *grid.fields.get_mut(p).unwrap() = 0;
+    }
+    flashed.len()
+}
+
+fn flash(grid: &mut Parsed, position: &PositionND<2>, flashed: &mut Vec<PositionND<2>>) {
     for n in position.neighbors() {
         if let Some(p) = grid.fields.get_mut(&n) {
             *p += 1;
             if p == &10 {
                 flashed.push(n);
-                flash(grid, n, flashed);
+                flash(grid, &n, flashed);
             }
         }
     }
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    let mut grid = parsed.to_owned();
-    let mut flashed = Vec::new();
-    for i in 1.. {
-        for (p, energy) in grid.fields.iter_mut() {
-            *energy += 1;
-            if energy == &10 {
-                flashed.push(*p);
-            }
-        }
-        for p in flashed.clone() {
-            flash(&mut grid, p, &mut flashed);
-        }
-        if flashed.len() == parsed.len() {
-            return i;
-        }
-        for p in flashed.drain(..) {
-            *grid.fields.get_mut(&p).unwrap() = 0;
-        }
-    }
-    unreachable!()
 }
 
 fn main() {
