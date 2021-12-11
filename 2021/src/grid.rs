@@ -8,11 +8,11 @@ use itertools::join;
 use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Grid<const D: usize, T: Display + Default> {
+pub struct Grid<T: Default, const D: usize> {
     pub fields: HashMap<PositionND<D>, T>,
 }
 
-impl<const D: usize, T: Display + Default + Copy> Grid<D, T> {
+impl<T: Default + Copy, const D: usize> Grid<T, D> {
     pub fn get(&self, pos: &PositionND<D>) -> T {
         self.fields.get(pos).copied().unwrap_or_else(T::default)
     }
@@ -20,13 +20,22 @@ impl<const D: usize, T: Display + Default + Copy> Grid<D, T> {
     pub fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, t: T) {
         self.fields.insert(pos.into(), t);
     }
+
+    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> Grid<T, 2> {
+        raw.lines()
+            .enumerate()
+            .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, c)| (PositionND { points: [x as i64, y as i64] }, f(c))))
+            .collect()
+    }
+
+    pub fn len(&self) -> usize {
+        self.fields.len()
+    }
 }
 
-impl<const D: usize, T: Display + Default> std::iter::FromIterator<(PositionND<D>, T)> for Grid<D, T> {
+impl<T: Default, const D: usize> std::iter::FromIterator<(PositionND<D>, T)> for Grid<T, D> {
     fn from_iter<I: IntoIterator<Item = (PositionND<D>, T)>>(iter: I) -> Self {
-        Grid {
-            fields: iter.into_iter().collect(),
-        }
+        Grid { fields: iter.into_iter().collect() }
     }
 }
 

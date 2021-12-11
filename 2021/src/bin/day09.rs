@@ -60,7 +60,8 @@ fn part2(parsed: &Parsed) -> usize {
     basins.sort_unstable_by_key(HashSet::len);
     basins.reverse();
     println!("{basins:?}");
-    basins.iter().take(3).map(|b| b.len()).product()
+    // basins.iter().take(3).map(|b| b.len()).product();
+    unimplemented!()
 }
 
 fn main() {
@@ -81,7 +82,7 @@ mod tests {
 9899965678";
 
     test!(part1() == 15);
-    test!(part2() == 1134);
+    // test!(part2() == 1134);
     bench!(part1() == 478);
     // bench!(part2() == 0);
     bench_input!(Vec::len => 100);
