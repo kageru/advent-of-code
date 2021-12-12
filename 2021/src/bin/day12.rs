@@ -8,8 +8,6 @@ use itertools::Itertools;
 const DAY: usize = 12;
 type Parsed<'a> = HashMap<Node<'a>, Vec<Node<'a>>>;
 
-const EMPTY: Vec<Node<'_>> = Vec::new();
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum Node<'a> {
     Start,
@@ -39,27 +37,28 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    possible_paths(parsed, &Node::Start, HashSet::new())
+    possible_paths(parsed, &Node::Start, HashSet::new(), false)
 }
 
-fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, mut visited: HashSet<&'a Node<'a>>) -> usize {
-    if position == &Node::End {
-        return 1;
-    }
+fn part2(parsed: &Parsed) -> usize {
+    possible_paths(parsed, &Node::Start, HashSet::new(), true)
+}
+
+fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, mut visited: HashSet<&'a Node<'a>>, small_cave_allowed: bool) -> usize {
     if matches!(position, &Node::Small(_)) {
         visited.insert(position);
     }
     map.get(position)
         .unwrap()
         .iter()
-        .filter(|&p| p != &Node::Start)
-        .filter(|p| !visited.contains(p))
-        .map(|p| possible_paths(map, p, visited.clone()))
+        .map(|p| match p {
+            Node::Big(_) => possible_paths(map, p, visited.clone(), small_cave_allowed),
+            Node::Small(_) if !visited.contains(&p) => possible_paths(map, p, visited.clone(), small_cave_allowed),
+            Node::Small(_) if small_cave_allowed => possible_paths(map, p, visited.clone(), false),
+            Node::Small(_) | Node::Start => 0,
+            Node::End => 1,
+        })
         .sum()
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
 }
 
 fn main() {
@@ -119,6 +118,6 @@ start-RW";
     test!(with _2: part2() == 103);
     test!(with _3: part2() == 3509);
     bench!(part1() == 4411);
-    bench!(part2() == 0);
+    bench!(part2() == 136767);
     bench_input!(HashMap::len => 13);
 }
