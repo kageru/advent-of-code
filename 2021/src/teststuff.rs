@@ -34,4 +34,13 @@ macro_rules! test {
             }
         }
     };
+    (with $input: ident: $part: ident $(<$gen: literal>)?  ($($param: expr),*) == $expected:expr) => {
+        paste::paste! {
+            #[test]
+            fn [<$part $($gen)? _$input:lower _test>]() {
+                let input = parse_input([<TEST_INPUT $input>]);
+                assert_eq!($part $(::<$gen>)? (&input$(, $param)*), $expected);
+            }
+        }
+    };
 }
