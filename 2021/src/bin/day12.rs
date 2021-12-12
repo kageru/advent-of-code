@@ -1,6 +1,6 @@
 #![feature(test)]
 extern crate test;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use aoc2021::common::*;
 use itertools::Itertools;
@@ -37,25 +37,25 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    possible_paths(parsed, &Node::Start, HashSet::new(), false)
+    possible_paths(parsed, &Node::Start, &Vec::new(), false)
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    possible_paths(parsed, &Node::Start, HashSet::new(), true)
+    possible_paths(parsed, &Node::Start, &Vec::new(), true)
 }
 
-fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, mut visited: HashSet<&'a Node<'a>>, small_cave_allowed: bool) -> usize {
-    if matches!(position, &Node::Small(_)) {
-        visited.insert(position);
-    }
+fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, visited: &Vec<&'a Node<'a>>, small_cave_allowed: bool) -> usize {
     map.get(position)
         .unwrap()
         .iter()
         .map(|p| match p {
-            Node::Big(_) => possible_paths(map, p, visited.clone(), small_cave_allowed),
-            Node::Small(_) if !visited.contains(&p) => possible_paths(map, p, visited.clone(), small_cave_allowed),
-            Node::Small(_) if small_cave_allowed => possible_paths(map, p, visited.clone(), false),
-            Node::Small(_) | Node::Start => 0,
+            Node::Big(_) => possible_paths(map, p, visited, small_cave_allowed),
+            Node::Small(_) if !visited.contains(&p) || small_cave_allowed => {
+                let mut new_visited = visited.to_owned();
+                new_visited.push(p);
+                possible_paths(map, p, &new_visited, !visited.contains(&p) && small_cave_allowed)
+            }
+            Node::Start | Node::Small(_) => 0,
             Node::End => 1,
         })
         .sum()
