@@ -14,15 +14,15 @@ enum Fold {
 impl Fold {
     fn fold(&self, grid: &mut Vec<Vec<bool>>) {
         match *self {
-            Fold::X(at) => {
+            Fold::Y(at) => {
                 for x in 0..at {
                     for y in 0..grid[x].len() {
-                        grid[x][y] |= grid[at + at - x][y];
+                        grid[x][y] |= grid.get(at + at - x).map(|ys| ys[y]).unwrap_or(false);
                     }
                 }
                 grid.truncate(at);
             }
-            Fold::Y(at) => {
+            Fold::X(at) => {
                 for ys in grid {
                     for y in 0..at {
                         ys[y] |= *ys.get(at + at - y).unwrap_or(&false);
@@ -38,9 +38,8 @@ fn parse_input(raw: &str) -> Parsed {
     let (points, folds) = raw.split_once("\n\n").unwrap();
     let points: Vec<(usize, usize)> =
         points.lines().map(|line| line.split_once(',').unwrap()).map(|(x, y)| (parse_num(x), parse_num(y))).collect();
-    let mut grid = vec![vec![false; points.iter().map(|&(_, y)| y).max().unwrap() + 1]; points.iter().map(|&(x, _)| x).max().unwrap() + 1];
-    println!("allocated x {} and y {}", grid.len(), grid[0].len());
-    for (x, y) in points {
+    let mut grid = vec![vec![false; points.iter().map(|&(x, _)| x).max().unwrap() + 1]; points.iter().map(|&(_, y)| y).max().unwrap() + 1];
+    for (y, x) in points {
         grid[x][y] = true;
     }
     let folds = folds
@@ -75,7 +74,7 @@ fn part2((grid, instructions): &Parsed) -> String {
 fn main() {
     let input = parse_input(&read_file(DAY));
     println!("Part 1: {}", part1(&input));
-    println!("Part 2: {}", part2(&input));
+    println!("Part 2:\n{}", part2(&input));
 }
 
 #[cfg(test)]
@@ -106,15 +105,13 @@ fold along y=7
 fold along x=5";
 
     test!(part1() == 17);
-    // test!(part2() == 0);
     bench!(part1() == 661);
-    // bench!(part2() == 0);
-    bench_input!(input_len_for_bench => 1323);
+    bench_input!(input_len_for_bench => 902);
 
     #[bench]
-    fn bench_part2(b: &mut test::Bencher) {
+    fn part2_bench(b: &mut test::Bencher) {
         let parsed = parse_input(&read_file(DAY));
-        b.iter(|| assert_eq!(part2(&parsed).len(), 279));
+        b.iter(|| assert_eq!(part2(&parsed).len(), 245));
     }
 
     fn input_len_for_bench((grid, folds): &Parsed) -> usize {
