@@ -4,6 +4,7 @@ use aoc2021::common::*;
 use itertools::Itertools;
 
 const DAY: usize = 13;
+// Turns out the grid is so sparse, a set would have been better. Welp.
 type Parsed = (Vec<Vec<bool>>, Vec<Fold>);
 
 enum Fold {
@@ -68,7 +69,8 @@ fn part2((grid, instructions): &Parsed) -> String {
     for instruction in instructions {
         instruction.fold(&mut paper); // :thanking:
     }
-    paper.into_iter().map(|ys| ys.into_iter().map(|b| if b { '#' } else { ' ' }).collect::<String>()).join("\n")
+    const OUTPUT_CHARS: [char; 2] = [' ', '#'];
+    paper.into_iter().map(|ys| ys.into_iter().map(|b| OUTPUT_CHARS[b as usize]).collect::<String>()).join("\n")
 }
 
 fn main() {
