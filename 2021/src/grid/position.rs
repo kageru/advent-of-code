@@ -67,6 +67,18 @@ impl<const DIMS: usize> PositionND<DIMS> {
     }
 }
 
+impl PositionND<2> {
+    pub fn neighbors_no_diagonals_only_positive(&self) -> [PositionND<2>; 2] {
+        let PositionND::<2> { points: [x, y] } = *self;
+        [[x + 1, y].into(), [x, y + 1].into()]
+    }
+
+    pub fn neighbors_no_diagonals(&self) -> [PositionND<2>; 4] {
+        let PositionND::<2> { points: [x, y] } = *self;
+        [[x + 1, y].into(), [x, y + 1].into(), [x - 1, y].into(), [x, y - 1].into()]
+    }
+}
+
 #[macro_export]
 macro_rules! dim {
     ($d: expr) => {{

@@ -49,6 +49,32 @@ impl<T: Default, const D: usize> std::iter::FromIterator<(PositionND<D>, T)> for
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct VecGrid<T> {
+    pub fields: Vec<Vec<T>>,
+}
+
+impl<T> Grid<T, 2> for VecGrid<T> {
+    fn get(&self, pos: &PositionND<2>) -> Option<&T> {
+        self.fields.get(pos.points[0] as usize)?.get(pos.points[1] as usize)
+    }
+
+    fn insert<Pos: Into<PositionND<2>>>(&mut self, pos: Pos, element: T) {
+        let PositionND { points: [x, y] } = pos.into();
+        self.fields[x as usize][y as usize] = element;
+    }
+
+    fn len(&self) -> usize {
+        self.fields.len()
+    }
+}
+
+impl<T: Copy> VecGrid<T> {
+    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> VecGrid<T> {
+        VecGrid { fields: raw.lines().map(|l| l.bytes().map(|c| f(c)).collect()).collect() }
+    }
+}
+
 struct Boundaries {
     x_min: i64,
     x_max: i64,
