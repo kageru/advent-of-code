@@ -14,7 +14,7 @@ fn bit_at(x: usize, n: usize) -> bool {
 }
 
 fn most_common(parsed: &Parsed, bits: usize) -> usize {
-    (0..bits).rev().map(|n| most_common_at(parsed, n)).fold(0, |acc, b| (acc | (b as usize)) << 1) >> 1
+    (0..bits).rev().map(|n| most_common_at(parsed, n)).fold(0, |acc, b| (acc << 1) | (b as usize))
 }
 
 fn most_common_at(parsed: &Parsed, n: usize) -> bool {
