@@ -1,7 +1,6 @@
-#![feature(core_intrinsics)]
 #![feature(test)]
 extern crate test;
-use std::{intrinsics::unlikely, ops::RangeInclusive};
+use std::ops::RangeInclusive;
 
 type TargetArea = (RangeInclusive<isize>, RangeInclusive<isize>);
 type Probe = ((isize, isize), (isize, isize));
@@ -29,27 +28,25 @@ fn step(((xvel, yvel), (x, y)): &Probe) -> Probe {
     ((xvel - xvel.signum(), yvel - 1), (x + xvel, y + yvel))
 }
 
-fn parse_input() -> TargetArea {
+fn get_target() -> TargetArea {
     (34..=67, -215..=-186)
 }
 
-fn part1(hits: &[((isize, isize), isize)]) -> isize {
-    *hits.iter().map(|(_, y)| y).max().unwrap()
+fn part1(hits: &[isize]) -> isize {
+    (1..=*hits.iter().max().unwrap()).sum()
 }
 
-fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
+fn find_hits(target: &TargetArea) -> Vec<isize> {
+    // Doing y in the outer loop and x in the inner would allow us to call last() instead of max()
+    // in part1, however, for reasons unknown to me, that makes this function 20% slower.
     (1..=*target.0.end())
         .flat_map(move |x| (*target.1.start()..250).map(move |y| (x, y)))
-        .filter_map(|start| {
-            let mut probe = (start, (0, 0));
-            let mut y_high = 0;
+        .filter_map(|(startx, starty)| {
+            let mut probe = ((startx, starty), (0, 0));
             loop {
                 probe = step(&probe);
-                if unlikely(probe.0 .1 == 0) {
-                    y_high = probe.1 .1;
-                }
                 match calc_status(&probe, target) {
-                    ProbeStatus::Hit => return Some((start, y_high)),
+                    ProbeStatus::Hit => return Some(starty),
                     ProbeStatus::Miss => continue,
                     ProbeStatus::NoLongerReachable => return None,
                 }
@@ -59,8 +56,7 @@ fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
 }
 
 fn main() {
-    let target = parse_input();
-    let hits = find_hits(&target);
+    let hits = find_hits(&get_target());
     println!("Part 1: {}", part1(&hits));
     println!("Part 2: {}", hits.len());
 }
@@ -86,14 +82,14 @@ mod tests {
 
     #[bench]
     fn bench_find_hits(b: &mut test::Bencher) {
-        let input = parse_input();
-        b.iter(|| assert_eq!(find_hits(&input).len(), 2040))
+        let input = get_target();
+        b.iter(|| assert_eq!(find_hits(test::black_box(&input)).len(), 2040))
     }
 
     #[bench]
     fn bench_part1(b: &mut test::Bencher) {
-        let input = parse_input();
+        let input = get_target();
         let hits = find_hits(&input);
-        b.iter(|| assert_eq!(part1(&hits), 23005))
+        b.iter(|| assert_eq!(part1(test::black_box(&hits)), 23005))
     }
 }
