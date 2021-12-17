@@ -13,6 +13,7 @@ enum ProbeStatus {
     NoLongerReachable,
 }
 
+#[inline]
 fn calc_status(((xvel, _), (x, y)): &Probe, (xtarget, ytarget): &TargetArea) -> ProbeStatus {
     if xtarget.contains(x) && ytarget.contains(y) {
         ProbeStatus::Hit
@@ -23,7 +24,8 @@ fn calc_status(((xvel, _), (x, y)): &Probe, (xtarget, ytarget): &TargetArea) -> 
     }
 }
 
-fn step(((xvel, yvel), (x, y)): Probe) -> Probe {
+#[inline]
+fn step(((xvel, yvel), (x, y)): &Probe) -> Probe {
     ((xvel - xvel.signum(), yvel - 1), (x + xvel, y + yvel))
 }
 
@@ -31,23 +33,23 @@ fn parse_input() -> TargetArea {
     (34..=67, -215..=-186)
 }
 
-fn part1(hits: &Vec<((isize, isize), isize)>) -> isize {
+fn part1(hits: &[((isize, isize), isize)]) -> isize {
     *hits.iter().map(|(_, y)| y).max().unwrap()
 }
 
 fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
     (1..=*target.0.end())
         .flat_map(move |x| (*target.1.start()..250).map(move |y| (x, y)))
-        .filter_map(|(xstart, ystart)| {
-            let mut probe = ((xstart, ystart), (0, 0));
+        .filter_map(|start| {
+            let mut probe = (start, (0, 0));
             let mut y_high = 0;
             loop {
-                probe = step(probe);
+                probe = step(&probe);
                 if unlikely(probe.0 .1 == 0) {
                     y_high = probe.1 .1;
                 }
                 match calc_status(&probe, target) {
-                    ProbeStatus::Hit => return Some(((xstart, ystart), y_high)),
+                    ProbeStatus::Hit => return Some((start, y_high)),
                     ProbeStatus::Miss => continue,
                     ProbeStatus::NoLongerReachable => return None,
                 }
