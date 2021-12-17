@@ -1,6 +1,7 @@
+#![feature(core_intrinsics)]
 #![feature(test)]
 extern crate test;
-use std::ops::RangeInclusive;
+use std::{intrinsics::unlikely, ops::RangeInclusive};
 
 type TargetArea = (RangeInclusive<isize>, RangeInclusive<isize>);
 type Probe = ((isize, isize), (isize, isize));
@@ -30,51 +31,36 @@ fn step(((xvel, yvel), (x, y)): Probe) -> Probe {
     ((xvel - xvel.signum(), yvel - 1), (x + xvel, y + yvel))
 }
 
-fn part1(target: &TargetArea, hits: &Vec<(isize, isize)>) -> isize {
-    hits.iter()
-        .map(|start_vel| {
-            std::iter::successors(Some((*start_vel, (0, 0))), |probe| {
-                let probe = step(*probe);
-                (calc_status(&probe, target) == ProbeStatus::Miss).then(|| probe)
-            })
-            .map(|(_, (_, y))| y)
-            .max()
-            .unwrap()
-        })
-        .max()
-        .unwrap()
+fn part1(hits: &Vec<((isize, isize), isize)>) -> isize {
+    *hits.iter().map(|(_, y)| y).max().unwrap()
 }
 
-fn find_hits(target: &TargetArea) -> Vec<(isize, isize)> {
-    let mut hits = Vec::new();
-    for xstart in -1000..1000 {
-        for ystart in -1000..1000 {
+fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
+    (0..100)
+        .flat_map(move |x| (-1000..1000).map(move |y| (x, y)))
+        .filter_map(|(xstart, ystart)| {
             let mut probe = ((xstart, ystart), (0, 0));
+            let mut y_high = 0;
             loop {
                 probe = step(probe);
+                if unlikely(probe.0 .1 == 0) {
+                    y_high = probe.1 .1;
+                }
                 match calc_status(&probe, target) {
-                    ProbeStatus::Hit => {
-                        hits.push((xstart, ystart));
-                        break;
-                    }
+                    ProbeStatus::Hit => return Some(((xstart, ystart), y_high)),
                     ProbeStatus::Miss => (),
-                    ProbeStatus::NoLongerReachable => break,
+                    ProbeStatus::NoLongerReachable => return None,
                 }
             }
-        }
-    }
-    hits
-}
-
-fn part2(hits: &Vec<(isize, isize)>) -> usize {
-    hits.len()
+        })
+        .collect()
 }
 
 fn main() {
     let target = parse_input();
     let hits = find_hits(&target);
-    println!("Part 1: {}", part1(&target, &hits));
-    println!("Part 2: {}", part2(&hits));
+    println!("Part 1: {}", part1(&hits));
+    println!("Part 2: {}", hits.len());
 }
 
 #[cfg(test)]
@@ -86,14 +72,14 @@ mod tests {
     fn part1_test() {
         let input = (20..=30, -10..=-5);
         let hits = find_hits(&input);
-        assert_eq!(part1(&input, &hits), 45);
+        assert_eq!(part1(&hits), 45);
     }
 
     #[test]
     fn part2_test() {
         let input = (20..=30, -10..=-5);
         let hits = find_hits(&input);
-        assert_eq!(part2(&hits), 112);
+        assert_eq!(hits.len(), 112);
     }
 
     #[bench]
@@ -106,6 +92,6 @@ mod tests {
     fn bench_part1(b: &mut test::Bencher) {
         let input = parse_input();
         let hits = find_hits(&input);
-        b.iter(|| assert_eq!(part1(&input, &hits), 23005))
+        b.iter(|| assert_eq!(part1(&hits), 23005))
     }
 }
