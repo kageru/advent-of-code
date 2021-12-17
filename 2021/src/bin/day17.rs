@@ -36,8 +36,8 @@ fn part1(hits: &Vec<((isize, isize), isize)>) -> isize {
 }
 
 fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
-    (0..100)
-        .flat_map(move |x| (-1000..1000).map(move |y| (x, y)))
+    (1..=*target.0.end())
+        .flat_map(move |x| (*target.1.start()..250).map(move |y| (x, y)))
         .filter_map(|(xstart, ystart)| {
             let mut probe = ((xstart, ystart), (0, 0));
             let mut y_high = 0;
