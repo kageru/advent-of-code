@@ -38,13 +38,9 @@ fn part2(parsed: &Parsed, bits: usize) -> usize {
     for i in (0..bits).rev() {
         let gamma = most_common_at(&matching_gamma, i);
         let epsilon = !most_common_at(&matching_epsilon, i);
-        // TODO: Find out why retain is significantly slower than filter().collect()
-        // Update: Let’s see what the maintainers say: https://github.com/rust-lang/rust/issues/91497
-        // matching_gamma.retain(|&n| bit_at(n, i) == gamma);
-        matching_gamma = matching_gamma.into_iter().filter(|&n| bit_at(n, i) == gamma).collect();
+        matching_gamma.retain(|&n| bit_at(n, i) == gamma);
         if matching_epsilon.len() > 1 {
-            // matching_epsilon.retain(|&n| bit_at(n, i) == epsilon);
-            matching_epsilon = matching_epsilon.into_iter().filter(|&n| bit_at(n, i) == epsilon).collect();
+            matching_epsilon.retain(|&n| bit_at(n, i) == epsilon);
         }
     }
     debug_assert_eq!(matching_gamma.len(), 1);
