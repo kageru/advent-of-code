@@ -13,22 +13,22 @@ enum ProbeStatus {
     NoLongerReachable,
 }
 
-fn calc_status((_, (x, y)): &Probe, (xtarget, ytarget): &TargetArea) -> ProbeStatus {
+fn calc_status(((xvel, _), (x, y)): &Probe, (xtarget, ytarget): &TargetArea) -> ProbeStatus {
     if xtarget.contains(x) && ytarget.contains(y) {
         ProbeStatus::Hit
-    } else if y < ytarget.start() {
+    } else if y < ytarget.start() || x > xtarget.end() || (xvel == &0 && !xtarget.contains(x)) {
         ProbeStatus::NoLongerReachable
     } else {
         ProbeStatus::Miss
     }
 }
 
-fn parse_input() -> TargetArea {
-    (34..=67, -215..=-186)
-}
-
 fn step(((xvel, yvel), (x, y)): Probe) -> Probe {
     ((xvel - xvel.signum(), yvel - 1), (x + xvel, y + yvel))
+}
+
+fn parse_input() -> TargetArea {
+    (34..=67, -215..=-186)
 }
 
 fn part1(hits: &Vec<((isize, isize), isize)>) -> isize {
@@ -48,7 +48,7 @@ fn find_hits(target: &TargetArea) -> Vec<((isize, isize), isize)> {
                 }
                 match calc_status(&probe, target) {
                     ProbeStatus::Hit => return Some(((xstart, ystart), y_high)),
-                    ProbeStatus::Miss => (),
+                    ProbeStatus::Miss => continue,
                     ProbeStatus::NoLongerReachable => return None,
                 }
             }
