@@ -40,7 +40,7 @@ fn find_hits(target: &TargetArea) -> Vec<isize> {
     // Doing y in the outer loop and x in the inner would allow us to call last() instead of max()
     // in part1, however, for reasons unknown to me, that makes this function 20% slower.
     (1..=*target.0.end())
-        .flat_map(move |x| (*target.1.start()..250).map(move |y| (x, y)))
+        .flat_map(move |x| (*target.1.start()..-target.1.start()).map(move |y| (x, y)))
         .filter_map(|(startx, starty)| {
             let mut probe = ((startx, starty), (0, 0));
             loop {
