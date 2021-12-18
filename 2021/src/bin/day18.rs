@@ -1,4 +1,3 @@
-#![feature(box_syntax)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
@@ -11,7 +10,7 @@ type Parsed = Vec<Node>;
 impl Add for Node {
     type Output = Node;
     fn add(self, rhs: Self) -> Self::Output {
-        Node::Pair(box (self, rhs))
+        Node::Pair(Box::new((self, rhs)))
     }
 }
 
@@ -38,10 +37,10 @@ fn parse_node(raw: &str) -> (Node, usize) {
     if let Some(inner) = raw.strip_prefix('[') {
         let (first, offset) = parse_node(inner);
         let (second, offset2) = parse_node(&inner[offset..]);
-        (first + second, 1 /* the opening [ */ + offset + offset2 + 1 /* the comma */)
+        (first + second, offset + offset2 + 2 /* 1 for the opening [ and 1 for the comma */)
     } else {
         let n = raw.as_bytes()[0] - b'0';
-        debug_assert!(n <= 9, "Number was {n}, raw was {raw}");
+        debug_assert!(n <= 9);
         (Node::Number(n as _), 2)
     }
 }
@@ -185,12 +184,10 @@ mod tests {
         let [first, second]: [Node; 2] = parse_input(TEST_INPUT_SINGLE_ADDITION).try_into().unwrap();
         assert_eq!(
             first,
-            Node::Pair(box (
-                Node::Pair(box (Node::Pair(box (Node::Pair(box (Node::Number(4), Node::Number(3))), Node::Number(4))), Node::Number(4))),
-                Node::Pair(box (Node::Number(7), Node::Pair(box (Node::Pair(box (Node::Number(8), Node::Number(4),)), Node::Number(9),))))
-            ))
+            (((Node::Number(4) + Node::Number(3)) + Node::Number(4)) + Node::Number(4))
+                + (Node::Number(7) + ((Node::Number(8) + Node::Number(4)) + Node::Number(9)))
         );
-        assert_eq!(second, Node::Pair(box (Node::Number(1), Node::Number(1))));
+        assert_eq!(second, (Node::Number(1) + Node::Number(1)));
     }
 
     #[test]
@@ -227,7 +224,7 @@ mod tests {
     fn test_full_chain() {
         let lhs = parse_node("[[[[4,3],4],4],[7,[[8,4],9]]]").0;
         let rhs = parse_node("[1,1]").0;
-        let mut res = Node::Pair(box (lhs, rhs));
+        let mut res = lhs + rhs;
         assert_eq!(res.to_string(), "[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]");
 
         let mut res2 = res.clone();

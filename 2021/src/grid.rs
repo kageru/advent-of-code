@@ -70,8 +70,8 @@ impl<T> Grid<T, 2> for VecGrid<T> {
 }
 
 impl<T: Copy> VecGrid<T> {
-    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> VecGrid<T> {
-        VecGrid { fields: raw.lines().map(|l| l.bytes().map(|c| f(c)).collect()).collect() }
+    pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, f: F) -> VecGrid<T> {
+        VecGrid { fields: raw.lines().map(|l| l.bytes().map(f).collect()).collect() }
     }
 }
 
