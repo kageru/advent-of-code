@@ -39,7 +39,7 @@ fn parse_node(raw: &str) -> (Node, usize) {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum Explosion {
     None,
     Partial,
@@ -52,7 +52,7 @@ impl Node {
     }
 
     fn explode(&mut self) -> bool {
-        self.explode_inner(0, &mut None, &mut None) != Explosion::None
+        self.explode_inner(0, &mut None, &mut None, Explosion::None) != Explosion::None
     }
 
     fn split(&mut self) -> bool {
@@ -78,6 +78,7 @@ impl Node {
         depth: usize,
         previous_number: &'b mut Option<&'a mut usize>,
         for_next: &'b mut Option<usize>,
+        state: Explosion,
     ) -> Explosion {
         match (self, &for_next) {
             (Node::Number(n), Some(x)) => {
@@ -87,25 +88,21 @@ impl Node {
             }
             (Node::Number(n), None) => {
                 *previous_number = Some(n);
-                Explosion::None
+                state
             }
-            (s @ Node::Pair(_), _) if depth == 4 => {
-                let (left, right) = s.number_pair_or_panic();
+            (s @ Node::Pair(_), _) if depth == 4 && state == Explosion::None => {
+                let (&left, &right) = s.number_pair_or_panic();
                 if let Some(prev) = previous_number {
                     **prev += left;
                 }
-                *for_next = Some(*right);
+                *for_next = Some(right);
                 *s = Node::Number(0);
                 Explosion::Partial
             }
-            (Node::Pair(p), _) => {
-                let left = p.0.explode_inner(depth + 1, previous_number, for_next);
-                if left != Explosion::Full {
-                    p.1.explode_inner(depth + 1, previous_number, for_next)
-                } else {
-                    left
-                }
-            }
+            (Node::Pair(p), _) => match p.0.explode_inner(depth + 1, previous_number, for_next, state) {
+                f @ Explosion::Full => f,
+                e => p.1.explode_inner(depth + 1, previous_number, for_next, e),
+            },
         }
     }
 
@@ -125,19 +122,13 @@ impl Node {
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    add_and_reduce(parsed.clone()).inspect(|n| println!("{n}")).unwrap().magnitude()
+    add_and_reduce(parsed.clone()).unwrap().magnitude()
 }
 
 fn add_and_reduce(parsed: Parsed) -> Option<Node> {
-    /*
-    let mut r = parsed.into_iter().reduce(move |acc, new| Node::Pair(box (acc, new))).unwrap();
-    r.reduce();
-    Some(r)
-    */
     parsed.into_iter().reduce(move |acc, new| {
         let mut n = Node::Pair(box (acc, new));
         n.reduce();
-        println!("{n}");
         n
     })
 }
@@ -205,6 +196,7 @@ mod tests {
     #[test_case("[[6,[5,[4,[3,2]]]],1]" => "[[6,[5,[7,0]]],3]")]
     #[test_case("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]" => "[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]")]
     #[test_case("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]" => "[[3,[2,[8,0]]],[9,[5,[7,0]]]]")]
+    #[test_case("[[[[4,0],[5,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]" => "[[[[4,0],[5,4]],[[0,[7,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]")]
     fn test_single_explosion(raw: &str) -> String {
         let mut i = parse_node(raw).0;
         assert!(i.explode());
@@ -250,19 +242,35 @@ mod tests {
         assert_eq!(res, res2);
     }
 
+    #[test]
+    fn test_single_reduction() {
+        let mut n = parse_node("[[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]").0;
+        n.reduce();
+        assert_eq!(n.to_string(), "[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]");
+    }
+
     #[test_case("[1,1]\n[2,2]\n[3,3]\n[4,4]" => "[[[[1,1],[2,2]],[3,3]],[4,4]]")]
     #[test_case("[1,1]\n[2,2]\n[3,3]\n[4,4]\n[5,5]" => "[[[[3,0],[5,3]],[4,4]],[5,5]]")]
     #[test_case("[1,1]\n[2,2]\n[3,3]\n[4,4]\n[5,5]\n[6,6]" => "[[[[5,0],[7,4]],[5,5]],[6,6]]")]
+    #[test_case("[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]
+[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]
+[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]
+[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]
+[7,[5,[[3,8],[1,4]]]]
+[[2,[2,2]],[8,[8,1]]]
+[2,9]
+[1,[[[9,3],9],[[9,0],[0,7]]]]
+[[[5,[7,4]],7],1]
+[[[[4,2],2],6],[8,7]]" => "[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]")]
     fn test_list_reduction(raw: &str) -> String {
         let parsed = parse_input(raw);
         add_and_reduce(parsed).unwrap().to_string()
     }
 
     test!(part1() == 4140);
-
+    bench!(part1() == 4173);
+    bench_input!(Vec::len => 100);
     /*
-    bench!(part1() == 0);
     bench!(part2() == 0);
-    bench_input!(Vec::len => 0);
     */
 }
