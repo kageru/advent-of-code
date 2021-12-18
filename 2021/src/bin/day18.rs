@@ -3,10 +3,18 @@
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
-use std::fmt;
+use itertools::iproduct;
+use std::{fmt, ops::Add};
 
 const DAY: usize = 18;
 type Parsed = Vec<Node>;
+
+impl Add for Node {
+    type Output = Node;
+    fn add(self, rhs: Self) -> Self::Output {
+        Node::Pair(box (self, rhs))
+    }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 enum Node {
@@ -31,7 +39,7 @@ fn parse_node(raw: &str) -> (Node, usize) {
     if let Some(inner) = raw.strip_prefix('[') {
         let (first, offset) = parse_node(inner);
         let (second, offset2) = parse_node(&inner[offset..]);
-        (Node::Pair(box (first, second)), 1 /* the opening [ */ + offset + offset2 + 1 /* the comma */)
+        (first + second, 1 /* the opening [ */ + offset + offset2 + 1 /* the comma */)
     } else {
         let n = raw.as_bytes()[0] - b'0';
         debug_assert!(n <= 9, "Number was {n}, raw was {raw}");
@@ -58,7 +66,7 @@ impl Node {
     fn split(&mut self) -> bool {
         match self {
             Node::Number(n) if *n >= 10 => {
-                *self = Node::Pair(box (Node::Number(*n / 2), Node::Number(*n / 2 + (*n & 1))));
+                *self = Node::Number(*n / 2) + Node::Number(*n / 2 + (*n & 1));
                 true
             }
             Node::Pair(p) => p.0.split() || p.1.split(),
@@ -127,14 +135,23 @@ fn part1(parsed: &Parsed) -> usize {
 
 fn add_and_reduce(parsed: Parsed) -> Option<Node> {
     parsed.into_iter().reduce(move |acc, new| {
-        let mut n = Node::Pair(box (acc, new));
+        let mut n = acc + new;
         n.reduce();
         n
     })
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    iproduct!(parsed, parsed)
+        .filter(|(a, b)| a != b)
+        .flat_map(|(a, b)| [a.clone() + b.clone(), b.clone() + a.clone()])
+        .map(|mut n| {
+            n.reduce();
+            n
+        })
+        .map(|n| n.magnitude())
+        .max()
+        .unwrap()
 }
 
 fn main() {
@@ -268,9 +285,8 @@ mod tests {
     }
 
     test!(part1() == 4140);
+    test!(part2() == 3993);
     bench!(part1() == 4173);
+    bench!(part2() == 4706);
     bench_input!(Vec::len => 100);
-    /*
-    bench!(part2() == 0);
-    */
 }
