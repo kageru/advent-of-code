@@ -1,3 +1,4 @@
+#![feature(box_patterns)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
@@ -24,7 +25,7 @@ impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
             Node::Number(n) => write!(f, "{n}"),
-            Node::Pair(p) => write!(f, "[{},{}]", p.0, p.1),
+            Node::Pair(box (a, b)) => write!(f, "[{a},{b}]"),
         }
     }
 }
@@ -68,7 +69,7 @@ impl Node {
                 *self = Node::Number(*n / 2) + Node::Number(*n / 2 + (*n & 1));
                 true
             }
-            Node::Pair(p) => p.0.split() || p.1.split(),
+            Node::Pair(box (a, b)) => a.split() || b.split(),
             _ => false,
         }
     }
@@ -76,7 +77,7 @@ impl Node {
     fn magnitude(&self) -> usize {
         match self {
             Node::Number(n) => *n,
-            Node::Pair(p) => 3 * p.0.magnitude() + 2 * p.1.magnitude(),
+            Node::Pair(box (a, b)) => 3 * a.magnitude() + 2 * b.magnitude(),
         }
     }
 
@@ -87,43 +88,30 @@ impl Node {
         for_next: &'b mut Option<usize>,
         state: Explosion,
     ) -> Explosion {
-        match (self, &for_next) {
-            (Node::Number(n), Some(x)) => {
-                *n += x;
-                *for_next = None;
-                Explosion::Full
-            }
-            (Node::Number(n), None) => {
-                *previous_number = Some(n);
-                state
-            }
-            (s @ Node::Pair(_), _) if depth == 4 && state == Explosion::None => {
-                let (&left, &right) = s.number_pair_or_panic();
+        match self {
+            Node::Number(n) => match &for_next {
+                Some(x) => {
+                    *n += x;
+                    *for_next = None;
+                    Explosion::Full
+                }
+                None => {
+                    *previous_number = Some(n);
+                    state
+                }
+            },
+            &mut Node::Pair(box (Node::Number(left), Node::Number(right))) if depth == 4 && state == Explosion::None => {
                 if let Some(prev) = previous_number {
                     **prev += left;
                 }
                 *for_next = Some(right);
-                *s = Node::Number(0);
+                *self = Node::Number(0);
                 Explosion::Partial
             }
-            (Node::Pair(p), _) => match p.0.explode_inner(depth + 1, previous_number, for_next, state) {
+            Node::Pair(box (a, b)) => match a.explode_inner(depth + 1, previous_number, for_next, state) {
                 f @ Explosion::Full => f,
-                e => p.1.explode_inner(depth + 1, previous_number, for_next, e),
+                e => b.explode_inner(depth + 1, previous_number, for_next, e),
             },
-        }
-    }
-
-    fn number_pair_or_panic(&self) -> (&usize, &usize) {
-        match &self {
-            Node::Pair(p) => (p.0.number_or_panic(), p.1.number_or_panic()),
-            _ => unreachable!(),
-        }
-    }
-
-    fn number_or_panic(&self) -> &usize {
-        match &self {
-            Node::Number(n) => n,
-            _ => unreachable!(),
         }
     }
 }
