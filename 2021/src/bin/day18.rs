@@ -1,7 +1,7 @@
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;
-use itertools::iproduct;
+use itertools::Itertools;
 use std::{fmt, ops::Add};
 
 const DAY: usize = 18;
@@ -137,12 +137,7 @@ fn add_and_reduce(parsed: Parsed) -> Option<Node> {
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    iproduct!(parsed, parsed)
-        .filter(|(a, b)| a != b)
-        .flat_map(|(a, b)| [a.clone() + b.clone(), b.clone() + a.clone()])
-        .map(|n| n.reduce().magnitude())
-        .max()
-        .unwrap()
+    parsed.iter().permutations(2).map(|n| (n[0].clone() + n[1].clone()).reduce().magnitude()).max().unwrap()
 }
 
 fn main() {
