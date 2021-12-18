@@ -8,6 +8,7 @@ fnv = "1.0.7"
 impl_ops = "0.1.1"
 itertools = "0.10"
 paste = "1.0"
+test-case = "1.2.1"
 
 [profile.bench]
 lto = true
