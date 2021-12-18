@@ -55,8 +55,9 @@ enum Explosion {
 }
 
 impl Node {
-    fn reduce(&mut self) {
+    fn reduce(mut self) -> Self {
         while self.explode() || self.split() {}
+        self
     }
 
     fn explode(&mut self) -> bool {
@@ -134,22 +135,14 @@ fn part1(parsed: &Parsed) -> usize {
 }
 
 fn add_and_reduce(parsed: Parsed) -> Option<Node> {
-    parsed.into_iter().reduce(move |acc, new| {
-        let mut n = acc + new;
-        n.reduce();
-        n
-    })
+    parsed.into_iter().reduce(move |acc, new| (acc + new).reduce())
 }
 
 fn part2(parsed: &Parsed) -> usize {
     iproduct!(parsed, parsed)
         .filter(|(a, b)| a != b)
         .flat_map(|(a, b)| [a.clone() + b.clone(), b.clone() + a.clone()])
-        .map(|mut n| {
-            n.reduce();
-            n
-        })
-        .map(|n| n.magnitude())
+        .map(|n| n.reduce().magnitude())
         .max()
         .unwrap()
 }
@@ -251,19 +244,20 @@ mod tests {
         res.explode();
         assert_eq!(res.to_string(), "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
         // should be done now
-        res.reduce();
+        res = res.reduce();
         assert_eq!(res.to_string(), "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]");
 
         // now again using .reduce() from the beginning
-        res2.reduce();
+        res2 = res2.reduce();
         assert_eq!(res, res2);
     }
 
     #[test]
     fn test_single_reduction() {
-        let mut n = parse_node("[[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]").0;
-        n.reduce();
-        assert_eq!(n.to_string(), "[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]");
+        assert_eq!(
+            parse_node("[[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]],[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]]").0.reduce().to_string(),
+            "[[[[4,0],[5,4]],[[7,7],[6,0]]],[[8,[7,7]],[[7,9],[5,0]]]]"
+        );
     }
 
     #[test_case("[1,1]\n[2,2]\n[3,3]\n[4,4]" => "[[[[1,1],[2,2]],[3,3]],[4,4]]")]
