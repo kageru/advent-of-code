@@ -6,16 +6,12 @@ use std::{
     ops::{Add, Mul, Sub},
 };
 
-pub trait Position
-where Self: Sized + Hash + PartialEq + Eq + Clone + Copy
-{
-    fn neighbors(&self) -> Vec<Self>;
-}
-
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct PositionND<const DIMS: usize> {
     pub points: [i64; DIMS],
 }
+
+pub type Position2D = PositionND<2>;
 
 impl<I, const D: usize> From<[I; D]> for PositionND<D>
 where I: TryInto<i64> + Copy
@@ -23,18 +19,9 @@ where I: TryInto<i64> + Copy
     fn from(s: [I; D]) -> Self {
         let mut points = [0; D];
         for i in 0..D {
-            points[i] = unwrap_number_result(s[i]);
+            points[i] = s[i].try_into().unwrap_or_else(|_| panic!("number did not fit in target type"))
         }
         Self { points }
-    }
-}
-
-// because calling .unwrap() on a TryInto result isn’t possible without trait bounds on the
-// associated Error type.
-fn unwrap_number_result<I: TryInto<i64>>(i: I) -> i64 {
-    match i.try_into() {
-        Ok(i) => i,
-        _ => panic!("Bad coordinate"),
     }
 }
 

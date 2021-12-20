@@ -2,7 +2,7 @@ pub mod cell;
 pub mod direction;
 pub mod position;
 pub use direction::*;
-use itertools::join;
+use itertools::{join, Itertools, MinMaxResult};
 pub use position::*;
 use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
 
@@ -34,7 +34,7 @@ impl<T: Default, const D: usize> Grid<T, D> for HashGrid<T, D> {
     }
 }
 
-impl<T: Default + Copy, const D: usize> HashGrid<T, D> {
+impl<T: Default + Copy> HashGrid<T, 2> {
     pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> HashGrid<T, 2> {
         raw.lines()
             .enumerate()
@@ -75,18 +75,24 @@ impl<T: Copy> VecGrid<T> {
     }
 }
 
-struct Boundaries {
-    x_min: i64,
-    x_max: i64,
-    y_min: i64,
-    y_max: i64,
+pub struct Boundaries {
+    pub x_min: i64,
+    pub x_max: i64,
+    pub y_min: i64,
+    pub y_max: i64,
 }
 
-fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
-    let x_min = input.iter().min_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);
-    let x_max = input.iter().max_by_key(|k| k.points[0]).map(|p| p.points[0]).unwrap_or(0);
-    let y_min = input.iter().min_by_key(|k| k.points[1]).map(|p| p.points[1]).unwrap_or(0);
-    let y_max = input.iter().max_by_key(|k| k.points[1]).map(|p| p.points[1]).unwrap_or(0);
+pub fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
+    let (x_min, x_max) = match input.iter().map(|p| p.points[0]).minmax() {
+        MinMaxResult::NoElements => (0, 0),
+        MinMaxResult::MinMax(min, max) => (min, max),
+        MinMaxResult::OneElement(x) => (x, x),
+    };
+    let (y_min, y_max) = match input.iter().map(|p| p.points[1]).minmax() {
+        MinMaxResult::NoElements => (0, 0),
+        MinMaxResult::MinMax(min, max) => (min, max),
+        MinMaxResult::OneElement(x) => (x, x),
+    };
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
