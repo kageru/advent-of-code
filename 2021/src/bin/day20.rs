@@ -60,12 +60,11 @@ fn step(grid: HashGrid<Pixel, 2>, lookup: &[Pixel; 512], iteration: usize) -> Ha
 const OUTSIDE: [Pixel; 2] = [Pixel::Dark, Pixel::Bright];
 
 fn lookup_index(p: Position2D, grid: &HashGrid<Pixel, 2>, iteration: usize) -> usize {
-    let idx = neighbors_plus_self(p)
+    neighbors_plus_self(p)
         .into_iter()
         .rev()
         .map(|p| grid.get(&p).unwrap_or(&OUTSIDE[iteration & 1]) == &Pixel::Bright)
-        .fold(0, |acc, n| (acc << 1) | n as usize);
-    idx
+        .fold(0, |acc, n| (acc << 1) | n as usize)
 }
 
 fn step_times(grid: &HashGrid<Pixel, 2>, lookup: &[Pixel; 512], iterations: usize) -> usize {

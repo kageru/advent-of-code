@@ -44,7 +44,7 @@ fn part2(parsed: &Parsed) -> usize {
     possible_paths(parsed, &Node::Start, &Vec::new(), true)
 }
 
-fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, visited: &Vec<&'a Node<'a>>, small_cave_allowed: bool) -> usize {
+fn possible_paths<'a>(map: &'a Parsed, position: &'a Node<'a>, visited: &[&'a Node<'a>], small_cave_allowed: bool) -> usize {
     map.get(position)
         .unwrap()
         .iter()

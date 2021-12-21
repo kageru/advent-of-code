@@ -1,3 +1,4 @@
+#![allow(unused)]
 #![feature(test)]
 extern crate test;
 use aoc2021::common::*;

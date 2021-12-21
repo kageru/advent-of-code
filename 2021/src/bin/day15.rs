@@ -35,8 +35,8 @@ fn part1(parsed: &Parsed, grid_size: usize) -> usize {
     }
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn part2(_parsed: &Parsed) -> usize {
+    todo!()
 }
 
 fn main() {

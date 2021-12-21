@@ -11,15 +11,15 @@ const DAY: usize = '$today';
 type Parsed = Vec<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
-    unimplemented!()
+    todo!()
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    unimplemented!()
+    todo!()
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    todo!()
 }
 
 fn main() {
