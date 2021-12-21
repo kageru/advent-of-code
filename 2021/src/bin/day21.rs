@@ -1,6 +1,5 @@
 #![feature(test)]
 extern crate test;
-use itertools::Itertools;
 
 type Parsed = (u16, u16);
 
@@ -9,21 +8,20 @@ const INPUT: Parsed = (7, 3);
 fn part1((p1, p2): Parsed) -> usize {
     (1..=100)
         .cycle()
-        .tuples()
+        .skip(1)
+        .step_by(3)
         .enumerate()
-        .inspect(|x| println!("raw: {x:?}"))
-        .scan([(p1, 0), (p2, 0)], |mut scores, (round, (_, die, _))| {
-            let mut points = (scores[round & 1].0 + die * 3) % 10;
-            if points == 0 {
-                points = 10;
+        .scan([(p1, 0), (p2, 0)], |mut scores, (round, die)| {
+            let mut points = scores[round & 1].0 + die * 3;
+            // can’t use mod 10 because we actually want to keep the 10
+            while points > 10 {
+                points -= 10;
             }
-            println!("Player {} moves {} for {points}", round & 1, die * 3);
             scores[round & 1].0 = points;
             scores[round & 1].1 += points;
-            Some((round, *scores))
+            Some((round + 1, *scores))
         })
-        .inspect(|x| println!("res: {x:?}"))
-        .find_map(|(r, [(_, s1), (_, s2)])| (s1 >= 1000 || s2 >= 1000).then(|| (r + 1) * 3 * (s1.min(s2) as usize)))
+        .find_map(|(r, [(_, s1), (_, s2)])| (s1 >= 1000 || s2 >= 1000).then(|| r * 3 * (s1.min(s2) as usize)))
         .unwrap()
 }
 
@@ -44,5 +42,10 @@ mod tests {
     #[test]
     fn part1_test() {
         assert_eq!(part1((4, 8)), 739785);
+    }
+
+    #[bench]
+    fn part1_bench(b: &mut test::Bencher) {
+        b.iter(|| assert_eq!(part1(test::black_box(INPUT)), 551901))
     }
 }
