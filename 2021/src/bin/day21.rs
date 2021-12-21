@@ -10,15 +10,12 @@ fn part1((p1, p2): Parsed) -> usize {
         .cycle()
         .skip(1)
         .step_by(3)
-        .zip(1..)
-        .scan([(p2, 0), (p1, 0)], |mut scores, (die, round)| {
-            let mut points = scores[round & 1].0 + die * 3;
-            points -= (points - 1) / 10 * 10;
-            scores[round & 1].0 = points;
-            scores[round & 1].1 += points;
-            Some((round, (scores[0].1, scores[1].1)))
+        .scan(GameState { odd_round: false, scores: [(p1, 0), (p2, 0)] }, |mut game, die| {
+            advance_game(&mut game, die * 3);
+            Some((game.scores[0].1, game.scores[1].1))
         })
-        .find_map(|(r, (s1, s2))| (s1 >= 1000 || s2 >= 1000).then(|| r * 3 * (s1.min(s2) as usize)))
+        .zip(1..)
+        .find_map(|((s1, s2), r)| (s1 >= 1000 || s2 >= 1000).then(|| r * 3 * (s1.min(s2) as usize)))
         .unwrap()
 }
 
@@ -37,33 +34,31 @@ fn part2((p1, p2): Parsed) -> usize {
     let start = GameState { odd_round: false, scores: [(p1, 0), (p2, 0)] };
     let mut games = FnvHashMap::default();
     games.insert(start, 1);
-    let mut p1_wins = 0;
-    let mut p2_wins = 0;
+    let mut wins = [0, 0];
     while !games.is_empty() {
-        games = games
-            .iter()
-            .flat_map(|(start, count)| POSSIBLE_ROLLS.iter().map(move |(die, count2)| (start, count * count2, die)))
-            .map(|(start, count, die)| {
-                let mut scores = start.scores;
-                let mut points = scores[start.odd_round as usize].0 + die;
-                points -= (points - 1) / 10 * 10;
-                scores[start.odd_round as usize].0 = points;
-                scores[start.odd_round as usize].1 += points as usize;
-                (GameState { odd_round: !start.odd_round, scores }, count)
-            })
-            .fold(FnvHashMap::default(), |mut acc, (state, count)| {
-                // Remove done games and queue the rest for another round
-                if state.scores[0].1 >= 21 {
-                    p1_wins += count;
-                } else if state.scores[1].1 >= 21 {
-                    p2_wins += count;
+        for k in games.clone().keys() {
+            let (start, count) = games.remove_entry(k).unwrap();
+            for &(die, count2) in &POSSIBLE_ROLLS {
+                let mut new_state = start;
+                advance_game(&mut new_state, die);
+                if new_state.scores[start.odd_round as usize].1 >= 21 {
+                    wins[new_state.odd_round as usize] += count * count2;
                 } else {
-                    *acc.entry(state).or_insert(0) += count;
+                    *games.entry(new_state).or_insert(0) += count * count2;
                 }
-                acc
-            })
+            }
+        }
     }
-    p1_wins.max(p2_wins)
+    wins[0].max(wins[1])
+}
+
+fn advance_game(game: &mut GameState, die: u16) {
+    let index = game.odd_round as usize;
+    let mut points = game.scores[index].0 + die;
+    points -= (points - 1) / 10 * 10;
+    game.scores[index].0 = points;
+    game.scores[index].1 += points as usize;
+    game.odd_round = !game.odd_round;
 }
 
 fn main() {
