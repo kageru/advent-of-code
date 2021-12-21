@@ -1,26 +1,39 @@
 #![feature(test)]
 extern crate test;
-use aoc2021::common::*;
+use itertools::Itertools;
 
-const DAY: usize = 21;
-type Parsed = Vec<usize>;
+type Parsed = (u16, u16);
 
-fn parse_input(raw: &str) -> Parsed {
-    unimplemented!()
+const INPUT: Parsed = (7, 3);
+
+fn part1((p1, p2): Parsed) -> usize {
+    (1..=100)
+        .cycle()
+        .tuples()
+        .enumerate()
+        .inspect(|x| println!("raw: {x:?}"))
+        .scan([(p1, 0), (p2, 0)], |mut scores, (round, (_, die, _))| {
+            let mut points = (scores[round & 1].0 + die * 3) % 10;
+            if points == 0 {
+                points = 10;
+            }
+            println!("Player {} moves {} for {points}", round & 1, die * 3);
+            scores[round & 1].0 = points;
+            scores[round & 1].1 += points;
+            Some((round, *scores))
+        })
+        .inspect(|x| println!("res: {x:?}"))
+        .find_map(|(r, [(_, s1), (_, s2)])| (s1 >= 1000 || s2 >= 1000).then(|| (r + 1) * 3 * (s1.min(s2) as usize)))
+        .unwrap()
 }
 
-fn part1(parsed: &Parsed) -> usize {
-    unimplemented!()
-}
-
-fn part2(parsed: &Parsed) -> usize {
+fn part2((p1, p2): Parsed) -> usize {
     unimplemented!()
 }
 
 fn main() {
-    let input = parse_input(&read_file(DAY));
-    println!("Part 1: {}", part1(&input));
-    println!("Part 2: {}", part2(&input));
+    println!("Part 1: {}", part1(INPUT));
+    println!("Part 2: {}", part2(INPUT));
 }
 
 #[cfg(test)]
@@ -28,11 +41,8 @@ mod tests {
     use super::*;
     use aoc2021::*;
 
-    const TEST_INPUT: &str = "";
-
-    test!(part1() == 0);
-    test!(part2() == 0);
-    bench!(part1() == 0);
-    bench!(part2() == 0);
-    bench_input!(Vec::len => 0);
+    #[test]
+    fn part1_test() {
+        assert_eq!(part1((4, 8)), 739785);
+    }
 }
