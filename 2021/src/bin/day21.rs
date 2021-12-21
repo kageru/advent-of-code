@@ -10,18 +10,15 @@ fn part1((p1, p2): Parsed) -> usize {
         .cycle()
         .skip(1)
         .step_by(3)
-        .enumerate()
-        .scan([(p1, 0), (p2, 0)], |mut scores, (round, die)| {
+        .zip(1..)
+        .scan([(p2, 0), (p1, 0)], |mut scores, (die, round)| {
             let mut points = scores[round & 1].0 + die * 3;
-            // can’t use mod 10 because we actually want to keep the 10
-            while points > 10 {
-                points -= 10;
-            }
+            points -= (points - 1) / 10 * 10;
             scores[round & 1].0 = points;
             scores[round & 1].1 += points;
-            Some((round + 1, *scores))
+            Some((round, (scores[0].1, scores[1].1)))
         })
-        .find_map(|(r, [(_, s1), (_, s2)])| (s1 >= 1000 || s2 >= 1000).then(|| r * 3 * (s1.min(s2) as usize)))
+        .find_map(|(r, (s1, s2))| (s1 >= 1000 || s2 >= 1000).then(|| r * 3 * (s1.min(s2) as usize)))
         .unwrap()
 }
 
