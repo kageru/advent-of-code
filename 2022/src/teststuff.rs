@@ -7,7 +7,7 @@ macro_rules! boilerplate {
         },
         bench1 == $b1: literal,
         bench2 == $b2: literal,
-        parse: $input_fn: expr => $it: literal$(,)?
+        bench_parse: $input_fn: expr => $it: literal$(,)?
     ) => {
     fn main() {
         let input = parse_input(&read_file(DAY));
@@ -22,15 +22,13 @@ macro_rules! boilerplate {
 
         const TEST_INPUT: &str = $ti;
 
-        $($(
-            paste::paste! {
-                #[test]
-                fn [<$part _test_ $to>]() {
-                    let input = parse_input($tpi);
-                    assert_eq!($part(&input), $to);
-                }
+        $($(paste::paste! {
+            #[test]
+            fn [<$part _test_ $to>]() {
+                let input = parse_input($tpi);
+                assert_eq!($part(&input), $to);
             }
-        )+)*
+        })+)*
         bench!(part1() == $b1);
         bench!(part2() == $b2);
         #[bench]

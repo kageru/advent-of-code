@@ -21,7 +21,7 @@ boilerplate! {
     },
     bench1 == 731731,
     bench2 == 116115990,
-    parse: Vec::len => 200,
+    bench_parse: Vec::len => 200,
 }
 
 /// Naive solution for a previous day 1,
