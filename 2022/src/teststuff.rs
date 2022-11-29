@@ -1,8 +1,6 @@
 #[macro_export]
 macro_rules! boilerplate {
     (
-        DAY = $day: literal,
-        type = $type: ty,
         TEST_INPUT == $ti: literal,
         tests: {
             $($part: ident: { $($tpi: expr => $to: literal$(,)?)+ }$(,)?)*
@@ -11,9 +9,6 @@ macro_rules! boilerplate {
         bench2 == $b2: literal,
         parse: $input_fn: expr => $it: literal$(,)?
     ) => {
-    const DAY: usize = $day;
-    type Parsed = $type;
-
     fn main() {
         let input = parse_input(&read_file(DAY));
         println!("Part 1: {}", part1(&input));
