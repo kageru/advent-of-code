@@ -7,8 +7,20 @@ echo '#![feature(test)]
 extern crate test;
 use aoc2022::{boilerplate, common::*};
 
-const DAY: usize = 0;
+const DAY: usize = '$today';
 type Parsed = Vec<usize>;
+
+fn parse_input(raw: &str) -> Parsed {
+    parse_nums(raw)
+}
+
+fn part1(parsed: &Parsed) -> usize {
+    unimplemented!()
+}
+
+fn part2(parsed: &Parsed) -> usize {
+    unimplemented!()
+}
 
 boilerplate! {
     TEST_INPUT == "",
@@ -18,17 +30,5 @@ boilerplate! {
     },
     bench1 == 0,
     bench2 == 0,
-    parse: Vec::len => 0,
-}
-
-fn parse_input(raw: &str) -> Parsed {
-    parse_nums()
-}
-
-fn part1(parsed: &Parsed) -> usize {
-    unimplemented!()
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    bench_parse: Vec::len => 0,
 }' > src/bin/day$today.rs
