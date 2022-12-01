@@ -1,5 +1,7 @@
 #![feature(test)]
 extern crate test;
+use std::collections::BinaryHeap;
+
 use aoc2022::{boilerplate, common::*};
 
 const DAY: usize = 01;
@@ -14,9 +16,8 @@ fn part1(parsed: &Parsed) -> usize {
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    let mut sorted: Vec<_> = parsed.clone();
-    sorted.sort();
-    sorted.iter().rev().take(3).sum()
+    let mut sorted: BinaryHeap<_> = parsed.iter().copied().collect();
+    (0..3).map(|_| sorted.pop().unwrap()).sum()
 }
 
 boilerplate! {
