@@ -1,23 +1,22 @@
-#![feature(test)]
+#![feature(binary_heap_into_iter_sorted, test)]
 extern crate test;
 use std::collections::BinaryHeap;
 
 use aoc2022::{boilerplate, common::*};
 
 const DAY: usize = 01;
-type Parsed = Vec<usize>;
+type Parsed = BinaryHeap<usize>;
 
 fn parse_input(raw: &str) -> Parsed {
     raw.split("\n\n").map(|elf| elf.lines().map(parse_num::<usize>).sum()).collect()
 }
 
 fn part1(parsed: &Parsed) -> usize {
-    *parsed.iter().max().unwrap_or(&0)
+    *parsed.peek().unwrap()
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    let mut sorted: BinaryHeap<_> = parsed.iter().copied().collect();
-    (0..3).map(|_| sorted.pop().unwrap()).sum()
+    parsed.clone().into_iter_sorted().take(3).sum()
 }
 
 boilerplate! {
@@ -41,5 +40,5 @@ boilerplate! {
     },
     bench1 == 72017,
     bench2 == 212520,
-    bench_parse: Vec::len => 242,
+    bench_parse: BinaryHeap::len => 242,
 }
