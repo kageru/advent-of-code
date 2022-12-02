@@ -4,20 +4,22 @@ use aoc2022::{boilerplate, common::*};
 
 const DAY: usize = 2;
 
-#[rustfmt::skip]
-fn round(input: [u8; 4]) -> usize {
-    match (input[0], input[2]) {
-        (b'A', b'X') => 4, (b'A', b'Y') => 8, (b'A', b'Z') => 3, (b'B', b'X') => 1, (b'B', b'Y') => 5, (b'B', b'Z') => 9, (b'C', b'X') => 7, (b'C', b'Y') => 2, (b'C', b'Z') => 6,
+fn round([other, _, own, _]: [u8; 4]) -> usize {
+    (match other.wrapping_sub(own - b'X' + b'A') {
+        0 => 3 + own - b'W',
+        1 | 254 => 0 + own - b'W',
+        2 | 255 => 6 + own - b'W',
         _ => unreachable!(),
-    }
+    }) as usize
 }
 
-#[rustfmt::skip]
-fn round_p2(input: [u8; 4]) -> usize {
-    match (input[0], input[2]) {
-        (b'A', b'X') => 3, (b'A', b'Y') => 4, (b'A', b'Z') => 8, (b'B', b'X') => 1, (b'B', b'Y') => 5, (b'B', b'Z') => 9, (b'C', b'X') => 2, (b'C', b'Y') => 6, (b'C', b'Z') => 7,
+fn round_p2([other, _, own, _]: [u8; 4]) -> usize {
+    (match own {
+        b'X' => other - b'A' + (3 * (other == b'A') as u8),
+        b'Y' => other - b'A' + 4,
+        b'Z' => other - b'A' + 8 - (3 * (other == b'C') as u8),
         _ => unreachable!(),
-    }
+    }) as usize
 }
 
 fn parse_input(raw: &str) -> &str {
@@ -39,7 +41,13 @@ C Z
 ",
     tests: {
         part1: { TEST_INPUT => 15 },
-        part2: { TEST_INPUT => 12 },
+        part2: {
+            TEST_INPUT => 12,
+            "A X\n" => 3,
+            "C X\n" => 2,
+            "A Y\n" => 4,
+            "A Z\n" => 8,
+        },
     },
     bench1 == 13268,
     bench2 == 15508,
