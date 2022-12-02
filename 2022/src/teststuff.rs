@@ -10,7 +10,8 @@ macro_rules! boilerplate {
         bench_parse: $input_fn: expr => $it: literal$(,)?
     ) => {
     fn main() {
-        let input = parse_input(&read_file(DAY));
+        let raw_input = read_file(DAY);
+        let input = parse_input(&raw_input);
         println!("Part 1: {}", part1(&input));
         println!("Part 2: {}", part2(&input));
     }
