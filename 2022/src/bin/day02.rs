@@ -8,17 +8,17 @@ fn round([other, _, own, _]: [u8; 4]) -> usize {
     (match other.wrapping_sub(own - b'X' + b'A') {
         0 => 3 + own - b'W',
         1 | 254 => 0 + own - b'W',
-        2 | 255 => 6 + own - b'W',
-        _ => unreachable!(),
+        _ => 6 + own - b'W',
     }) as usize
 }
 
 fn round_p2([other, _, own, _]: [u8; 4]) -> usize {
-    (match own {
-        b'X' => other - b'A' + (3 * (other == b'A') as u8),
-        b'Y' => other - b'A' + 4,
-        b'Z' => other - b'A' + 8 - (3 * (other == b'C') as u8),
-        _ => unreachable!(),
+    (match (own, other) {
+        (b'Y', _) => other - b'A' + 4,
+        (b'X', b'A') => 3,
+        (b'X', _) => other - b'A',
+        (_, b'C') => 7,
+        _ => other - b'A' + 8,
     }) as usize
 }
 
