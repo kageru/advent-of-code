@@ -25,7 +25,7 @@ macro_rules! boilerplate {
 
         $($(paste::paste! {
             #[test]
-            fn [<$part _test_ $to>]() {
+            fn [<$part _test_ $to:lower>]() {
                 let input = parse_input($tpi);
                 assert_eq!($part(&input), $to);
             }
