@@ -1,4 +1,4 @@
-#![feature(test, slice_take)]
+#![feature(test, slice_take, get_many_mut)]
 extern crate test;
 
 use aoc2022::{boilerplate, common::*};
@@ -48,27 +48,24 @@ fn parse_input(raw: &str) -> Parsed {
     (stacks, moves)
 }
 
-fn part1((stacks, moves): &Parsed) -> String {
-    let mut stacks = stacks.to_owned();
-    for mov in moves {
-        for _ in 0..(mov.n) {
-            let e = stacks[mov.src].pop().unwrap();
-            stacks[mov.dst].push(e);
-        }
-    }
-    stacks.iter().filter_map(|s| s.last()).map(|&b| b as char).collect()
+fn part1(parsed: &Parsed) -> String {
+    rearrange::<false>(parsed)
 }
 
-fn part2((stacks, moves): &Parsed) -> String {
+fn part2(parsed: &Parsed) -> String {
+    rearrange::<true>(parsed)
+}
+
+fn rearrange<const GRAB_MULTIPLE: bool>((stacks, moves): &Parsed) -> String {
     let mut stacks = stacks.to_owned();
-    let mut temp = Vec::new();
     for mov in moves {
-        // Sadly can’t drain from one into the other because the compiler doesn’t know
-        // src and dst are always different :feelsBadMan:
         let start_index = stacks[mov.src].len() - mov.n;
-        temp.extend(stacks[mov.src].drain(start_index..));
-        for e in temp.drain(..) {
-            stacks[mov.dst].push(e);
+        if let Ok([src, dst]) = stacks.get_many_mut([mov.src, mov.dst]) {
+            if GRAB_MULTIPLE {
+                dst.extend(src.drain(start_index..));
+            } else {
+                dst.extend(src.drain(start_index..).rev());
+            }
         }
     }
     stacks.iter().filter_map(|s| s.last()).map(|&b| b as char).collect()
