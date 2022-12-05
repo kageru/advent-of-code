@@ -1,5 +1,6 @@
-#![feature(test)]
+#![feature(test, slice_take)]
 extern crate test;
+
 use aoc2022::{boilerplate, common::*};
 
 const DAY: usize = 5;
@@ -24,20 +25,24 @@ fn parse_input(raw: &str) -> Parsed {
     };
     let num_stacks = (stack_numbers.trim().bytes().last().unwrap() - b'0') as usize;
     let mut stacks = vec![vec![]; num_stacks];
-    for s in raw_stacks.iter().rev() {
-        for n in 0..num_stacks {
+    for &s in raw_stacks.iter().rev() {
+        for (n, stack) in stacks.iter_mut().enumerate() {
             match s.as_bytes().get(1 + 4 * n) {
                 Some(b' ') | None => (),
-                Some(&c) => stacks[n].push(c),
+                Some(&c) => stack.push(c),
             }
         }
     }
     let moves = lines
         .skip(1)
-        .map(|l| {
-            let (n, pos) = l[5..].split_once(" from ").unwrap();
-            let (src, dst) = pos.split_once(" to ").unwrap();
-            Move { n: parse_num(n), src: parse_num::<usize>(src) - 1, dst: parse_num::<usize>(dst) - 1 }
+        .map(|l| match l.as_bytes() {
+            [_, _, _, _, _, n, _, _, _, _, _, _, src, _, _, _, _, dst] => {
+                Move { n: (n - b'0') as usize, src: (src - b'1') as _, dst: (dst - b'1') as _ }
+            }
+            [_, _, _, _, _, n1, n2, _, _, _, _, _, _, src, _, _, _, _, dst] => {
+                Move { n: ((n1 - b'0') * 10 + n2 - b'0') as _, src: (src - b'1') as _, dst: (dst - b'1') as _ }
+            }
+            _ => unreachable!("Operations can’t be repeated more than 99 times"),
         })
         .collect();
     (stacks, moves)

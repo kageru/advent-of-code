@@ -4,7 +4,7 @@ use std::collections::BinaryHeap;
 
 use aoc2022::{boilerplate, common::*};
 
-const DAY: usize = 01;
+const DAY: usize = 1;
 type Parsed = BinaryHeap<usize>;
 
 fn parse_input(raw: &str) -> Parsed {

@@ -7,7 +7,7 @@ const DAY: usize = 2;
 fn round([other, _, own, _]: [u8; 4]) -> usize {
     (match other.wrapping_sub(own - b'X' + b'A') {
         0 => 3 + own - b'W',
-        1 | 254 => 0 + own - b'W',
+        1 | 254 => own - b'W',
         _ => 6 + own - b'W',
     }) as usize
 }
