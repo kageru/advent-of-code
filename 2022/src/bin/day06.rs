@@ -1,6 +1,5 @@
 #![feature(test, array_windows)]
 extern crate test;
-use std::collections::HashSet;
 
 use aoc2022::{boilerplate, common::*};
 
@@ -10,23 +9,22 @@ fn parse_input(raw: &str) -> &str {
     raw
 }
 
-// Different implementation because manual comparisons are feasible for groups of 4 and
-// significantly faster than sets.
 fn part1(parsed: &str) -> usize {
-    parsed
-        .as_bytes()
-        .array_windows()
-        .zip(4..)
-        .find_map(|([a, b, c, d], i)| (a != b && a != c && a != d && b != c && b != d && c != d).then_some(i))
-        .unwrap()
+    solve::<4>(parsed)
 }
 
 fn part2(parsed: &str) -> usize {
-    parsed
-        .as_bytes()
-        .array_windows::<14>()
-        .zip(14..)
-        .find_map(|(arr, i)| (arr.iter().collect::<HashSet<_>>().len() == 14).then_some(i))
+    solve::<14>(parsed)
+}
+
+fn solve<const BS: usize>(s: &str) -> usize {
+    s.as_bytes()
+        .array_windows::<BS>()
+        .zip(BS..)
+        .find_map(|(arr, position)| {
+            let bitset = arr.iter().fold(0u32, |bitset, n| bitset | 1 << (n & 0b1_1111));
+            (bitset.count_ones() as usize == BS).then_some(position)
+        })
         .unwrap()
 }
 
