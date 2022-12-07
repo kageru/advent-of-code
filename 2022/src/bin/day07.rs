@@ -8,14 +8,14 @@ const DAY: usize = 7;
 
 enum Node<'a> {
     File(&'a str, usize),
-    Dir(&'a str, Vec<Box<Node<'a>>>),
+    Dir(&'a str, Vec<Box<Node<'a>>>, usize),
 }
 
 impl<'a> IndexMut<&str> for Node<'a> {
     fn index_mut(&mut self, index: &str) -> &mut Node<'a> {
         match self {
-            Self::Dir(_, contents) => {
-                contents.iter_mut().find(|d| matches!(***d, Self::Dir ( name,_) if name == index)).expect("File not found")
+            Self::Dir(_, contents, _) => {
+                contents.iter_mut().find(|d| matches!(***d, Self::Dir(name, _, _) if name == index)).expect("File not found")
             }
             Self::File(name, _) => panic!("Can’t index into a file ({name})"),
         }
@@ -27,8 +27,8 @@ impl<'a> Index<&str> for Node<'a> {
 
     fn index(&self, index: &str) -> &Self::Output {
         match self {
-            Self::Dir(_, contents) => {
-                contents.iter().find(|&d| matches!(**d, Self::Dir ( name,_) if name == index)).expect("File not found")
+            Self::Dir(_, contents, _) => {
+                contents.iter().find(|&d| matches!(**d, Self::Dir(name, _, _) if name == index)).expect("File not found")
             }
             Self::File(name, _) => panic!("Can’t index into a file ({name})"),
         }
@@ -37,9 +37,8 @@ impl<'a> Index<&str> for Node<'a> {
 
 fn parse_input(raw: &str) -> Node<'_> {
     let mut pwd = Vec::<&str>::new();
-    let mut fs = Node::Dir("/", Vec::new());
+    let mut fs = Node::Dir("/", Vec::new(), 0);
     for cmd in raw.trim_start_matches("$ cd /\n$ ").split("$ ") {
-        // println!("Now at: {cmd}");
         let mut lines = cmd.lines();
         match lines.next().and_then(|s| s.split_once(' ')) {
             Some(("cd", "..")) => {
@@ -53,10 +52,10 @@ fn parse_input(raw: &str) -> Node<'_> {
                     cd = &mut cd[p];
                 }
                 match cd {
-                    Node::Dir(_, contents) => {
+                    Node::Dir(_, contents, _) => {
                         for line in lines {
                             match line.split_once(' ') {
-                                Some(("dir", d)) => contents.push(Box::new(Node::Dir(d, Vec::new()))),
+                                Some(("dir", d)) => contents.push(Box::new(Node::Dir(d, Vec::new(), 0))),
                                 Some((size, name)) => contents.push(Box::new(Node::File(name, size.parse().unwrap()))),
                                 _ => unreachable!("Invalid directory contents: {line}"),
                             }
@@ -67,30 +66,40 @@ fn parse_input(raw: &str) -> Node<'_> {
             }
         };
     }
+    compute_dir_size(&mut fs);
     fs
 }
 
-fn part1(parsed: &Node<'_>) -> usize {
-    let mut n = 0;
-    node_size(parsed, &mut n);
-    n
-}
-
-fn node_size(node: &Node<'_>, n: &mut usize) -> usize {
+fn compute_dir_size(node: &mut Node<'_>) -> usize {
     match node {
         Node::File(_, s) => *s,
-        Node::Dir(_, c) => {
-            let dir_size = c.iter().map(|d| node_size(d, n)).sum();
-            if dir_size <= 100_000 {
-                *n += dir_size;
-            }
-            dir_size
+        Node::Dir(_, c, size) => {
+            *size = c.iter_mut().map(|d| compute_dir_size(d)).sum();
+            *size
+        }
+    }
+}
+
+fn part1(parsed: &Node<'_>) -> usize {
+    let mut sizes = Vec::new();
+    dir_sizes(parsed, &mut sizes);
+    sizes.into_iter().filter(|&s| s <= 100_000).sum()
+}
+
+fn dir_sizes(node: &Node<'_>, sizes: &mut Vec<usize>) {
+    if let Node::Dir(_, contents, size) = node {
+        sizes.push(*size);
+        for c in contents {
+            dir_sizes(c, sizes);
         }
     }
 }
 
 fn part2(parsed: &Node<'_>) -> usize {
-    unimplemented!()
+    let needed_space = 30000000 - (70000000 - if let Node::Dir(_, _, s) = parsed { s } else { unreachable!() });
+    let mut sizes = Vec::new();
+    dir_sizes(parsed, &mut sizes);
+    sizes.into_iter().filter(|&s| s >= needed_space).min().unwrap()
 }
 
 boilerplate! {
@@ -129,7 +138,7 @@ $ ls
 #[cfg(test)]
 fn node_name<'a>(n: &Node<'a>) -> &'a str {
     match n {
-        Node::Dir(name, _) => name,
+        Node::Dir(name, _, _) => name,
         Node::File(name, _) => name,
     }
 }
