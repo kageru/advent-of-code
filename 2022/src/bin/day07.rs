@@ -1,6 +1,5 @@
-#![feature(test)]
+#![feature(test, if_let_guard, iter_collect_into)]
 extern crate test;
-use std::ops::{Index, IndexMut};
 
 use aoc2022::{boilerplate, common::*};
 
@@ -11,26 +10,15 @@ enum Node<'a> {
     Dir(&'a str, Vec<Box<Node<'a>>>, usize),
 }
 
-impl<'a> IndexMut<&str> for Node<'a> {
-    fn index_mut(&mut self, index: &str) -> &mut Node<'a> {
+impl<'a> Node<'a> {
+    /// Implementing this rather than IndexMut because that requires a mostly redundant
+    /// implementation of Index which is more boilerplate.
+    fn subdir_mut(&mut self, dir: &str) -> &mut Self {
         match self {
             Self::Dir(_, contents, _) => {
-                contents.iter_mut().find(|d| matches!(***d, Self::Dir(name, _, _) if name == index)).expect("File not found")
+                contents.iter_mut().find(|d| matches!(***d, Self::Dir(name, _, _) if name == dir)).expect("File not found")
             }
-            Self::File(name, _) => panic!("Can’t index into a file ({name})"),
-        }
-    }
-}
-
-impl<'a> Index<&str> for Node<'a> {
-    type Output = Self;
-
-    fn index(&self, index: &str) -> &Self::Output {
-        match self {
-            Self::Dir(_, contents, _) => {
-                contents.iter().find(|&d| matches!(**d, Self::Dir(name, _, _) if name == index)).expect("File not found")
-            }
-            Self::File(name, _) => panic!("Can’t index into a file ({name})"),
+            Self::File(name, _) => panic!("Can't index into a file ({name})"),
         }
     }
 }
@@ -41,40 +29,30 @@ fn parse_input(raw: &str) -> Node<'_> {
     for cmd in raw.trim_start_matches("$ cd /\n$ ").split("$ ") {
         let mut lines = cmd.lines();
         match lines.next().and_then(|s| s.split_once(' ')) {
-            Some(("cd", "..")) => {
-                pwd.pop();
-            }
+            Some(("cd", "..")) => drop(pwd.pop()),
             Some(("cd", dir)) => pwd.push(dir),
             // ls
-            _ => {
-                let mut cd = &mut fs;
-                for p in pwd.iter() {
-                    cd = &mut cd[p];
-                }
-                match cd {
-                    Node::Dir(_, contents, _) => {
-                        for line in lines {
-                            match line.split_once(' ') {
-                                Some(("dir", d)) => contents.push(Box::new(Node::Dir(d, Vec::new(), 0))),
-                                Some((size, name)) => contents.push(Box::new(Node::File(name, size.parse().unwrap()))),
-                                _ => unreachable!("Invalid directory contents: {line}"),
-                            }
-                        }
-                    }
-                    Node::File(_, _) => unreachable!("Can’t `ls` file contents"),
-                }
+            _ if let Node::Dir(_, contents, _) = pwd.iter().fold(&mut fs, |cd, p| cd.subdir_mut(p)) => {
+                lines
+                    .filter_map(|l| l.split_once(' '))
+                    .map(|line| match line {
+                        ("dir", d) => Box::new(Node::Dir(d, Vec::new(), 0)),
+                        (size, name) => Box::new(Node::File(name, size.parse().unwrap()))
+                    })
+                    .collect_into(contents);
             }
+            _ => unreachable!()
         };
     }
-    compute_dir_size(&mut fs);
+    compute_dir_sizes(&mut fs);
     fs
 }
 
-fn compute_dir_size(node: &mut Node<'_>) -> usize {
+fn compute_dir_sizes(node: &mut Node<'_>) -> usize {
     match node {
         Node::File(_, s) => *s,
         Node::Dir(_, c, size) => {
-            *size = c.iter_mut().map(|d| compute_dir_size(d)).sum();
+            *size = c.iter_mut().map(|d| compute_dir_sizes(d)).sum();
             *size
         }
     }
@@ -131,7 +109,7 @@ $ ls
         part2: { TEST_INPUT => 24933642 },
     },
     bench1 == 1667443,
-    bench2 == 0,
+    bench2 == 8998590,
     bench_parse: node_name => "/",
 }
 
