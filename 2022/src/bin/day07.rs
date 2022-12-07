@@ -7,7 +7,7 @@ const DAY: usize = 7;
 
 enum Node<'a> {
     File(&'a str, usize),
-    Dir(&'a str, Vec<Box<Node<'a>>>, usize),
+    Dir(&'a str, Vec<Node<'a>>, usize),
 }
 
 impl<'a> Node<'a> {
@@ -16,7 +16,7 @@ impl<'a> Node<'a> {
     fn subdir_mut(&mut self, dir: &str) -> &mut Self {
         match self {
             Self::Dir(_, contents, _) => {
-                contents.iter_mut().find(|d| matches!(***d, Self::Dir(name, _, _) if name == dir)).expect("File not found")
+                contents.iter_mut().find(|d| matches!(**d, Self::Dir(name, _, _) if name == dir)).expect("File not found")
             }
             Self::File(name, _) => panic!("Can't index into a file ({name})"),
         }
@@ -36,8 +36,8 @@ fn parse_input(raw: &str) -> Node<'_> {
                 lines
                     .filter_map(|l| l.split_once(' '))
                     .map(|line| match line {
-                        ("dir", d) => Box::new(Node::Dir(d, Vec::new(), 0)),
-                        (size, name) => Box::new(Node::File(name, size.parse().unwrap()))
+                        ("dir", d) => Node::Dir(d, Vec::new(), 0),
+                        (size, name) => Node::File(name, size.parse().unwrap())
                     })
                     .collect_into(contents);
             }
