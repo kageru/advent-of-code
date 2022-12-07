@@ -1,4 +1,4 @@
-#![feature(test, if_let_guard, iter_collect_into)]
+#![feature(test, if_let_guard)]
 extern crate test;
 
 use aoc2022::{boilerplate, common::*};
@@ -6,19 +6,15 @@ use aoc2022::{boilerplate, common::*};
 const DAY: usize = 7;
 
 enum Node<'a> {
-    File(&'a str, usize),
+    File(usize),
     Dir(&'a str, Vec<Node<'a>>, usize),
 }
 
 impl<'a> Node<'a> {
-    /// Implementing this rather than IndexMut because that requires a mostly redundant
-    /// implementation of Index which is more boilerplate.
-    fn subdir_mut(&mut self, dir: &str) -> &mut Self {
+    fn subdir_mut(&mut self, dir: &str) -> Option<&mut Self> {
         match self {
-            Self::Dir(_, contents, _) => {
-                contents.iter_mut().find(|d| matches!(**d, Self::Dir(name, _, _) if name == dir)).expect("File not found")
-            }
-            Self::File(name, _) => panic!("Can't index into a file ({name})"),
+            Self::Dir(_, contents, _) => contents.iter_mut().find(|d| matches!(**d, Self::Dir(name, _, _) if name == dir)),
+            _ => None,
         }
     }
 }
@@ -26,21 +22,18 @@ impl<'a> Node<'a> {
 fn parse_input(raw: &str) -> Node<'_> {
     let mut pwd = Vec::<&str>::new();
     let mut fs = Node::Dir("/", Vec::new(), 0);
-    for cmd in raw.trim_start_matches("$ cd /\n$ ").split("$ ") {
-        let mut lines = cmd.lines();
-        match lines.next().and_then(|s| s.split_once(' ')) {
-            Some(("cd", "..")) => drop(pwd.pop()),
-            Some(("cd", dir)) => pwd.push(dir),
+    for cmd in raw.trim_start_matches("$ cd /\n$ ").split("\n$ ") {
+        match cmd.bytes().next() {
+            Some(b'c') => if cmd.ends_with(".") { drop(pwd.pop()) } else { pwd.push(&cmd[3..]) },
             // ls
-            _ if let Node::Dir(_, contents, _) = pwd.iter().fold(&mut fs, |cd, p| cd.subdir_mut(p)) => {
-                lines
+            _ if let Some(Node::Dir(_, contents, _)) = pwd.iter().try_fold(&mut fs, |cd, p| cd.subdir_mut(p)) => contents.extend(
+                cmd.lines()
                     .filter_map(|l| l.split_once(' '))
                     .map(|line| match line {
                         ("dir", d) => Node::Dir(d, Vec::new(), 0),
-                        (size, name) => Node::File(name, size.parse().unwrap())
+                        (size, _) => Node::File(parse_num(size))
                     })
-                    .collect_into(contents);
-            }
+            ),
             _ => unreachable!()
         };
     }
@@ -50,7 +43,7 @@ fn parse_input(raw: &str) -> Node<'_> {
 
 fn compute_dir_sizes(node: &mut Node<'_>) -> usize {
     match node {
-        Node::File(_, s) => *s,
+        Node::File(s) => *s,
         Node::Dir(_, c, size) => {
             *size = c.iter_mut().map(|d| compute_dir_sizes(d)).sum();
             *size
@@ -110,13 +103,13 @@ $ ls
     },
     bench1 == 1667443,
     bench2 == 8998590,
-    bench_parse: node_name => "/",
+    bench_parse: dir_name => "/",
 }
 
 #[cfg(test)]
-fn node_name<'a>(n: &Node<'a>) -> &'a str {
+fn dir_name<'a>(n: &Node<'a>) -> &'a str {
     match n {
         Node::Dir(name, _, _) => name,
-        Node::File(name, _) => name,
+        Node::File(_) => panic!("Not a directory"),
     }
 }
