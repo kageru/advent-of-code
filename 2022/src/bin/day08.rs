@@ -1,4 +1,4 @@
-#![feature(test)]
+#![feature(test, get_many_mut)]
 extern crate test;
 use itertools::Itertools;
 use std::iter::repeat;
@@ -28,9 +28,15 @@ fn is_visible_1d<'a>(iter: impl IntoIterator<Item = &'a u8>, rev: bool) -> Vec<b
 }
 
 fn transpose<T: Copy>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let len = v.len();
-    let mut iters: Vec<_> = v.iter().map(|n| n.iter()).collect();
-    (0..len).map(|_| iters.iter_mut().map(|i| i.next().unwrap()).copied().collect::<Vec<T>>()).collect()
+    let mut v = v.clone();
+    let size = v.len();
+    for i in 0..size {
+        for j in i + 1..size {
+            let [a, b] = v.get_many_mut([i, j]).unwrap();
+            std::mem::swap(&mut a[j], &mut b[i]);
+        }
+    }
+    v
 }
 
 fn horizontally_visible(v: &[Vec<u8>]) -> Vec<Vec<bool>> {
@@ -45,14 +51,15 @@ fn part1(parsed: &Parsed) -> usize {
 
 fn part2(parsed: &Parsed) -> usize {
     let size = parsed.len(); // input is always square
+    let transposed = transpose(parsed);
     (1..size - 1)
         .flat_map(|i| repeat(i).zip(1..size - 1))
         .map(|(i, j)| {
             let tree = parsed[i][j];
-            let a = visible_trees(((i + 1)..size).map(|i| parsed[i][j]), tree);
-            let b = visible_trees((0..i).rev().map(|i| parsed[i][j]), tree);
-            let c = visible_trees(((j + 1)..size).map(|j| parsed[i][j]), tree);
-            let d = visible_trees((0..j).rev().map(|j| parsed[i][j]), tree);
+            let a = visible_trees(tree, transposed[j][(i + 1)..size].iter());
+            let b = visible_trees(tree, transposed[j][0..i].iter().rev());
+            let c = visible_trees(tree, parsed[i][(j + 1)..size].iter());
+            let d = visible_trees(tree, parsed[i][0..j].iter().rev());
             a * b * c * d
         })
         .max()
@@ -60,13 +67,17 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 #[inline] // this inline actually saves ~40% runtime
-fn visible_trees(heights: impl Iterator<Item = u8>, tree: u8) -> usize {
-    let mut heights = heights.peekable();
+fn visible_trees<'a, I: Iterator<Item = &'a u8>>(tree: u8, heights: I) -> usize {
+    let mut heights = heights.copied().peekable();
     heights.peeking_take_while(|&t| t < tree).count() + heights.peek().map(|_| 1).unwrap_or(0)
 }
 
+// These have to be separate variables because the test outputs are used as function names and
+// can’t contain special characters.
 #[cfg(test)]
 const TEST_OUTPUT: &[bool] = &[true, true, false, true, false];
+#[cfg(test)]
+const TRANSPOSE_OUTPUT: &[[u8; 3]; 3] = &[[1, 4, 7], [2, 5, 8], [3, 6, 9]];
 
 boilerplate! {
     TEST_INPUT == "30373
@@ -80,6 +91,7 @@ boilerplate! {
     },
     unittests: {
         is_visible_1d: { [1, 3, 2, 4, 2].iter(), false => TEST_OUTPUT, },
+        transpose: { &vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]] => TRANSPOSE_OUTPUT },
     },
     bench1 == 1543,
     bench2 == 595080,
