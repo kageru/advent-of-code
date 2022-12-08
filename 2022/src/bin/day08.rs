@@ -1,5 +1,6 @@
 #![feature(test)]
 extern crate test;
+use itertools::Itertools;
 use std::iter::repeat;
 
 use aoc2022::{boilerplate, common::*};
@@ -22,6 +23,7 @@ fn is_visible_1d<'a>(iter: impl IntoIterator<Item = &'a u8>) -> Vec<bool> {
 }
 
 fn part1(parsed: &Parsed) -> usize {
+    let size = parsed.len(); // input is always square
     let a: Vec<_> = parsed.iter().map(is_visible_1d).collect();
     let b: Vec<_> = parsed
         .iter()
@@ -31,19 +33,35 @@ fn part1(parsed: &Parsed) -> usize {
             v
         })
         .collect();
-    let c: Vec<_> = (0..parsed[0].len()).map(|i| is_visible_1d(parsed.iter().map(|row| &row[i]))).collect();
-    let d: Vec<_> = (0..parsed[0].len())
+    let c: Vec<_> = (0..size).map(|i| is_visible_1d(parsed.iter().map(|row| &row[i]))).collect();
+    let d: Vec<_> = (0..size)
         .map(|i| {
             let mut v = is_visible_1d(parsed.iter().rev().map(|row| &row[i]));
             v.reverse();
             v
         })
         .collect();
-    (0..parsed.len()).flat_map(|i| repeat(i).zip(0..parsed[0].len())).filter(|&(i, j)| a[i][j] || b[i][j] || c[j][i] || d[j][i]).count()
+    (0..size).flat_map(|i| repeat(i).zip(0..size)).filter(|&(i, j)| a[i][j] || b[i][j] || c[j][i] || d[j][i]).count()
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    let size = parsed.len(); // input is always square
+    (1..size - 1)
+        .flat_map(|i| repeat(i).zip(1..size - 1))
+        .map(|(i, j)| {
+            let tree = parsed[i][j];
+            let mut heights = ((i + 1)..size).map(|i| parsed[i][j]).peekable();
+            let a = heights.peeking_take_while(|&t| t < tree).count() + heights.peek().map(|_| 1).unwrap_or(0);
+            let mut heights = (0..i).rev().map(|i| parsed[i][j]).peekable();
+            let b = heights.peeking_take_while(|&t| t < tree).count() + heights.peek().map(|_| 1).unwrap_or(0);
+            let mut heights = ((j + 1)..size).map(|j| parsed[i][j]).peekable();
+            let c = heights.peeking_take_while(|&t| t < tree).count() + heights.peek().map(|_| 1).unwrap_or(0);
+            let mut heights = (0..j).rev().map(|j| parsed[i][j]).peekable();
+            let d = heights.peeking_take_while(|&t| t < tree).count() + heights.peek().map(|_| 1).unwrap_or(0);
+            a * b * c * d
+        })
+        .max()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -57,12 +75,12 @@ boilerplate! {
 35390",
     tests: {
         part1: { TEST_INPUT => 21 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 8 },
     },
     unittests: {
         is_visible_1d: { [1, 3, 2, 4, 2] => TEST_OUTPUT, },
     },
     bench1 == 1543,
-    bench2 == 0,
+    bench2 == 595080,
     bench_parse: Vec::len => 99,
 }
