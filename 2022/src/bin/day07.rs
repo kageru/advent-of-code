@@ -24,7 +24,7 @@ fn parse_input(raw: &str) -> Node<'_> {
     let mut fs = Node::Dir("/", Vec::new(), 0);
     for cmd in raw.trim_start_matches("$ cd /\n$ ").split("\n$ ") {
         match cmd.bytes().next() {
-            Some(b'c') => if cmd.ends_with(".") { drop(pwd.pop()) } else { pwd.push(&cmd[3..]) },
+            Some(b'c') => if cmd.ends_with('.') { pwd.pop(); } else { pwd.push(&cmd[3..]) },
             // ls
             _ if let Some(Node::Dir(_, contents, _)) = pwd.iter().try_fold(&mut fs, |cd, p| cd.subdir_mut(p)) => contents.extend(
                 cmd.lines()
@@ -45,7 +45,7 @@ fn compute_dir_sizes(node: &mut Node<'_>) -> usize {
     match node {
         Node::File(s) => *s,
         Node::Dir(_, c, size) => {
-            *size = c.iter_mut().map(|d| compute_dir_sizes(d)).sum();
+            *size = c.iter_mut().map(compute_dir_sizes).sum();
             *size
         }
     }

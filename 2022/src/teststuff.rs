@@ -6,7 +6,7 @@ macro_rules! boilerplate {
             $($part: ident: { $($tpi: expr => $to: expr),+$(,)? }),*$(,)?
         },
         $(unittests: {
-            $($unittest: ident: { $($utpi: expr => $uto: expr),+$(,)? }),*$(,)?
+            $($unittest: ident: { $($($utpi: expr),+ => $uto: expr),+$(,)? }),*$(,)?
         },)?
         bench1 == $b1: literal,
         bench2 == $b2: literal,
@@ -29,7 +29,7 @@ macro_rules! boilerplate {
         $($($(paste::paste! {
             #[test]
             fn [<$unittest _test_ $uto:lower>]() {
-                assert_eq!($unittest(&$utpi), $uto);
+                assert_eq!($unittest($($utpi),+), $uto);
             }
         })+)*)?
         $($(paste::paste! {
