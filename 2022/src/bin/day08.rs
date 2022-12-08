@@ -1,6 +1,7 @@
 #![feature(test, get_many_mut)]
 extern crate test;
 use itertools::Itertools;
+use rayon::prelude::*;
 use std::iter::repeat;
 
 use aoc2022::{boilerplate, common::*};
@@ -53,7 +54,8 @@ fn part2(parsed: &Parsed) -> usize {
     let size = parsed.len(); // input is always square
     let transposed = transpose(parsed);
     (1..size - 1)
-        .flat_map(|i| repeat(i).zip(1..size - 1))
+        .into_par_iter()
+        .flat_map(|i| rayon::iter::repeat(i).zip(1..size - 1))
         .map(|(i, j)| {
             let tree = parsed[i][j];
             let a = visible_trees(tree, transposed[j][(i + 1)..size].iter());
