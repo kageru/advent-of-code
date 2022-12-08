@@ -3,8 +3,11 @@ macro_rules! boilerplate {
     (
         TEST_INPUT == $ti: literal,
         tests: {
-            $($part: ident: { $($tpi: expr => $to: literal$(,)?)+ }$(,)?)*
+            $($part: ident: { $($tpi: expr => $to: expr),+$(,)? }),*$(,)?
         },
+        $(unittests: {
+            $($unittest: ident: { $($utpi: expr => $uto: expr),+$(,)? }),*$(,)?
+        },)?
         bench1 == $b1: literal,
         bench2 == $b2: literal,
         bench_parse: $input_fn: expr => $it: literal$(,)?
@@ -23,6 +26,12 @@ macro_rules! boilerplate {
 
         const TEST_INPUT: &str = $ti;
 
+        $($($(paste::paste! {
+            #[test]
+            fn [<$unittest _test_ $uto:lower>]() {
+                assert_eq!($unittest(&$utpi), $uto);
+            }
+        })+)*)?
         $($(paste::paste! {
             #[test]
             fn [<$part _test_ $to:lower>]() {
