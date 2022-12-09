@@ -24,7 +24,7 @@ fn rope<const KNOTS: usize>(parsed: &Parsed) -> usize {
     let mut positions = HashSet::default();
     positions.insert((0, 0));
     for &(dir, n) in parsed {
-        for _ in 0..n {
+        'outer: for _ in 0..n {
             match dir {
                 b'U' => knots[0].1 += 1,
                 b'D' => knots[0].1 -= 1,
@@ -32,33 +32,26 @@ fn rope<const KNOTS: usize>(parsed: &Parsed) -> usize {
                 b'R' => knots[0].0 += 1,
                 _ => unreachable!(),
             }
-            let mut tail_moved = true;
             for i in 0..KNOTS - 1 {
-                let ro = knots[i];
-                if !step_towards(&mut knots[i + 1], ro) {
-                    tail_moved = false;
-                    break;
+                if let Some(p) = step_towards(knots[i + 1], knots[i]) {
+                    knots[i + 1] = p;
+                } else {
+                    continue 'outer;
                 }
             }
-            if tail_moved {
-                positions.insert(knots[KNOTS - 1]);
-            }
+            positions.insert(knots[KNOTS - 1]);
         }
     }
     positions.len()
 }
 
 #[inline]
-fn step_towards(tail: &mut (i32, i32), head: (i32, i32)) -> bool {
+fn step_towards(tail: (i32, i32), head: (i32, i32)) -> Option<(i32, i32)> {
     let xdiff = head.0 - tail.0;
     let ydiff = head.1 - tail.1;
     match (xdiff, ydiff) {
-        (-1 | 0 | 1, -1 | 0 | 1) => false,
-        _ => {
-            tail.0 += xdiff.signum();
-            tail.1 += ydiff.signum();
-            true
-        }
+        (-1 | 0 | 1, -1 | 0 | 1) => None,
+        _ => Some((tail.0 + xdiff.signum(), tail.1 + ydiff.signum())),
     }
 }
 
