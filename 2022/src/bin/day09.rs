@@ -1,6 +1,6 @@
 #![feature(test)]
 extern crate test;
-use std::collections::HashSet;
+use fnv::FnvHashSet as HashSet;
 
 use aoc2022::{boilerplate, common::*};
 
@@ -21,7 +21,8 @@ fn part2(parsed: &Parsed) -> usize {
 
 fn rope<const KNOTS: usize>(parsed: &Parsed) -> usize {
     let mut knots = [(0i32, 0i32); KNOTS];
-    let mut positions = HashSet::from([(0, 0)]);
+    let mut positions = HashSet::default();
+    positions.insert((0, 0));
     for &(dir, n) in parsed {
         for _ in 0..n {
             match dir {
@@ -31,31 +32,34 @@ fn rope<const KNOTS: usize>(parsed: &Parsed) -> usize {
                 b'R' => knots[0].0 += 1,
                 _ => unreachable!(),
             }
+            let mut tail_moved = true;
             for i in 0..KNOTS - 1 {
                 let ro = knots[i];
                 if !step_towards(&mut knots[i + 1], ro) {
+                    tail_moved = false;
                     break;
                 }
             }
-            positions.insert(knots[KNOTS - 1]);
+            if tail_moved {
+                positions.insert(knots[KNOTS - 1]);
+            }
         }
     }
     positions.len()
 }
 
+#[inline]
 fn step_towards(tail: &mut (i32, i32), head: (i32, i32)) -> bool {
     let xdiff = head.0 - tail.0;
     let ydiff = head.1 - tail.1;
-    match (xdiff.abs(), ydiff.abs()) {
-        (0 | 1, 0 | 1) => return false,
-        (_, 0) => tail.0 += xdiff.signum(),
-        (0, _) => tail.1 += ydiff.signum(),
+    match (xdiff, ydiff) {
+        (-1 | 0 | 1, -1 | 0 | 1) => false,
         _ => {
             tail.0 += xdiff.signum();
             tail.1 += ydiff.signum();
+            true
         }
     }
-    true
 }
 
 boilerplate! {
