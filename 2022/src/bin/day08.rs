@@ -82,11 +82,13 @@ const TEST_OUTPUT: &[bool] = &[true, true, false, true, false];
 const TRANSPOSE_OUTPUT: &[[u8; 3]; 3] = &[[1, 4, 7], [2, 5, 8], [3, 6, 9]];
 
 boilerplate! {
-    TEST_INPUT == "30373
-25512
-65332
-33549
-35390",
+    TEST_INPUT == "\
+        30373\n\
+        25512\n\
+        65332\n\
+        33549\n\
+        35390\
+    ",
     tests: {
         part1: { TEST_INPUT => 21 },
         part2: { TEST_INPUT => 8 },

@@ -20,7 +20,8 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 boilerplate! {
-    TEST_INPUT == "1000
+    TEST_INPUT == "\
+1000
 2000
 3000
 

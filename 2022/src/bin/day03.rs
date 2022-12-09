@@ -40,12 +40,14 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 boilerplate! {
-    TEST_INPUT == "vJrwpWtwJgWrhcsFMMfFFhFp
-jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
-PmmdzqPrVvPwwTWBwg
-wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
-ttgJtRGJQctTZtZT
-CrZsJsPPZsGzwwsLwLmpwMDw",
+    TEST_INPUT == "\
+        vJrwpWtwJgWrhcsFMMfFFhFp\n\
+        jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\n\
+        PmmdzqPrVvPwwTWBwg\n\
+        wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\n\
+        ttgJtRGJQctTZtZT\n\
+        CrZsJsPPZsGzwwsLwLmpwMDw\
+    ",
     tests: {
         part1: { TEST_INPUT => 157 },
         part2: { TEST_INPUT => 70 },

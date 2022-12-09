@@ -35,10 +35,11 @@ fn part2(parsed: &str) -> usize {
 }
 
 boilerplate! {
-    TEST_INPUT == "A Y
-B X
-C Z
-",
+    TEST_INPUT == "\
+        A Y\n\
+        B X\n\
+        C Z\n\
+    ",
     tests: {
         part1: { TEST_INPUT => 15 },
         part2: {

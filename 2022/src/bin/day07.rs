@@ -74,7 +74,8 @@ fn part2(parsed: &Node<'_>) -> usize {
 }
 
 boilerplate! {
-    TEST_INPUT == "$ cd /
+    TEST_INPUT == "\
+$ cd /
 $ ls
 dir a
 14848514 b.txt
