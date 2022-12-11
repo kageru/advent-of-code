@@ -17,8 +17,8 @@ struct Monkey {
 
 #[derive(Copy, Clone, Debug)]
 enum MonkeyOp {
-    Add(Option<usize>, Option<usize>),
-    Mul(Option<usize>, Option<usize>),
+    Add(Option<usize>),
+    Mul(Option<usize>),
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -30,9 +30,12 @@ fn parse_input(raw: &str) -> Parsed {
             let div_test = parse_num(&test[21..]);
             let true_dst = parse_num(&if_true[29..]);
             let false_dst = parse_num(&if_false[30..]);
-            let op = match op[19..].split(' ').collect::<Vec<_>>().as_slice() {
-                [x, "+", y] => MonkeyOp::Add(x.parse().ok(), y.parse().ok()),
-                [x, "*", y] => MonkeyOp::Mul(x.parse().ok(), y.parse().ok()),
+            let op = op.as_bytes();
+            let op = match (op[23], op[25]) {
+                (b'+', b'o') => MonkeyOp::Add(None),
+                (b'+', x) => MonkeyOp::Add(Some((x - b'0') as _)),
+                (b'*', b'o') => MonkeyOp::Mul(None),
+                (b'*', x) => MonkeyOp::Mul(Some((x - b'0') as _)),
                 _ => unreachable!(),
             };
             Monkey { inspection_count: 0, items, op, div_test, true_dst, false_dst }
@@ -61,8 +64,8 @@ fn monkey_business<const ITERATIONS: usize, const STRESS_REDUCTION: usize>(parse
             while !monkey.items.is_empty() {
                 moved.extend(monkey.items.drain(..).map(|mut stress| {
                     stress = match monkey.op {
-                        MonkeyOp::Add(x, y) => x.unwrap_or(stress) + y.unwrap_or(stress),
-                        MonkeyOp::Mul(x, y) => x.unwrap_or(stress) * y.unwrap_or(stress),
+                        MonkeyOp::Add(x) => stress + x.unwrap_or(stress),
+                        MonkeyOp::Mul(x) => stress * x.unwrap_or(stress),
                     } / STRESS_REDUCTION;
                     if stress > lcm {
                         stress %= lcm;
