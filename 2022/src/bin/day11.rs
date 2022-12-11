@@ -40,20 +40,6 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
-// Stolen from my 2019 day 12 solution
-fn lcm(x: usize, y: usize) -> usize {
-    fn gcd(mut x: usize, mut y: usize) -> usize {
-        let mut remainder;
-        while y != 0 {
-            remainder = x % y;
-            x = y;
-            y = remainder;
-        }
-        x
-    }
-    x * y / gcd(x, y)
-}
-
 fn part1(parsed: &Parsed) -> usize {
     monkey_business::<20, 3>(parsed)
 }
@@ -63,8 +49,8 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 fn monkey_business<const ITERATIONS: usize, const STRESS_REDUCTION: usize>(parsed: &Parsed) -> usize {
-    let lcm = parsed.iter().map(|m| m.div_test).reduce(lcm).unwrap();
-    println!("lcm: {lcm}");
+    // The checks are all prime numbers, so the lcm is just their product.
+    let lcm = parsed.iter().map(|m| m.div_test).product();
     let mut monkeys: Vec<Monkey> = parsed.clone();
     let mut moved = Vec::new();
     for _ in 0..ITERATIONS {
