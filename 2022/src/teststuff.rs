@@ -10,7 +10,7 @@ macro_rules! boilerplate {
         },)?
         bench1 == $b1: literal,
         bench2 == $b2: literal,
-        bench_parse: $input_fn: expr => $it: literal$(,)?
+        bench_parse: $input_fn: expr => $it: expr$(,)?
     ) => {
     fn main() {
         let raw_input = read_file(DAY);
