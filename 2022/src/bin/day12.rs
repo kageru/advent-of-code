@@ -3,7 +3,7 @@ extern crate test;
 use aoc2022::{
     boilerplate,
     common::*,
-    grid::{Grid, Position2D, VecGrid},
+    grid::{Grid, Position2D, PositionND, VecGrid},
 };
 
 const DAY: usize = 12;
@@ -35,10 +35,37 @@ fn parse_input(raw: &str) -> Parsed {
     (start, end, grid)
 }
 
+/// This is like… O(n³) or something for grid size n :tehe:
 fn part1((start, end, grid): &Parsed) -> usize {
-    let mut distances = VecGrid { fields: vec![vec![usize::MAX; grid.fields[0].len()]; grid.len()] };
+    let xbounds = 0..grid.len();
+    let ybounds = 0..grid.fields[0].len();
+    let mut distances = VecGrid { fields: vec![vec![usize::MAX; ybounds.end]; xbounds.end] };
     distances[*start] = 0;
-    0
+    let mut curr = *start;
+    loop {
+        if &curr == end {
+            return distances[curr];
+        }
+        for n in curr
+            .neighbors_no_diagonals()
+            .into_iter()
+            .filter(|&PositionND([x, y])| xbounds.contains(&(x as usize)) && ybounds.contains(&(y as usize)))
+        {
+            if grid[curr] >= grid[n] || grid[n] - grid[curr] == 1 {
+                distances[n] = distances[n].min(distances[curr] + 1);
+            }
+        }
+        distances[curr] = usize::MAX;
+        let min = distances.fields.iter().flatten().min().unwrap();
+        curr = distances
+            .fields
+            .iter()
+            .enumerate()
+            .find_map(|(x, row)| {
+                row.iter().enumerate().find_map(|(y, e)| (e == min).then_some(y)).map(|y| PositionND([x as i64, y as i64]))
+            })
+            .unwrap();
+    }
 }
 
 fn part2(parsed: &Parsed) -> usize {
@@ -55,7 +82,7 @@ abdefghi",
         part1: { TEST_INPUT => 31 },
         part2: { TEST_INPUT => 0 },
     },
-    bench1 == 0,
+    bench1 == 517,
     bench2 == 0,
-    bench_parse: |&((sx, sy), (ex, ey), _)| ((sx, sy), (ex, ey)) => ((20, 0), (20, 145)),
+    bench_parse: |&(PositionND([sx, sy]), PositionND([ex, ey]), _)| ((sx, sy), (ex, ey)) => ((20, 0), (20, 145)),
 }
