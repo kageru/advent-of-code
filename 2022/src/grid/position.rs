@@ -7,9 +7,7 @@ use std::{
 };
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
-pub struct PositionND<const DIMS: usize> {
-    pub points: [i64; DIMS],
-}
+pub struct PositionND<const DIMS: usize>(pub [i64; DIMS]);
 
 pub type Position2D = PositionND<2>;
 
@@ -21,7 +19,7 @@ where I: TryInto<i64> + Copy
         for i in 0..D {
             points[i] = s[i].try_into().unwrap_or_else(|_| panic!("number did not fit in target type"))
         }
-        Self { points }
+        Self(points)
     }
 }
 
@@ -31,7 +29,7 @@ pub const fn num_neighbors(d: usize) -> usize {
 
 impl<const DIMS: usize> PositionND<DIMS> {
     pub const fn zero() -> Self {
-        PositionND { points: [0; DIMS] }
+        PositionND([0; DIMS])
     }
 
     pub fn from_padded(slice: &[i64]) -> PositionND<DIMS> {
@@ -40,7 +38,7 @@ impl<const DIMS: usize> PositionND<DIMS> {
         for i in 0..(DIMS.min(slice.len())) {
             points[i] = slice[i];
         }
-        PositionND { points }
+        PositionND(points)
     }
 
     pub fn neighbors(&self) -> [PositionND<DIMS>; num_neighbors(DIMS)]
@@ -56,12 +54,12 @@ impl<const DIMS: usize> PositionND<DIMS> {
 
 impl PositionND<2> {
     pub fn neighbors_no_diagonals_only_positive(&self) -> [PositionND<2>; 2] {
-        let PositionND::<2> { points: [x, y] } = *self;
+        let PositionND::<2>([x, y]) = *self;
         [[x + 1, y].into(), [x, y + 1].into()]
     }
 
     pub fn neighbors_no_diagonals(&self) -> [PositionND<2>; 4] {
-        let PositionND::<2> { points: [x, y] } = *self;
+        let PositionND::<2>([x, y]) = *self;
         [[x + 1, y].into(), [x, y + 1].into(), [x - 1, y].into(), [x, y - 1].into()]
     }
 }
@@ -115,7 +113,7 @@ impl<const D: usize> Mul<i64> for PositionND<D> {
     type Output = PositionND<D>;
 
     fn mul(mut self, rhs: i64) -> Self::Output {
-        for p in self.points.iter_mut() {
+        for p in self.0.iter_mut() {
             *p *= rhs;
         }
         self
@@ -126,7 +124,7 @@ impl<const D: usize> Add<PositionND<D>> for PositionND<D> {
     type Output = PositionND<D>;
 
     fn add(mut self, rhs: PositionND<D>) -> Self::Output {
-        for (x, y) in self.points.iter_mut().zip(rhs.points) {
+        for (x, y) in self.0.iter_mut().zip(rhs.0) {
             *x += y;
         }
         self
@@ -137,7 +135,7 @@ impl<const D: usize> Sub<PositionND<D>> for PositionND<D> {
     type Output = PositionND<D>;
 
     fn sub(mut self, rhs: PositionND<D>) -> Self::Output {
-        for (x, y) in self.points.iter_mut().zip(rhs.points) {
+        for (x, y) in self.0.iter_mut().zip(rhs.0) {
             *x -= y;
         }
         self
@@ -161,72 +159,72 @@ mod tests {
 
     #[test]
     fn test_neighbors_2d() {
-        let p = PositionND { points: [0, 0] };
+        let p = PositionND([0, 0]);
         let n = p.neighbors();
         assert_eq!(
             n,
             [
-                PositionND { points: [-1, -1] },
-                PositionND { points: [-1, 0] },
-                PositionND { points: [-1, 1] },
-                PositionND { points: [0, -1] },
-                PositionND { points: [0, 1] },
-                PositionND { points: [1, -1] },
-                PositionND { points: [1, 0] },
-                PositionND { points: [1, 1] },
+                PositionND([-1, -1]),
+                PositionND([-1, 0]),
+                PositionND([-1, 1]),
+                PositionND([0, -1]),
+                PositionND([0, 1]),
+                PositionND([1, -1]),
+                PositionND([1, 0]),
+                PositionND([1, 1]),
             ]
         );
 
-        let p = PositionND { points: [1, 1] };
+        let p = PositionND([1, 1]);
         let n = p.neighbors();
         assert_eq!(
             n,
             [
-                PositionND { points: [0, 0] },
-                PositionND { points: [0, 1] },
-                PositionND { points: [0, 2] },
-                PositionND { points: [1, 0] },
-                PositionND { points: [1, 2] },
-                PositionND { points: [2, 0] },
-                PositionND { points: [2, 1] },
-                PositionND { points: [2, 2] },
+                PositionND([0, 0]),
+                PositionND([0, 1]),
+                PositionND([0, 2]),
+                PositionND([1, 0]),
+                PositionND([1, 2]),
+                PositionND([2, 0]),
+                PositionND([2, 1]),
+                PositionND([2, 2]),
             ]
         )
     }
 
     #[test]
     fn test_neighbors_3d() {
-        let p = PositionND { points: [0, 0, 0] };
+        let p = PositionND([0, 0, 0]);
         let n = p.neighbors();
         assert_eq!(
             n,
             [
-                PositionND { points: [-1, -1, -1] },
-                PositionND { points: [-1, -1, 0] },
-                PositionND { points: [-1, -1, 1] },
-                PositionND { points: [-1, 0, -1] },
-                PositionND { points: [-1, 0, 0] },
-                PositionND { points: [-1, 0, 1] },
-                PositionND { points: [-1, 1, -1] },
-                PositionND { points: [-1, 1, 0] },
-                PositionND { points: [-1, 1, 1] },
-                PositionND { points: [0, -1, -1] },
-                PositionND { points: [0, -1, 0] },
-                PositionND { points: [0, -1, 1] },
-                PositionND { points: [0, 0, -1] },
-                PositionND { points: [0, 0, 1] },
-                PositionND { points: [0, 1, -1] },
-                PositionND { points: [0, 1, 0] },
-                PositionND { points: [0, 1, 1] },
-                PositionND { points: [1, -1, -1] },
-                PositionND { points: [1, -1, 0] },
-                PositionND { points: [1, -1, 1] },
-                PositionND { points: [1, 0, -1] },
-                PositionND { points: [1, 0, 0] },
-                PositionND { points: [1, 0, 1] },
-                PositionND { points: [1, 1, -1] },
-                PositionND { points: [1, 1, 0] },
-                PositionND { points: [1, 1, 1] },
+                PositionND([-1, -1, -1]),
+                PositionND([-1, -1, 0]),
+                PositionND([-1, -1, 1]),
+                PositionND([-1, 0, -1]),
+                PositionND([-1, 0, 0]),
+                PositionND([-1, 0, 1]),
+                PositionND([-1, 1, -1]),
+                PositionND([-1, 1, 0]),
+                PositionND([-1, 1, 1]),
+                PositionND([0, -1, -1]),
+                PositionND([0, -1, 0]),
+                PositionND([0, -1, 1]),
+                PositionND([0, 0, -1]),
+                PositionND([0, 0, 1]),
+                PositionND([0, 1, -1]),
+                PositionND([0, 1, 0]),
+                PositionND([0, 1, 1]),
+                PositionND([1, -1, -1]),
+                PositionND([1, -1, 0]),
+                PositionND([1, -1, 1]),
+                PositionND([1, 0, -1]),
+                PositionND([1, 0, 0]),
+                PositionND([1, 0, 1]),
+                PositionND([1, 1, -1]),
+                PositionND([1, 1, 0]),
+                PositionND([1, 1, 1]),
             ]
         );
     }

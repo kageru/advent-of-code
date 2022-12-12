@@ -38,7 +38,7 @@ impl_op!(+ |a: Direction, b: i8| -> Direction {
                 Direction::Down => Direction::Up,
                 Direction::Left => Direction::Right,
             },
-            n => unreachable!(format!("Illegal turn value: {}", n)),
+            n => unreachable!("Illegal turn value: {n}"),
         }
 });
 

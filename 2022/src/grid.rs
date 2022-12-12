@@ -1,4 +1,3 @@
-pub mod cell;
 pub mod direction;
 pub mod position;
 pub use direction::*;
@@ -38,7 +37,7 @@ impl<T: Default + Copy> HashGrid<T, 2> {
     pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, mut f: F) -> HashGrid<T, 2> {
         raw.lines()
             .enumerate()
-            .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, c)| (PositionND { points: [x as i64, y as i64] }, f(c))))
+            .flat_map(move |(y, l)| l.bytes().enumerate().map(move |(x, c)| (PositionND([x as i64, y as i64]), f(c))))
             .collect()
     }
 }
@@ -56,11 +55,11 @@ pub struct VecGrid<T> {
 
 impl<T> Grid<T, 2> for VecGrid<T> {
     fn get(&self, pos: &PositionND<2>) -> Option<&T> {
-        self.fields.get(pos.points[0] as usize)?.get(pos.points[1] as usize)
+        self.fields.get(pos.0[0] as usize)?.get(pos.0[1] as usize)
     }
 
     fn insert<Pos: Into<PositionND<2>>>(&mut self, pos: Pos, element: T) {
-        let PositionND { points: [x, y] } = pos.into();
+        let PositionND([x, y]) = pos.into();
         self.fields[x as usize][y as usize] = element;
     }
 
@@ -83,12 +82,12 @@ pub struct Boundaries {
 }
 
 pub fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
-    let (x_min, x_max) = match input.iter().map(|p| p.points[0]).minmax() {
+    let (x_min, x_max) = match input.iter().map(|p| p.0[0]).minmax() {
         MinMaxResult::NoElements => (0, 0),
         MinMaxResult::MinMax(min, max) => (min, max),
         MinMaxResult::OneElement(x) => (x, x),
     };
-    let (y_min, y_max) = match input.iter().map(|p| p.points[1]).minmax() {
+    let (y_min, y_max) = match input.iter().map(|p| p.0[1]).minmax() {
         MinMaxResult::NoElements => (0, 0),
         MinMaxResult::MinMax(min, max) => (min, max),
         MinMaxResult::OneElement(x) => (x, x),
@@ -100,9 +99,7 @@ pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Po
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {
-            (b.x_min..=b.x_max)
-                .map(|x| coordinates.get(&PositionND { points: [x, y] }).unwrap_or(&T::default()).to_string())
-                .collect::<String>()
+            (b.x_min..=b.x_max).map(|x| coordinates.get(&PositionND([x, y])).unwrap_or(&T::default()).to_string()).collect::<String>()
         }),
         "\n",
     )
@@ -114,19 +111,19 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(PositionND::from([0, 2]) + PositionND::from([-1, 0]), [-1, 2].into());
-        assert_eq!(PositionND::from([0, -1]) + PositionND::from(Direction::Up), [0, 0].into());
+        assert_eq!(PositionND([0, 2]) + PositionND([-1, 0]), [-1, 2].into());
+        assert_eq!(PositionND([0, -1]) + PositionND::from(Direction::Up), [0, 0].into());
     }
 
     #[test]
     fn test_sub() {
-        assert_eq!(PositionND::from([0, 2]) - PositionND::from([-1, 0]), [1, 2].into());
-        assert_eq!(PositionND::from([0, -1]) - PositionND::from([0, -1]), [0, 0].into());
+        assert_eq!(PositionND([0, 2]) - PositionND([-1, 0]), [1, 2].into());
+        assert_eq!(PositionND([0, -1]) - PositionND([0, -1]), [0, 0].into());
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(PositionND::from([0, 2]) * 5, [0, 10].into());
-        assert_eq!(PositionND::from([0, -1]) * -2, [0, 2].into());
+        assert_eq!(PositionND([0, 2]) * 5, [0, 10].into());
+        assert_eq!(PositionND([0, -1]) * -2, [0, 2].into());
     }
 }
