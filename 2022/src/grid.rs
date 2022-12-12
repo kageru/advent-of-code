@@ -3,10 +3,15 @@ pub mod position;
 pub use direction::*;
 use itertools::{join, Itertools, MinMaxResult};
 pub use position::*;
-use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    hash::BuildHasher,
+    ops::{Index, IndexMut},
+};
 
 #[allow(clippy::len_without_is_empty)] // I mainly have this for assertions in benchmarks
-pub trait Grid<T, const D: usize> {
+pub trait Grid<T, const D: usize>: Index<PositionND<D>, Output = T> + IndexMut<PositionND<D>> {
     fn get(&self, pos: &PositionND<D>) -> Option<&T>;
 
     fn insert<Pos: Into<PositionND<D>>>(&mut self, pos: Pos, element: T);
@@ -17,6 +22,19 @@ pub trait Grid<T, const D: usize> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct HashGrid<T: Default, const D: usize> {
     pub fields: HashMap<PositionND<D>, T>,
+}
+
+impl<T: Default, const D: usize> Index<PositionND<D>> for HashGrid<T, D> {
+    type Output = T;
+    fn index(&self, index: PositionND<D>) -> &Self::Output {
+        &self.fields[&index]
+    }
+}
+
+impl<T: Default, const D: usize> IndexMut<PositionND<D>> for HashGrid<T, D> {
+    fn index_mut(&mut self, index: PositionND<D>) -> &mut Self::Output {
+        self.fields.get_mut(&index).expect("Key not in map")
+    }
 }
 
 impl<T: Default, const D: usize> Grid<T, D> for HashGrid<T, D> {
@@ -65,6 +83,19 @@ impl<T> Grid<T, 2> for VecGrid<T> {
 
     fn len(&self) -> usize {
         self.fields.len()
+    }
+}
+
+impl<T> Index<Position2D> for VecGrid<T> {
+    type Output = T;
+    fn index(&self, index: Position2D) -> &Self::Output {
+        &self.fields[index.0[0] as usize][index.0[1] as usize]
+    }
+}
+
+impl<T> IndexMut<Position2D> for VecGrid<T> {
+    fn index_mut(&mut self, index: Position2D) -> &mut Self::Output {
+        &mut self.fields[index.0[0] as usize][index.0[1] as usize]
     }
 }
 
