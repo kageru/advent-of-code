@@ -68,8 +68,36 @@ fn part1((start, end, grid): &Parsed) -> usize {
     }
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn part2((_, end, grid): &Parsed) -> usize {
+    let xbounds = 0..grid.len();
+    let ybounds = 0..grid.fields[0].len();
+    let mut distances = VecGrid { fields: vec![vec![usize::MAX; ybounds.end]; xbounds.end] };
+    distances[*end] = 0;
+    let mut curr = *end;
+    loop {
+        if grid[curr] == b'a' {
+            return distances[curr];
+        }
+        for n in curr
+            .neighbors_no_diagonals()
+            .into_iter()
+            .filter(|&PositionND([x, y])| xbounds.contains(&(x as usize)) && ybounds.contains(&(y as usize)))
+        {
+            if grid[curr] <= grid[n] || grid[curr] - grid[n] == 1 {
+                distances[n] = distances[n].min(distances[curr] + 1);
+            }
+        }
+        distances[curr] = usize::MAX;
+        let min = distances.fields.iter().flatten().min().unwrap();
+        curr = distances
+            .fields
+            .iter()
+            .enumerate()
+            .find_map(|(x, row)| {
+                row.iter().enumerate().find_map(|(y, e)| (e == min).then_some(y)).map(|y| PositionND([x as i64, y as i64]))
+            })
+            .unwrap();
+    }
 }
 
 boilerplate! {
@@ -80,9 +108,9 @@ acctuvwj
 abdefghi",
     tests: {
         part1: { TEST_INPUT => 31 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 29 },
     },
     bench1 == 517,
-    bench2 == 0,
+    bench2 == 512,
     bench_parse: |&(PositionND([sx, sy]), PositionND([ex, ey]), _)| ((sx, sy), (ex, ey)) => ((20, 0), (20, 145)),
 }
