@@ -1,0 +1,79 @@
+#![feature(test, array_windows)]
+extern crate test;
+use aoc2022::{boilerplate, common::*};
+use std::iter::repeat;
+
+const DAY: usize = 14;
+const X_OFFSET: usize = 300;
+const SAND_SOURCE: (usize, usize) = (500 - X_OFFSET, 0);
+const CAVE_HEIGHT: usize = 200;
+const CAVE_WIDTH: usize = CAVE_HEIGHT * 2;
+type Cave = [[Tile; CAVE_HEIGHT]; CAVE_WIDTH];
+type Parsed = (Cave, usize);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+enum Tile {
+    Wall,
+    Sand,
+    Air,
+}
+
+fn parse_input(raw: &str) -> Parsed {
+    let mut cave = [[Tile::Air; CAVE_HEIGHT]; CAVE_WIDTH];
+    let mut max_y = 0;
+    for line in raw.lines() {
+        let segments: Vec<(usize, usize)> =
+            line.split(" -> ").map(|s| s.split_once(',').unwrap()).map(|(x, y)| (parse_num::<usize>(x) - X_OFFSET, parse_num(y))).collect();
+        for &[(x1, y1), (x2, y2)] in segments.array_windows() {
+            max_y = max_y.max(y1).max(y2);
+            for (x, y) in ((x1.min(x2))..=(x1.max(x2))).flat_map(|x| repeat(x).zip((y1.min(y2))..=(y1.max(y2)))) {
+                cave[x][y] = Tile::Wall;
+            }
+        }
+    }
+    (cave, max_y)
+}
+
+fn simulate((x, y): (usize, usize), cave: &Cave) -> Option<(usize, usize)> {
+    if y >= CAVE_HEIGHT - 1 {
+        None
+    } else if cave[x][y + 1] == Tile::Air {
+        simulate((x, y + 1), cave)
+    } else if cave[x - 1][y + 1] == Tile::Air {
+        simulate((x - 1, y + 1), cave)
+    } else if cave[x + 1][y + 1] == Tile::Air {
+        simulate((x + 1, y + 1), cave)
+    } else {
+        Some((x, y))
+    }
+}
+
+fn part1((cave, _): &Parsed) -> usize {
+    let mut cave = cave.to_owned();
+    while let Some((x, y)) = simulate(SAND_SOURCE, &cave) {
+        cave[x][y] = Tile::Sand;
+    }
+    cave.iter().flatten().filter(|&t| t == &Tile::Sand).count()
+}
+
+fn part2((cave, max_y): &Parsed) -> usize {
+    let mut cave = cave.to_owned();
+    cave.iter_mut().for_each(|row| row[max_y + 2] = Tile::Wall);
+    while cave[SAND_SOURCE.0][SAND_SOURCE.1] == Tile::Air {
+        let (x, y) = simulate(SAND_SOURCE, &cave).unwrap();
+        cave[x][y] = Tile::Sand;
+    }
+    cave.iter().flatten().filter(|&t| t == &Tile::Sand).count()
+}
+
+boilerplate! {
+    TEST_INPUT == "498,4 -> 498,6 -> 496,6
+503,4 -> 502,4 -> 502,9 -> 494,9",
+    tests: {
+        part1: { TEST_INPUT => 24 },
+        part2: { TEST_INPUT => 93 },
+    },
+    bench1 == 674,
+    bench2 == 24958,
+    bench_parse: |(_, y): &Parsed| *y => 161,
+}
