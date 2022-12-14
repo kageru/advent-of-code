@@ -42,13 +42,7 @@ fn simulate((x, y): (usize, usize), cave: &Cave) -> Option<(usize, usize)> {
 }
 
 fn part1((cave, _): &Parsed) -> usize {
-    let mut cave = cave.to_owned();
-    let mut sand = 0;
-    while let Some((x, y)) = simulate(SAND_SOURCE, &cave) {
-        cave[x][y] = true;
-        sand += 1;
-    }
-    sand
+    (0..).scan(cave.to_owned(), |cave, _| simulate(SAND_SOURCE, &cave).map(|(x, y)| cave[x][y] = true)).count()
 }
 
 fn part2((cave, max_y): &Parsed) -> usize {
