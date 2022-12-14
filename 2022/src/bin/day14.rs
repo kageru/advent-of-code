@@ -41,20 +41,17 @@ fn simulate((x, y): (usize, usize), cave: &Cave) -> Option<(usize, usize)> {
     }
 }
 
+// abusing scan here to simulate a stateful for-loop with a counter
 fn part1((cave, _): &Parsed) -> usize {
-    (0..).scan(cave.to_owned(), |cave, _| simulate(SAND_SOURCE, &cave).map(|(x, y)| cave[x][y] = true)).count()
+    repeat(()).scan(cave.to_owned(), |cave, _| simulate(SAND_SOURCE, &cave).map(|(x, y)| cave[x][y] = true)).count()
 }
 
 fn part2((cave, max_y): &Parsed) -> usize {
     let mut cave = cave.to_owned();
-    let mut sand = 0;
     cave.iter_mut().for_each(|row| row[max_y + 2] = true);
-    while !cave[SAND_SOURCE.0][SAND_SOURCE.1] {
-        let (x, y) = simulate(SAND_SOURCE, &cave).unwrap();
-        cave[x][y] = true;
-        sand += 1;
-    }
-    sand
+    1 + repeat(())
+        .scan(cave, |cave, _| simulate(SAND_SOURCE, &cave).map(|(x, y)| cave[x][y] = true).filter(|_| !cave[SAND_SOURCE.0][SAND_SOURCE.1]))
+        .count()
 }
 
 boilerplate! {
