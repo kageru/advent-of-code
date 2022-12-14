@@ -14,15 +14,16 @@ type Parsed = (Cave, usize);
 fn parse_input(raw: &str) -> Parsed {
     let mut cave = [[false; CAVE_HEIGHT]; CAVE_WIDTH];
     let mut max_y = 0;
+    let mut segments: Vec<(usize, usize)> = Vec::with_capacity(10);
     for line in raw.lines() {
-        let segments: Vec<(usize, usize)> =
-            line.split(" -> ").map(|s| s.split_once(',').unwrap()).map(|(x, y)| (parse_num::<usize>(x) - X_OFFSET, parse_num(y))).collect();
+        segments
+            .extend(line.split(" -> ").map(|s| s.split_once(',').unwrap()).map(|(x, y)| (parse_num::<usize>(x) - X_OFFSET, parse_num(y))));
         for &[(x1, y1), (x2, y2)] in segments.array_windows() {
-            max_y = max_y.max(y1).max(y2);
             for (x, y) in ((x1.min(x2))..=(x1.max(x2))).flat_map(|x| repeat(x).zip((y1.min(y2))..=(y1.max(y2)))) {
                 cave[x][y] = true;
             }
         }
+        max_y = max_y.max(segments.drain(..).map(|(_, y)| y).max().unwrap());
     }
     (cave, max_y)
 }
