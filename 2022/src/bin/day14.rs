@@ -8,18 +8,11 @@ const X_OFFSET: usize = 300;
 const SAND_SOURCE: (usize, usize) = (500 - X_OFFSET, 0);
 const CAVE_HEIGHT: usize = 200;
 const CAVE_WIDTH: usize = CAVE_HEIGHT * 2;
-type Cave = [[Tile; CAVE_HEIGHT]; CAVE_WIDTH];
+type Cave = [[bool; CAVE_HEIGHT]; CAVE_WIDTH];
 type Parsed = (Cave, usize);
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-enum Tile {
-    Wall,
-    Sand,
-    Air,
-}
-
 fn parse_input(raw: &str) -> Parsed {
-    let mut cave = [[Tile::Air; CAVE_HEIGHT]; CAVE_WIDTH];
+    let mut cave = [[false; CAVE_HEIGHT]; CAVE_WIDTH];
     let mut max_y = 0;
     for line in raw.lines() {
         let segments: Vec<(usize, usize)> =
@@ -27,7 +20,7 @@ fn parse_input(raw: &str) -> Parsed {
         for &[(x1, y1), (x2, y2)] in segments.array_windows() {
             max_y = max_y.max(y1).max(y2);
             for (x, y) in ((x1.min(x2))..=(x1.max(x2))).flat_map(|x| repeat(x).zip((y1.min(y2))..=(y1.max(y2)))) {
-                cave[x][y] = Tile::Wall;
+                cave[x][y] = true;
             }
         }
     }
@@ -37,11 +30,11 @@ fn parse_input(raw: &str) -> Parsed {
 fn simulate((x, y): (usize, usize), cave: &Cave) -> Option<(usize, usize)> {
     if y >= CAVE_HEIGHT - 1 {
         None
-    } else if cave[x][y + 1] == Tile::Air {
+    } else if !cave[x][y + 1] {
         simulate((x, y + 1), cave)
-    } else if cave[x - 1][y + 1] == Tile::Air {
+    } else if !cave[x - 1][y + 1] {
         simulate((x - 1, y + 1), cave)
-    } else if cave[x + 1][y + 1] == Tile::Air {
+    } else if !cave[x + 1][y + 1] {
         simulate((x + 1, y + 1), cave)
     } else {
         Some((x, y))
@@ -50,20 +43,24 @@ fn simulate((x, y): (usize, usize), cave: &Cave) -> Option<(usize, usize)> {
 
 fn part1((cave, _): &Parsed) -> usize {
     let mut cave = cave.to_owned();
+    let mut sand = 0;
     while let Some((x, y)) = simulate(SAND_SOURCE, &cave) {
-        cave[x][y] = Tile::Sand;
+        cave[x][y] = true;
+        sand += 1;
     }
-    cave.iter().flatten().filter(|&t| t == &Tile::Sand).count()
+    sand
 }
 
 fn part2((cave, max_y): &Parsed) -> usize {
     let mut cave = cave.to_owned();
-    cave.iter_mut().for_each(|row| row[max_y + 2] = Tile::Wall);
-    while cave[SAND_SOURCE.0][SAND_SOURCE.1] == Tile::Air {
+    let mut sand = 0;
+    cave.iter_mut().for_each(|row| row[max_y + 2] = true);
+    while !cave[SAND_SOURCE.0][SAND_SOURCE.1] {
         let (x, y) = simulate(SAND_SOURCE, &cave).unwrap();
-        cave[x][y] = Tile::Sand;
+        cave[x][y] = true;
+        sand += 1;
     }
-    cave.iter().flatten().filter(|&t| t == &Tile::Sand).count()
+    sand
 }
 
 boilerplate! {
