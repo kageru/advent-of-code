@@ -26,7 +26,7 @@ fn manhattan((x1, y1): (i64, i64), (x2, y2): (i64, i64)) -> u64 {
 fn part1(parsed: &Parsed, y: i64) -> i64 {
     let (&min_x, &max_x) = parsed.iter().map(|((x1, _), _)| x1).minmax().into_option().unwrap();
     let mut x = min_x - *parsed.iter().map(|(_, d)| d).max().unwrap() as i64;
-    let mut c = 0;
+    let mut c = -1;
     while x <= max_x {
         match parsed.iter().find(|(p, d)| manhattan(*p, (x, y)) <= *d) {
             Some(&((px, py), d)) => {
@@ -34,10 +34,15 @@ fn part1(parsed: &Parsed, y: i64) -> i64 {
                 c += new_x - x;
                 x = new_x;
             }
-            None => x += 1,
+            None => {
+                match parsed.iter().filter(|&&((x1, y1), d)| x1 > x && y1.abs_diff(y) < d).min_by_key(|&&(p, d)| manhattan(p, (x, y)) - d) {
+                    Some(&((px, py), d)) => x = px - (d as i64 - (py.abs_diff(y) as i64)),
+                    None => break,
+                };
+            }
         };
     }
-    c - 1
+    c
 }
 
 fn part2(parsed: &Parsed, bounds: i64) -> i64 {
