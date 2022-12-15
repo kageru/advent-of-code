@@ -1,4 +1,4 @@
-#![feature(test, result_option_inspect)]
+#![feature(test, iter_array_chunks)]
 extern crate test;
 
 use aoc2022::{boilerplate, common::*};
@@ -8,14 +8,13 @@ const DAY: usize = 15;
 type Parsed = Vec<((i64, i64), u64)>;
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines()
-        .map(|line| {
-            <[&str; 4]>::try_from(line[12..].replace(", y=", ",").replace(": closest beacon is at x=", ",").split(',').collect_vec())
-                .unwrap()
-                .map(|s| s.parse().unwrap())
-        })
-        .map(|[x1, y1, x2, y2]| ((x1, y1), (x2, y2)))
-        .map(|(t1, t2)| (t1, manhattan(t1, t2)))
+    raw.replace(", y=", ",")
+        .replace(": closest beacon is at x=", ",")
+        .lines()
+        .flat_map(|line| line[12..].split(','))
+        .map(|s| s.parse().unwrap())
+        .array_chunks()
+        .map(|[x1, y1, x2, y2]| ((x1, y1), manhattan((x1, y1), (x2, y2))))
         .collect()
 }
 
@@ -38,7 +37,7 @@ fn part1(parsed: &Parsed, y: i64) -> i64 {
                 match parsed.iter().filter(|&&((x1, y1), d)| x1 > x && y1.abs_diff(y) < d).min_by_key(|&&(p, d)| manhattan(p, (x, y)) - d) {
                     Some(&((px, py), d)) => x = px - (d as i64 - (py.abs_diff(y) as i64)),
                     None => break,
-                };
+                }
             }
         };
     }
