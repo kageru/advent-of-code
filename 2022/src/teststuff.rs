@@ -9,14 +9,14 @@ macro_rules! boilerplate {
             $($unittest: ident: { $($($utpi: expr),+ => $uto: expr),+$(,)? }),*$(,)?
         },)?
         bench1$(($bi1: literal))? == $b1: literal,
-        bench2 == $b2: literal,
+        bench2$(($bi2: literal))? == $b2: literal,
         bench_parse: $input_fn: expr => $it: expr$(,)?
     ) => {
     fn main() {
         let raw_input = read_file(DAY);
         let input = parse_input(&raw_input);
         println!("Part 1: {}", part1(&input$(,$bi1)?));
-        println!("Part 2: {}", part2(&input));
+        println!("Part 2: {}", part2(&input$(,$bi2)?));
     }
 
     #[cfg(test)]
@@ -40,7 +40,7 @@ macro_rules! boilerplate {
             }
         })+)*
         bench!(part1($($bi1)?) == $b1);
-        bench!(part2() == $b2);
+        bench!(part2($($bi2)?) == $b2);
         #[bench]
         fn bench_input_parsing(b: &mut test::Bencher) {
             let raw = &read_file(DAY);
