@@ -5,7 +5,7 @@ use aoc2022::{boilerplate, common::*};
 use itertools::Itertools;
 
 const DAY: usize = 15;
-type Parsed = Vec<((i64, i64), (i64, i64), u64)>;
+type Parsed = Vec<((i64, i64), u64)>;
 
 fn parse_input(raw: &str) -> Parsed {
     raw.lines()
@@ -15,7 +15,7 @@ fn parse_input(raw: &str) -> Parsed {
                 .map(|s| s.parse().unwrap())
         })
         .map(|[x1, y1, x2, y2]| ((x1, y1), (x2, y2)))
-        .map(|(t1, t2)| (t1, t2, manhattan(t1, t2)))
+        .map(|(t1, t2)| (t1, manhattan(t1, t2)))
         .collect()
 }
 
@@ -23,48 +23,34 @@ fn manhattan((x1, y1): (i64, i64), (x2, y2): (i64, i64)) -> u64 {
     x1.abs_diff(x2) + y1.abs_diff(y2)
 }
 
-fn part1(parsed: &Parsed, y: i64) -> usize {
-    let max_distance = *parsed.iter().map(|(_, _, d)| d).max().unwrap() + 1;
-    let (&min_x, &max_x) = parsed.iter().map(|((x1, _), _, _)| x1).minmax().into_option().unwrap();
-
+fn part1(parsed: &Parsed, y: i64) -> i64 {
+    let (&min_x, &max_x) = parsed.iter().map(|((x1, _), _)| x1).minmax().into_option().unwrap();
+    let mut x = min_x - *parsed.iter().map(|(_, d)| d).max().unwrap() as i64;
     let mut c = 0;
-    let mut nearest = None;
-    for x in (min_x - max_distance as i64)..=(max_x + max_distance as i64) {
-        match nearest {
-            None => {
-                nearest = parsed.iter().find(|(p, _, d)| manhattan(*p, (x, y)) <= *d);
-                if nearest.is_some() {
-                    c += 1;
-                }
+    while x <= max_x {
+        match parsed.iter().find(|(p, d)| manhattan(*p, (x, y)) <= *d) {
+            Some(&((px, py), d)) => {
+                let new_x = px + d as i64 - (py.abs_diff(y) as i64) + 1;
+                c += new_x - x;
+                x = new_x;
             }
-            Some(&(p, _, d)) => {
-                if manhattan(p, (x, y)) <= d {
-                    c += 1;
-                } else {
-                    nearest = parsed.iter().find(|(p, _, d)| manhattan(*p, (x, y)) <= *d);
-                    if nearest.is_some() {
-                        c += 1;
-                    }
-                }
-            }
-        }
+            None => x += 1,
+        };
     }
-    c - 1 // no idea why this is consistently off by 1
+    c - 1
 }
 
 fn part2(parsed: &Parsed, bounds: i64) -> i64 {
     for x in 0..=bounds {
         let mut y = 0;
         while y <= bounds {
-            match parsed.iter().find(|(p, _, d)| manhattan(*p, (x, y)) <= *d) {
-                Some(&((px, py), _, d)) => {
-                    y = py + d as i64 - (px.abs_diff(x) as i64) + 1;
-                }
+            match parsed.iter().find(|(p, d)| manhattan(*p, (x, y)) <= *d) {
+                Some(&((px, py), d)) => y = py + d as i64 - (px.abs_diff(x) as i64) + 1,
                 None => return x * 4_000_000 + y,
             };
         }
     }
-    panic!("Did not find an eligible spot")
+    unreachable!("Did not find an eligible spot")
 }
 
 boilerplate! {
