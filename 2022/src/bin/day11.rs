@@ -31,11 +31,13 @@ fn parse_input(raw: &str) -> Parsed {
             let true_dst = parse_num(&if_true[29..]);
             let false_dst = parse_num(&if_false[30..]);
             let op = op.as_bytes();
-            let op = match (op[23], op[25]) {
-                (b'+', b'o') => MonkeyOp::Add(None),
-                (b'+', x) => MonkeyOp::Add(Some((x - b'0') as _)),
-                (b'*', b'o') => MonkeyOp::Mul(None),
-                (b'*', x) => MonkeyOp::Mul(Some((x - b'0') as _)),
+            let op = match (op[23], op[25], op.get(26).copied()) {
+                (b'+', b'o', _) => MonkeyOp::Add(None),
+                (b'+', x, None) => MonkeyOp::Add(Some((x - b'0') as _)),
+                (b'+', x, Some(y)) => MonkeyOp::Add(Some(((x - b'0') * 10 + y - b'0') as _)),
+                (b'*', b'o', _) => MonkeyOp::Mul(None),
+                (b'*', x, None) => MonkeyOp::Mul(Some((x - b'0') as _)),
+                (b'*', x, Some(y)) => MonkeyOp::Mul(Some(((x - b'0') * 10 + y - b'0') as _)),
                 _ => unreachable!(),
             };
             Monkey { inspection_count: 0, items, op, div_test, true_dst, false_dst }
