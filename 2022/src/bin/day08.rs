@@ -28,8 +28,8 @@ fn is_visible_1d<'a>(iter: impl IntoIterator<Item = &'a u8>, rev: bool) -> Vec<b
     v
 }
 
-fn transpose<T: Copy>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
-    let mut v = v.clone();
+fn transpose<T: Copy>(v: &[Vec<T>]) -> Vec<Vec<T>> {
+    let mut v = v.to_vec();
     let size = v.len();
     for i in 0..size {
         for j in i + 1..size {

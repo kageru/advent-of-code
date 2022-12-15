@@ -61,21 +61,22 @@ fn monkey_business<const ITERATIONS: usize, const STRESS_REDUCTION: usize>(parse
     for _ in 0..ITERATIONS {
         let mut i = 0;
         while i < monkeys.len() {
-            let monkey = monkeys.get_mut(i).unwrap();
-            monkey.inspection_count += monkey.items.len();
-            while !monkey.items.is_empty() {
-                moved.extend(monkey.items.drain(..).map(|mut stress| {
-                    stress = match monkey.op {
-                        MonkeyOp::Add(x) => stress + x.unwrap_or(stress),
-                        MonkeyOp::Mul(x) => stress * x.unwrap_or(stress),
-                    } / STRESS_REDUCTION;
-                    if stress > lcm {
-                        stress %= lcm;
-                    }
-                    (stress, if stress % monkey.div_test == 0 { monkey.true_dst } else { monkey.false_dst })
-                }));
+            {
+                let monkey = monkeys.get_mut(i).unwrap();
+                monkey.inspection_count += monkey.items.len();
+                while !monkey.items.is_empty() {
+                    moved.extend(monkey.items.drain(..).map(|mut stress| {
+                        stress = match monkey.op {
+                            MonkeyOp::Add(x) => stress + x.unwrap_or(stress),
+                            MonkeyOp::Mul(x) => stress * x.unwrap_or(stress),
+                        } / STRESS_REDUCTION;
+                        if stress > lcm {
+                            stress %= lcm;
+                        }
+                        (stress, if stress % monkey.div_test == 0 { monkey.true_dst } else { monkey.false_dst })
+                    }));
+                }
             }
-            drop(monkey);
             for (item, dst) in moved.drain(..) {
                 monkeys.get_mut(dst).unwrap().items.push(item);
             }

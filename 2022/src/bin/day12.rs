@@ -11,7 +11,7 @@ use aoc2022::{
 const DAY: usize = 12;
 type Parsed = (Position2D, Position2D, VecGrid<u8>);
 
-fn find_and_modify(grid: &mut Vec<Vec<u8>>, needle: u8, replacement: u8) -> (usize, usize) {
+fn find_and_modify(grid: &mut [Vec<u8>], needle: u8, replacement: u8) -> (usize, usize) {
     grid.iter_mut()
         .enumerate()
         .find_map(|(x, line)| {

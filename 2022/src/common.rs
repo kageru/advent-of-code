@@ -1,5 +1,5 @@
 pub fn read_file(day: usize) -> String {
-    std::fs::read_to_string(std::env::var("AOC_INPUT").unwrap_or_else(|_| format!("inputs/day{:0>2}", day))).unwrap()
+    std::fs::read_to_string(std::env::var("AOC_INPUT").unwrap_or_else(|_| format!("inputs/day{day:0>2}"))).unwrap()
 }
 
 pub fn parse_nums(l: &str) -> Vec<usize> {
