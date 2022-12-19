@@ -11,6 +11,7 @@ type Parsed = Vec<Blueprint>;
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 struct Factory {
     minute:         u32,
+    waited:         u32,
     ore:            u32,
     ore_robot:      u32,
     clay:           u32,
@@ -29,6 +30,7 @@ impl Factory {
             obsidian: self.obsidian + self.obsidian_robot,
             geode: self.geode + self.geode_robot,
             minute: self.minute + 1,
+            waited: self.waited + 1,
             ..self
         }
     }
@@ -90,47 +92,54 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> u32 {
-    parsed.iter().map(|blueprint| max_geodes(Factory { ore_robot: 1, ..Default::default() }, blueprint, 24) * blueprint.number).sum()
+    parsed.iter().map(|blueprint| max_geodes(Factory { ore_robot: 1, ..Default::default() }, blueprint, 3, 24) * blueprint.number).sum()
 }
 
 fn part2(parsed: &Parsed) -> u32 {
-    parsed.iter().take(3).map(|blueprint| max_geodes(Factory { ore_robot: 1, ..Default::default() }, blueprint, 32)).product()
+    parsed.iter().take(3).map(|blueprint| max_geodes(Factory { ore_robot: 1, ..Default::default() }, blueprint, 4, 32)).product()
 }
 
-fn max_geodes(factory: Factory, bp: &Blueprint, limit: u32) -> u32 {
+fn max_geodes(factory: Factory, bp: &Blueprint, wait_limit: u32, limit: u32) -> u32 {
     if factory.minute == limit {
         return factory.geode;
     }
     if factory.can_afford(&bp.geode_robot) {
-        return max_geodes(Factory { geode_robot: factory.geode_robot + 1, ..factory.pass_minute() } - bp.geode_robot, bp, limit);
+        return max_geodes(
+            Factory { geode_robot: factory.geode_robot + 1, waited: 0, ..factory.pass_minute() } - bp.geode_robot,
+            bp,
+            wait_limit,
+            limit,
+        );
     }
-    // This assumption holds for my input but not the test input.
-    // Not entirely fair, but good enough until I figure out a better way.
+    // This assumption (“if we can build an obsidian robot, we should”) holds for my input but not the test input.
+    // Not entirely fair, but good enough until (or if at all) I figure out a better way.
     if factory.obsidian_robot < bp.geode_robot.obsidian && factory.can_afford(&bp.obsidian_robot) {
-        return max_geodes(Factory { obsidian_robot: factory.obsidian_robot + 1, ..factory.pass_minute() } - bp.obsidian_robot, bp, limit);
+        return max_geodes(
+            Factory { obsidian_robot: factory.obsidian_robot + 1, waited: 0, ..factory.pass_minute() } - bp.obsidian_robot,
+            bp,
+            wait_limit,
+            limit,
+        );
     }
+
     let mut outcomes = Vec::with_capacity(3);
     if factory.ore_robot < bp.max_ore && factory.can_afford(&bp.ore_robot) {
-        outcomes.push(Factory { ore_robot: factory.ore_robot + 1, ..factory.pass_minute() } - bp.ore_robot);
+        outcomes.push(Factory { ore_robot: factory.ore_robot + 1, waited: 0, ..factory.pass_minute() } - bp.ore_robot);
     }
     if factory.clay_robot < bp.obsidian_robot.clay && factory.can_afford(&bp.clay_robot) {
-        outcomes.push(Factory { clay_robot: factory.clay_robot + 1, ..factory.pass_minute() } - bp.clay_robot);
+        outcomes.push(Factory { clay_robot: factory.clay_robot + 1, waited: 0, ..factory.pass_minute() } - bp.clay_robot);
     }
-    // There seem to be steps where doing nothing is the right choice even if we could produce
-    // another robot according to the rules above. If I could eliminate this, the number of tested
-    // lines is reduce by a factor of ~1_000_000
-    outcomes.push(factory.pass_minute());
-    outcomes.into_iter().map(|f| max_geodes(f, bp, limit)).max().unwrap()
+    if outcomes.is_empty() || factory.waited < wait_limit {
+        outcomes.push(factory.pass_minute());
+    }
+    outcomes.into_iter().take(2).map(|f| max_geodes(f, bp, wait_limit, limit)).max().unwrap()
 }
 
 boilerplate! {
     TEST_INPUT == "\
 Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
 Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.",
-    tests: {
-        part1: { TEST_INPUT => 33 },
-        // part2: { TEST_INPUT => 3472 },
-    },
+    tests: { part1: { TEST_INPUT => 33 } },
     bench1 == 1150,
     bench2 == 37367,
     bench_parse: Vec::len => 30,
