@@ -1,7 +1,10 @@
 #![feature(test)]
 extern crate test;
 use aoc2022::{boilerplate, common::*};
-use std::{collections::VecDeque, iter::repeat};
+use std::{
+    collections::VecDeque,
+    iter::{repeat, repeat_with},
+};
 
 const DAY: usize = 20;
 type Parsed = Vec<isize>;
@@ -11,54 +14,49 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> isize {
-    let mut xs: VecDeque<_> = parsed.iter().copied().zip(repeat(false)).collect();
+    let mut xs: VecDeque<_> = repeat(false).zip(parsed.iter().copied()).collect();
     let mut moved = 0;
     while moved < parsed.len() {
         let x = xs.pop_front().unwrap();
-        if x.1 {
+        if x.0 {
+            // already processed, just put it in the back
             xs.push_back(x);
         } else {
-            xs.insert(((x.0 + (xs.len() * 2) as isize) % xs.len() as isize) as usize, (x.0, true));
+            // casting :notLikeMiya:
+            xs.insert(((x.1 + (xs.len() * 2) as isize) % xs.len() as isize) as usize, (true, x.1));
             moved += 1;
         }
     }
-    let i = xs.iter().position(|(x, _)| x == &0).unwrap();
-    xs.rotate_left(i);
-    xs.rotate_left(1000 % parsed.len());
-    let a = xs.front().unwrap().0;
-    xs.rotate_left(1000 % parsed.len());
-    let b = xs.front().unwrap().0;
-    xs.rotate_left(1000 % parsed.len());
-    let c = xs.front().unwrap().0;
-    a + b + c
+    get_coords(&mut xs)
 }
 
 const DECRYPTION_KEY: isize = 811589153;
 
 fn part2(parsed: &Parsed) -> isize {
     let mut xs: VecDeque<_> = parsed.iter().enumerate().map(|(p, x)| (p, x * DECRYPTION_KEY)).collect();
-    for i in 0..10 {
-        dbg!(i, &xs);
-        let mut moved = 0;
-        while moved < parsed.len() {
-            let i = xs.iter().position(|(x, _)| x == &moved).unwrap();
+    // Effective length is reduced by one because the element that’s being moved is no longer in the collection.
+    let len = xs.len() as isize - 1;
+    // Add this to each element to make it guaranteed positive before modulo-ing for the index.
+    let make_positive = len * 2 * DECRYPTION_KEY;
+    for _ in 0..10 {
+        for current in 0..parsed.len() {
+            let i = xs.iter().position(|(x, _)| x == &current).unwrap();
             xs.rotate_left(i);
             let x = xs.pop_front().unwrap();
-            let idx = ((x.1 + (xs.len() * 2 * DECRYPTION_KEY as usize) as isize) % xs.len() as isize) as usize;
-            dbg!("Inserting at", idx);
-            xs.insert(idx, x);
-            moved += 1;
+            xs.insert(((x.1 + make_positive) % len) as usize, x);
         }
     }
-    let i = xs.iter().position(|(_, x)| x == &0).unwrap();
-    xs.rotate_left(i);
-    xs.rotate_left(1000 % parsed.len());
-    let a = xs.front().unwrap().1;
-    xs.rotate_left(1000 % parsed.len());
-    let b = xs.front().unwrap().1;
-    xs.rotate_left(1000 % parsed.len());
-    let c = xs.front().unwrap().1;
-    a + b + c
+    get_coords(&mut xs)
+}
+
+fn get_coords<T>(xs: &mut VecDeque<(T, isize)>) -> isize {
+    xs.rotate_left(xs.iter().position(|(_, x)| x == &0).unwrap());
+    repeat_with(|| {
+        xs.rotate_left(1000 % xs.len());
+        xs.front().unwrap().1
+    })
+    .take(3)
+    .sum()
 }
 
 boilerplate! {
