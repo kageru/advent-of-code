@@ -1,4 +1,4 @@
-#![feature(test, try_blocks, hash_drain_filter)]
+#![feature(test, hash_drain_filter)]
 extern crate test;
 use aoc2022::{boilerplate, common::*};
 use fnv::FnvHashMap as HashMap;
@@ -19,7 +19,7 @@ fn parse_input(raw: &str) -> Parsed {
     raw.lines()
         .map(|line| {
             let key = &line.as_bytes()[0..4];
-            let value = line[6..].as_bytes();
+            let value = &line.as_bytes()[6..];
 
             if value[0].is_ascii_digit() {
                 return (key, Monkey::Number(parse_num(&line[6..])));
@@ -35,31 +35,25 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
+const ROOT: &[u8] = b"root";
+
+fn resolve_monkey(monkey: &Monkey, resolved: &HashMap<&[u8], isize>) -> Option<isize> {
+    Some(match monkey {
+        Monkey::Number(n) => *n,
+        Monkey::Add(a, b) => resolved.get(a)? + resolved.get(b)?,
+        Monkey::Sub(a, b) => resolved.get(a)? - resolved.get(b)?,
+        Monkey::Mul(a, b) => resolved.get(a)? * resolved.get(b)?,
+        Monkey::Div(a, b) => resolved.get(a)? / resolved.get(b)?,
+    })
+}
+
 fn part1(parsed: &Parsed) -> isize {
     let mut missing = parsed.clone();
     let mut resolved = HashMap::<&[u8], isize>::default();
-    // parsed.iter().filter_map(|(&k, m)| if let Monkey::Number(n) = m { Some((k, *n)) } else { None }).collect();
     while !missing.is_empty() {
-        missing
-            .drain_filter(|&k, v| {
-                let o: Option<()> = try {
-                    resolved.insert(
-                        k,
-                        match v {
-                            Monkey::Number(n) => *n,
-                            Monkey::Add(a, b) => resolved.get(a)? + resolved.get(b)?,
-                            Monkey::Sub(a, b) => resolved.get(a)? - resolved.get(b)?,
-                            Monkey::Mul(a, b) => resolved.get(a)? * resolved.get(b)?,
-                            Monkey::Div(a, b) => resolved.get(a)? / resolved.get(b)?,
-                        },
-                    );
-                };
-                o.is_some()
-            })
-            .last();
+        missing.drain_filter(|&k, v| resolve_monkey(v, &resolved).map(|n| resolved.insert(k, n)).is_some()).last();
     }
-    let root: &[u8] = b"root";
-    resolved[root]
+    resolved[ROOT]
 }
 
 fn part2(parsed: &Parsed) -> usize {
