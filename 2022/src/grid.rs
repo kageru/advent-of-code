@@ -128,8 +128,8 @@ pub fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
 pub fn draw_ascii<T: Display + Default>(coordinates: &HashMap<PositionND<2>, T>) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
-        (b.y_min..=b.y_max).rev().map(|y| {
-            (b.x_min..=b.x_max).map(|x| coordinates.get(&PositionND([x, y])).unwrap_or(&T::default()).to_string()).collect::<String>()
+        (b.x_min..=b.x_max).map(|x| {
+            (b.y_min..=b.y_max).map(|y| coordinates.get(&PositionND([x, y])).unwrap_or(&T::default()).to_string()).collect::<String>()
         }),
         "\n",
     )
