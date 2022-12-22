@@ -1,12 +1,11 @@
 pub mod direction;
 pub mod position;
 pub use direction::*;
+use fnv::FnvHashMap as HashMap;
 use itertools::{join, Itertools, MinMaxResult};
 pub use position::*;
 use std::{
-    collections::HashMap,
     fmt::Display,
-    hash::BuildHasher,
     ops::{Index, IndexMut},
 };
 
@@ -126,7 +125,7 @@ pub fn get_boundaries(input: &[&PositionND<2>]) -> Boundaries {
     Boundaries { x_min, x_max, y_min, y_max }
 }
 
-pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<PositionND<2>, T, S>) -> String {
+pub fn draw_ascii<T: Display + Default>(coordinates: &HashMap<PositionND<2>, T>) -> String {
     let b = get_boundaries(&coordinates.keys().collect::<Vec<_>>());
     join(
         (b.y_min..=b.y_max).rev().map(|y| {

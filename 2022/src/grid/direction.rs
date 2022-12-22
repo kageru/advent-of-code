@@ -5,10 +5,10 @@ pub const ALL_DIRECTIONS: [Direction; 4] = [Direction::Up, Direction::Down, Dire
 
 #[derive(Clone, Copy, Debug)]
 pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+    Right = 0,
+    Down = 1,
+    Left = 2,
+    Up = 3,
 }
 
 impl AddAssign<i8> for Direction {
