@@ -13,7 +13,7 @@ fn part1(parsed: &Parsed) -> usize {
     parsed
         .iter()
         .map(|l| {
-            let l: Vec<_> = l.bytes().filter_map(|b| b.is_ascii_digit().then_some((b - b'0') as usize)).collect();
+            let l: Vec<_> = l.bytes().filter_map(digit_as_usize).collect();
             l[0] * 10 + l.last().unwrap()
         })
         .sum()
@@ -21,11 +21,12 @@ fn part1(parsed: &Parsed) -> usize {
 
 const DIGITS: [&str; 9] = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
+fn digit_as_usize(b: u8) -> Option<usize> {
+    b.is_ascii_digit().then_some((b - b'0') as usize)
+}
+
 fn find_digit(s: &str) -> Option<usize> {
-    if s.as_bytes()[0].is_ascii_digit() {
-        return Some((s.as_bytes()[0] - b'0') as usize);
-    }
-    DIGITS.iter().zip(1usize..).find_map(|(&d, i)| s.starts_with(d).then_some(i))
+    digit_as_usize(s.as_bytes()[0]).or_else(|| DIGITS.iter().position(|d| s.starts_with(d)).map(|x| x + 1))
 }
 
 fn part2(parsed: &Parsed) -> usize {
