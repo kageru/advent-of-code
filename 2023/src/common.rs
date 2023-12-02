@@ -10,6 +10,21 @@ pub fn parse_nums_comma(l: &str) -> Vec<usize> {
     l.trim().split(',').map(parse_num).collect()
 }
 
+pub trait Splitting {
+    fn before<'a>(&'a self, sep: &str) -> &'a str;
+    fn after<'a>(&'a self, sep: &str) -> &'a str;
+}
+
+impl Splitting for &str {
+    fn after<'a>(&'a self, sep: &str) -> &'a str {
+        self.split_once(sep).unwrap().1
+    }
+
+    fn before<'a>(&'a self, sep: &str) -> &'a str {
+        self.split_once(sep).unwrap().0
+    }
+}
+
 #[cfg(debug_assertions)]
 pub fn parse_num<T: std::str::FromStr + std::fmt::Display>(s: &str) -> T {
     s.parse().unwrap_or_else(|_| panic!("Invalid number {s}"))
