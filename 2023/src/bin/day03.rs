@@ -1,5 +1,7 @@
 #![feature(test, try_blocks)]
 extern crate test;
+use std::ops::RangeInclusive;
+
 use aoc2023::{
     boilerplate,
     common::*,
@@ -8,39 +10,62 @@ use aoc2023::{
 use itertools::Itertools;
 
 const DAY: usize = 3;
-type Parsed<'a> = Vec<&'a [u8]>;
+type Grid<'a> = Vec<&'a [u8]>;
+type Parsed<'a> = (Grid<'a>, Vec<(usize, RangeInclusive<usize>)>);
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines().map(|l| l.as_bytes()).collect()
-}
-
-fn part1(parsed: &Parsed) -> usize {
-    let number_positions = parsed
+    let grid = raw.lines().map(|l| l.as_bytes()).collect_vec();
+    let number_positions = grid
         .iter()
         .enumerate()
-        .flat_map(|(x, l)| l.iter().enumerate().filter_map(move |(y, c)| matches!(c, b'0'..=b'9').then_some((x, y..=y))))
+        .flat_map(|(x, l)| l.iter().enumerate().filter_map(move |(y, c)| c.is_ascii_digit().then_some((x, y..=y))))
         .coalesce(
             |(x1, y1), (x2, y2)| if y1.end() + 1 == *y2.start() { Ok((x1, *y1.start()..=*y2.end())) } else { Err(((x1, y1), (x2, y2))) },
         )
         .collect_vec();
-    let mut sum = 0usize;
-    for (x, ys) in number_positions {
-        let start = Position2D::from([x, *ys.start()]);
-        let end = Position2D::from([x, *ys.end()]);
-        if start
-            .neighbors()
-            .into_iter()
-            .chain(end.neighbors())
-            .any(|PositionND([x, y])| !matches!(parsed.get(x as usize).and_then(|ys| ys.get(y as usize)), Some(b'0'..=b'9' | b'.') | None))
-        {
-            sum += String::from_utf8_lossy(&parsed[x][ys]).parse::<usize>().unwrap();
-        }
-    }
-    sum
+    (grid, number_positions)
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn parse_at(grid: &Grid, (x, ys): (usize, RangeInclusive<usize>)) -> usize {
+    String::from_utf8_lossy(&grid[x][ys]).parse::<usize>().unwrap()
+}
+
+fn part1((grid, number_positions): &Parsed) -> usize {
+    number_positions
+        .iter()
+        .cloned()
+        .filter_map(|(x, ys)| {
+            let start = Position2D::from([x, *ys.start()]);
+            let end = Position2D::from([x, *ys.end()]);
+            start
+                .neighbors()
+                .into_iter()
+                .chain(end.neighbors())
+                .any(|PositionND([x, y])| {
+                    !matches!(grid.get(x as usize).and_then(|ys| ys.get(y as usize)), Some(b'0'..=b'9' | b'.') | None)
+                })
+                .then(|| parse_at(grid, (x, ys)))
+        })
+        .sum()
+}
+
+fn part_of(PositionND([x1, y]): Position2D, (x2, ys): &(usize, RangeInclusive<usize>)) -> bool {
+    x1 == *x2 as i64 && ys.contains(&(y as usize))
+}
+
+fn part2((grid, number_positions): &Parsed) -> usize {
+    grid.iter()
+        .enumerate()
+        .flat_map(|(x, ys)| ys.iter().enumerate().filter_map(move |(y, &b)| (b == b'*').then_some(Position2D::from([x, y]))))
+        .filter_map(|p| {
+            let neighbors = p.neighbors();
+            number_positions
+                .iter()
+                .filter_map(|np| neighbors.iter().find_map(|&n| part_of(n, np).then(|| parse_at(grid, np.clone()))))
+                .collect_tuple()
+        })
+        .map(|(a, b)| a * b)
+        .sum()
 }
 
 boilerplate! {
@@ -56,9 +81,9 @@ boilerplate! {
 .664.598..",
     tests: {
         part1: { TEST_INPUT => 4361 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 467835 },
     },
     bench1 == 536202,
-    bench2 == 0,
-    bench_parse: Vec::len => 0,
+    bench2 == 78272573,
+    bench_parse: |(g, ns): &Parsed| (g.len(), ns.len()) => (140, 1203),
 }
