@@ -1,3 +1,5 @@
+use std::iter::Step;
+
 pub fn read_file(day: usize) -> String {
     std::fs::read_to_string(std::env::var("AOC_INPUT").unwrap_or_else(|_| format!("inputs/day{day:0>2}"))).unwrap()
 }
@@ -22,6 +24,21 @@ impl Splitting for &str {
 
     fn before<'a>(&'a self, sep: &str) -> &'a str {
         self.split_once(sep).unwrap().0
+    }
+}
+
+pub trait Inc: Default + Copy + Step {
+    fn inc(self) -> Self;
+    fn dec(self) -> Self;
+}
+
+impl<T: Step + Default + Copy> Inc for T {
+    fn inc(self) -> Self {
+        T::forward(self, 1)
+    }
+
+    fn dec(self) -> Self {
+        T::backward(self, 1)
     }
 }
 

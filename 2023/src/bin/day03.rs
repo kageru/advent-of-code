@@ -5,11 +5,12 @@ use std::ops::RangeInclusive;
 use aoc2023::{
     boilerplate,
     common::*,
-    grid::{Position2D, PositionND},
+    position::{Position2D, PositionND},
 };
 use itertools::Itertools;
 
 const DAY: usize = 3;
+type I = i32;
 type Grid<'a> = Vec<&'a [u8]>;
 type Parsed<'a> = (Grid<'a>, Vec<Vec<(usize, RangeInclusive<usize>)>>);
 
@@ -47,8 +48,8 @@ fn part1((grid, number_positions): &Parsed) -> usize {
         .flatten()
         .cloned()
         .filter_map(|(x, ys)| {
-            let start = Position2D::from([x, *ys.start()]);
-            let end = Position2D::from([x, *ys.end()]);
+            let start = PositionND([x as I, *ys.start() as I]);
+            let end = PositionND([x as I, *ys.end() as I]);
             start
                 .neighbors()
                 .into_iter()
@@ -61,17 +62,17 @@ fn part1((grid, number_positions): &Parsed) -> usize {
         .sum()
 }
 
-fn part_of(PositionND([x1, y]): Position2D, (x2, ys): &(usize, RangeInclusive<usize>)) -> bool {
-    x1 == *x2 as i64 && ys.contains(&(y as usize))
+fn part_of(PositionND([_, y]): Position2D<I>, (_, ys): &(usize, RangeInclusive<usize>)) -> bool {
+    ys.contains(&(y as usize))
 }
 
 fn part2((grid, number_positions): &Parsed) -> usize {
     grid.iter()
         .enumerate()
-        .flat_map(|(x, ys)| ys.iter().enumerate().filter_map(move |(y, &b)| (b == b'*').then_some(Position2D::from([x, y]))))
+        .flat_map(|(x, ys)| ys.iter().enumerate().filter_map(move |(y, &b)| (b == b'*').then_some(PositionND([x as I, y as I]))))
         .filter_map(|p| {
             let neighbors = p.neighbors();
-            number_positions[((p.0[0] - 1) as usize)..=((p.0[0] + 1) as usize)]
+            number_positions[(p.0[0].dec() as usize)..=(p.0[0].inc() as usize)]
                 .iter()
                 .flatten()
                 .filter_map(|np| neighbors.iter().find_map(|&n| part_of(n, np).then(|| parse_at(grid, np.clone()))))

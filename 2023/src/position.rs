@@ -1,39 +1,29 @@
 extern crate test;
-use super::direction::*;
 use std::{
-    convert::TryInto,
+    fmt::Debug,
     hash::Hash,
-    ops::{Add, Mul, Sub},
+    iter::Step,
+    ops::{Add, AddAssign},
 };
 
+use crate::common::Inc;
+
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
-pub struct PositionND<const DIMS: usize>(pub [i64; DIMS]);
+pub struct PositionND<I, const DIMS: usize>(pub [I; DIMS]);
 
-pub type Position2D = PositionND<2>;
-
-impl<I, const D: usize> From<[I; D]> for PositionND<D>
-where I: TryInto<i64> + Copy
-{
-    fn from(s: [I; D]) -> Self {
-        let mut points = [0; D];
-        for i in 0..D {
-            points[i] = s[i].try_into().unwrap_or_else(|_| panic!("number did not fit in target type"))
-        }
-        Self(points)
-    }
-}
+pub type Position2D<I> = PositionND<I, 2>;
 
 pub const fn num_neighbors(d: usize) -> usize {
     3usize.pow(d as u32) - 1
 }
 
-impl<const DIMS: usize> PositionND<DIMS> {
-    pub const fn zero() -> Self {
-        PositionND([0; DIMS])
+impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> PositionND<I, DIMS> {
+    pub fn zero() -> Self {
+        PositionND([I::default(); DIMS])
     }
 
-    pub fn from_padded(slice: &[i64]) -> PositionND<DIMS> {
-        let mut points = [0; DIMS];
+    pub fn from_padded(slice: &[I]) -> PositionND<I, DIMS> {
+        let mut points = [I::default(); DIMS];
         #[allow(clippy::manual_memcpy)]
         for i in 0..(DIMS.min(slice.len())) {
             points[i] = slice[i];
@@ -41,36 +31,44 @@ impl<const DIMS: usize> PositionND<DIMS> {
         PositionND(points)
     }
 
-    pub fn neighbors(&self) -> [PositionND<DIMS>; num_neighbors(DIMS)]
-    where [PositionND<DIMS>; num_neighbors(DIMS) + 1]: Sized {
-        let ns = neighbor_vectors::<DIMS>();
+    pub fn neighbors(&self) -> [PositionND<I, DIMS>; num_neighbors(DIMS)]
+    where [PositionND<I, DIMS>; num_neighbors(DIMS) + 1]: Sized {
+        let ns = neighbor_vectors::<I, DIMS>();
         let mut out = [*self; num_neighbors(DIMS)];
-        for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[0; DIMS])) {
-            *out = *out + PositionND::from(dir);
+        for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[I::default(); DIMS])) {
+            *out = *out + PositionND(dir);
         }
         out
     }
 }
 
-impl PositionND<2> {
-    pub fn neighbors_no_diagonals_only_positive(&self) -> [PositionND<2>; 2] {
-        let PositionND::<2>([x, y]) = *self;
-        [[x + 1, y].into(), [x, y + 1].into()]
-    }
+impl<I, const D: usize> Add<PositionND<I, D>> for PositionND<I, D>
+where I: AddAssign<I> + Copy
+{
+    type Output = PositionND<I, D>;
 
-    pub fn neighbors_no_diagonals(&self) -> [PositionND<2>; 4] {
-        let PositionND::<2>([x, y]) = *self;
-        [[x + 1, y].into(), [x, y + 1].into(), [x - 1, y].into(), [x, y - 1].into()]
+    fn add(mut self, rhs: PositionND<I, D>) -> Self::Output {
+        for (x, y) in self.0.iter_mut().zip(rhs.0) {
+            *x += y;
+        }
+        self
     }
 }
 
-#[macro_export]
+impl<I: Copy + Default + Step> PositionND<I, 2> {
+    pub fn neighbors_no_diagonals(&self) -> [PositionND<I, 2>; 4] {
+        let PositionND([x, y]) = *self;
+        [PositionND([x.inc(), y]), PositionND([x, y.inc()]), PositionND([x.dec(), y]), PositionND([x, y.dec()])]
+    }
+}
+
 macro_rules! dim {
-    ($d: expr) => {{
-        let mut out = [[0; D]; num_neighbors(D) + 1];
+    ($d: expr, $i:ty) => {{
+        let zero: $i = Default::default();
+        let mut out = [[zero; D]; num_neighbors(D) + 1];
         let mut i = 0;
-        for offset in -1..=1 {
-            for inner in neighbor_vectors::<$d>() {
+        for offset in zero.dec()..=zero.inc() {
+            for inner in neighbor_vectors::<$i, $d>() {
                 out[i][0] = offset;
                 let mut j = 1;
                 for e in inner {
@@ -84,72 +82,27 @@ macro_rules! dim {
     }};
 }
 
-fn neighbor_vectors<const D: usize>() -> [[i64; D]; num_neighbors(D) + 1]
-where
-{
+fn neighbor_vectors<I: Inc, const D: usize>() -> [[I; D]; num_neighbors(D) + 1] {
     // I would love to just call neighbor_vectors::<D-1>(), but it seems to be impossible to get the
     // correct constraints for that.
     match D {
         0 => unreachable!(),
         1 => {
-            let mut out = [[0; D]; num_neighbors(D) + 1];
-            out[0] = [-1; D];
-            out[1] = [0; D];
-            out[2] = [1; D];
+            let zero = I::default();
+            let mut out = [[zero; D]; num_neighbors(D) + 1];
+            out[0] = [zero.dec(); D];
+            out[1] = [zero; D];
+            out[2] = [zero.inc(); D];
             out
         }
-        2 => dim!(1),
-        3 => dim!(2),
-        4 => dim!(3),
-        5 => dim!(4),
-        6 => dim!(5),
-        7 => dim!(6),
+        2 => dim!(1, I),
+        3 => dim!(2, I),
+        4 => dim!(3, I),
+        5 => dim!(4, I),
+        6 => dim!(5, I),
+        7 => dim!(6, I),
         // Adding more causes a stackoverflow. How curious.
         _ => unimplemented!(),
-    }
-}
-
-impl<const D: usize> Mul<i64> for PositionND<D> {
-    type Output = PositionND<D>;
-
-    fn mul(mut self, rhs: i64) -> Self::Output {
-        for p in self.0.iter_mut() {
-            *p *= rhs;
-        }
-        self
-    }
-}
-
-impl<const D: usize> Add<PositionND<D>> for PositionND<D> {
-    type Output = PositionND<D>;
-
-    fn add(mut self, rhs: PositionND<D>) -> Self::Output {
-        for (x, y) in self.0.iter_mut().zip(rhs.0) {
-            *x += y;
-        }
-        self
-    }
-}
-
-impl<const D: usize> Sub<PositionND<D>> for PositionND<D> {
-    type Output = PositionND<D>;
-
-    fn sub(mut self, rhs: PositionND<D>) -> Self::Output {
-        for (x, y) in self.0.iter_mut().zip(rhs.0) {
-            *x -= y;
-        }
-        self
-    }
-}
-
-impl From<Direction> for PositionND<2> {
-    fn from(d: Direction) -> Self {
-        match d {
-            Direction::Up => PositionND::from([0, 1]),
-            Direction::Right => PositionND::from([1, 0]),
-            Direction::Left => PositionND::from([-1, 0]),
-            Direction::Down => PositionND::from([0, -1]),
-        }
     }
 }
 
