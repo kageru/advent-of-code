@@ -11,17 +11,28 @@ use itertools::Itertools;
 
 const DAY: usize = 3;
 type Grid<'a> = Vec<&'a [u8]>;
-type Parsed<'a> = (Grid<'a>, Vec<(usize, RangeInclusive<usize>)>);
+type Parsed<'a> = (Grid<'a>, Vec<Vec<(usize, RangeInclusive<usize>)>>);
 
 fn parse_input(raw: &str) -> Parsed {
     let grid = raw.lines().map(|l| l.as_bytes()).collect_vec();
     let number_positions = grid
         .iter()
         .enumerate()
-        .flat_map(|(x, l)| l.iter().enumerate().filter_map(move |(y, c)| c.is_ascii_digit().then_some((x, y..=y))))
-        .coalesce(
-            |(x1, y1), (x2, y2)| if y1.end() + 1 == *y2.start() { Ok((x1, *y1.start()..=*y2.end())) } else { Err(((x1, y1), (x2, y2))) },
-        )
+        .map(|(x, l)| {
+            l.iter()
+                .enumerate()
+                .filter_map(move |(y, c)| c.is_ascii_digit().then_some((x, y..=y)))
+                .coalesce(
+                    |(x1, y1), (x2, y2)| {
+                        if y1.end() + 1 == *y2.start() {
+                            Ok((x1, *y1.start()..=*y2.end()))
+                        } else {
+                            Err(((x1, y1), (x2, y2)))
+                        }
+                    },
+                )
+                .collect_vec()
+        })
         .collect_vec();
     (grid, number_positions)
 }
@@ -33,6 +44,7 @@ fn parse_at(grid: &Grid, (x, ys): (usize, RangeInclusive<usize>)) -> usize {
 fn part1((grid, number_positions): &Parsed) -> usize {
     number_positions
         .iter()
+        .flatten()
         .cloned()
         .filter_map(|(x, ys)| {
             let start = Position2D::from([x, *ys.start()]);
@@ -59,8 +71,9 @@ fn part2((grid, number_positions): &Parsed) -> usize {
         .flat_map(|(x, ys)| ys.iter().enumerate().filter_map(move |(y, &b)| (b == b'*').then_some(Position2D::from([x, y]))))
         .filter_map(|p| {
             let neighbors = p.neighbors();
-            number_positions
+            number_positions[((p.0[0] - 1) as usize)..=((p.0[0] + 1) as usize)]
                 .iter()
+                .flatten()
                 .filter_map(|np| neighbors.iter().find_map(|&n| part_of(n, np).then(|| parse_at(grid, np.clone()))))
                 .collect_tuple()
         })
@@ -85,5 +98,5 @@ boilerplate! {
     },
     bench1 == 536202,
     bench2 == 78272573,
-    bench_parse: |(g, ns): &Parsed| (g.len(), ns.len()) => (140, 1203),
+    bench_parse: |(g, ns): &Parsed| (g.len(), ns.len()) => (140, 140),
 }
