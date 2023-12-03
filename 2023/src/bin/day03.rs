@@ -1,6 +1,5 @@
 #![feature(test, try_blocks)]
 extern crate test;
-use std::ops::RangeInclusive;
 
 use aoc2023::{
     boilerplate,
@@ -12,7 +11,8 @@ use itertools::Itertools;
 const DAY: usize = 3;
 type I = i32;
 type Grid<'a> = Vec<&'a [u8]>;
-type Parsed<'a> = (Grid<'a>, Vec<Vec<(usize, RangeInclusive<usize>)>>);
+type Region = (usize, (usize, usize));
+type Parsed<'a> = (Grid<'a>, Vec<Vec<Region>>);
 
 fn parse_input(raw: &str) -> Parsed {
     let grid = raw.lines().map(|l| l.as_bytes()).collect_vec();
@@ -22,24 +22,24 @@ fn parse_input(raw: &str) -> Parsed {
         .map(|(x, l)| {
             l.iter()
                 .enumerate()
-                .filter_map(move |(y, c)| c.is_ascii_digit().then_some((x, y..=y)))
+                .filter_map(move |(y, c)| c.is_ascii_digit().then_some((x, (y, y))))
                 .coalesce(
-                    |(x1, y1), (x2, y2)| {
-                        if y1.end() + 1 == *y2.start() {
-                            Ok((x1, *y1.start()..=*y2.end()))
+                    |(x1, (y11, y12)), (x2, (y21, y22))| {
+                        if y12 + 1 == y21 {
+                            Ok((x1, (y11, y22)))
                         } else {
-                            Err(((x1, y1), (x2, y2)))
+                            Err(((x1, (y11, y12)), (x2, (y21, y22))))
                         }
                     },
                 )
-                .collect_vec()
+                .collect()
         })
-        .collect_vec();
+        .collect();
     (grid, number_positions)
 }
 
-fn parse_at(grid: &Grid, (x, ys): (usize, RangeInclusive<usize>)) -> usize {
-    String::from_utf8_lossy(&grid[x][ys]).parse::<usize>().unwrap()
+fn parse_at(grid: &Grid, (x, (y1, y2)): Region) -> usize {
+    String::from_utf8_lossy(&grid[x][y1..=y2]).parse().unwrap()
 }
 
 fn part1((grid, number_positions): &Parsed) -> usize {
@@ -47,9 +47,9 @@ fn part1((grid, number_positions): &Parsed) -> usize {
         .iter()
         .flatten()
         .cloned()
-        .filter_map(|(x, ys)| {
-            let start = PositionND([x as I, *ys.start() as I]);
-            let end = PositionND([x as I, *ys.end() as I]);
+        .filter_map(|(x, (y1, y2))| {
+            let start = PositionND([x as I, y1 as I]);
+            let end = PositionND([x as I, y2 as I]);
             start
                 .neighbors()
                 .into_iter()
@@ -57,13 +57,13 @@ fn part1((grid, number_positions): &Parsed) -> usize {
                 .any(|PositionND([x, y])| {
                     !matches!(grid.get(x as usize).and_then(|ys| ys.get(y as usize)), Some(b'0'..=b'9' | b'.') | None)
                 })
-                .then(|| parse_at(grid, (x, ys)))
+                .then(|| parse_at(grid, (x, (y1, y2))))
         })
         .sum()
 }
 
-fn part_of(PositionND([_, y]): Position2D<I>, (_, ys): &(usize, RangeInclusive<usize>)) -> bool {
-    ys.contains(&(y as usize))
+fn part_of(PositionND([_, y]): Position2D<I>, (_, (y1, y2)): &Region) -> bool {
+    (y1..=y2).contains(&&(y as usize))
 }
 
 fn part2((grid, number_positions): &Parsed) -> usize {
@@ -75,7 +75,7 @@ fn part2((grid, number_positions): &Parsed) -> usize {
             number_positions[(p.0[0].dec() as usize)..=(p.0[0].inc() as usize)]
                 .iter()
                 .flatten()
-                .filter_map(|np| neighbors.iter().find_map(|&n| part_of(n, np).then(|| parse_at(grid, np.clone()))))
+                .filter_map(|&np| neighbors.iter().find_map(|&n| part_of(n, &np).then(|| parse_at(grid, np))))
                 .collect_tuple()
         })
         .map(|(a, b)| a * b)

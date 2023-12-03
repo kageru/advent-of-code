@@ -184,27 +184,27 @@ mod tests {
 
     #[test]
     fn test_neighbor_vectors() {
-        let n = neighbor_vectors::<2>();
+        let n = neighbor_vectors::<i32, 2>();
         assert_eq!(n, [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 0], [0, 1], [1, -1], [1, 0], [1, 1],]);
     }
 
     #[bench]
     fn bench_neighbor_vectors_2d(b: &mut test::Bencher) {
-        b.iter(|| test::black_box(neighbor_vectors::<2>()))
+        b.iter(|| test::black_box(neighbor_vectors::<i32, 2>()))
     }
 
     #[bench]
     fn bench_neighbor_vectors_3d(b: &mut test::Bencher) {
-        b.iter(|| test::black_box(neighbor_vectors::<3>()))
+        b.iter(|| test::black_box(neighbor_vectors::<i32, 3>()))
     }
 
     #[bench]
     fn bench_neighbor_vectors_4d(b: &mut test::Bencher) {
-        b.iter(|| test::black_box(neighbor_vectors::<4>()))
+        b.iter(|| test::black_box(neighbor_vectors::<i32, 4>()))
     }
 
     #[bench]
     fn bench_neighbor_vectors_5d(b: &mut test::Bencher) {
-        b.iter(|| test::black_box(neighbor_vectors::<5>()))
+        b.iter(|| test::black_box(neighbor_vectors::<i32, 5>()))
     }
 }
