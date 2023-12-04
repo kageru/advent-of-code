@@ -32,11 +32,9 @@ fn part1(parsed: &Parsed) -> I {
 fn part2(parsed: &Parsed) -> I {
     let mut cards = vec![1; parsed.len()];
     for (i, card) in parsed.iter().enumerate() {
-        let _: Option<()> = try {
-            for j in 1..=*card {
-                *cards.get_mut(i + j)? += cards[i];
-            }
-        };
+        for j in 1..=*card {
+            cards[i + j] += cards[i];
+        }
     }
     cards.iter().sum()
 }
