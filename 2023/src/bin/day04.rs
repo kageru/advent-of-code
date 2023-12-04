@@ -1,18 +1,14 @@
 #![feature(test, try_blocks)]
 extern crate test;
 use aoc2023::{boilerplate, common::*};
+use tuple_map::TupleMap2;
 
 const DAY: usize = 4;
 type I = u32;
 type Parsed = Vec<(Vec<I>, Vec<I>)>;
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines()
-        .filter_map(|l| {
-            let (w, m) = l.after(": ").split_once(" | ")?;
-            Some((w.split_whitespace().map(parse_num).collect(), m.split_whitespace().map(parse_num).collect()))
-        })
-        .collect()
+    raw.lines().filter_map(|l| Some(l.after(": ").split_once(" | ")?.map(|ns| ns.split_whitespace().map(parse_num).collect()))).collect()
 }
 
 fn winning_numbers((winning, mine): &(Vec<I>, Vec<I>)) -> usize {

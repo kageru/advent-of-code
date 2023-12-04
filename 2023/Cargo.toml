@@ -8,6 +8,7 @@ fnv = "1.0.7"
 impl_ops = "0.1.1"
 itertools = "0.12"
 paste = "1.0"
+tuple-map = "0.4.0"
 
 [profile.bench]
 lto = true
