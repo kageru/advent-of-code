@@ -8,7 +8,8 @@ extern crate test;
 use aoc2023::{boilerplate, common::*};
 
 const DAY: usize = '$today';
-type Parsed = Vec<usize>;
+type I = u32;
+type Parsed = Vec<I>;
 
 fn parse_input(raw: &str) -> Parsed {
     parse_nums(raw)
