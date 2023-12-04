@@ -1,34 +1,39 @@
 #![feature(test, try_blocks)]
 extern crate test;
 use aoc2023::{boilerplate, common::*};
-use tuple_map::TupleMap2;
 
 const DAY: usize = 4;
-type I = u32;
-type Parsed = Vec<(Vec<I>, Vec<I>)>;
+type I = usize;
+type Parsed = Vec<I>;
+
+// Parsing with this gives me 50ns for the entire parsing step and then a few hundred ns each for parts 1 and 2
+// If only there was a way to use include!() inside a macro.
+#[allow(unused)]
+macro_rules! parse {
+    ($(Card $_:literal: $($winning:literal )* | $($mine:literal )*)*) => {
+        [$(([$($winning,)*], [$($mine,)*]),)*]
+    };
+}
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines().filter_map(|l| Some(l.after(": ").split_once(" | ")?.map(|ns| ns.split_whitespace().map(parse_num).collect()))).collect()
-}
-
-fn winning_numbers((winning, mine): &(Vec<I>, Vec<I>)) -> usize {
-    mine.iter().filter(|n| winning.contains(n)).count()
-}
-
-const BASE: I = 2;
-fn score(n: usize) -> Option<I> {
-    Some(BASE.pow(n.checked_sub(1)? as u32))
+    raw.lines()
+        .map(|l| {
+            let (w, m) = l.after(": ").split_once(" | ").unwrap();
+            let w: Vec<u32> = w.split_whitespace().map(parse_num).collect();
+            m.split_whitespace().filter(|n| w.contains(&parse_num(n))).count()
+        })
+        .collect()
 }
 
 fn part1(parsed: &Parsed) -> I {
-    parsed.iter().map(winning_numbers).filter_map(score).sum()
+    parsed.iter().filter_map(|n| Some(2usize.pow(n.checked_sub(1)? as u32))).sum()
 }
 
 fn part2(parsed: &Parsed) -> I {
     let mut cards = vec![1; parsed.len()];
     for (i, card) in parsed.iter().enumerate() {
         let _: Option<()> = try {
-            for j in 1..=winning_numbers(card) {
+            for j in 1..=*card {
                 *cards.get_mut(i + j)? += cards[i];
             }
         };
