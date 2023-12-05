@@ -41,26 +41,46 @@ fn resolve_backwards(start: I, mappings: &Vec<Mapping>) -> I {
 fn part2((seeds, mappings): &Parsed) -> I {
     let seed_ranges = seeds.iter().array_chunks().map(|[&a, &b]| a..a + b).collect_vec();
     let mut mappings = mappings.clone();
-    // let smallest_range = mappings.iter().flatten().map(|(r, _, _)| r.try_len().unwrap()).min().unwrap();
-
-    let mut destinations = mappings.remove(mappings.len() - 1);
-    destinations.sort_by_key(|(_, range, _)| range.start);
     mappings.reverse();
+
+    let mut destinations = mappings.remove(0);
+    destinations.sort_by_key(|(_, range, _)| range.start);
 
     let mut ranges = Vec::<(Range<I>, I)>::new();
     for (_, range, offset) in destinations {
-        ranges.push((ranges.last().map(|(r, _)| r.end).unwrap_or(1)..range.start, 0));
+        ranges.push((ranges.last().map(|(r, _)| r.end).unwrap_or(0)..range.start, 0));
         ranges.push((range, offset));
     }
-    ranges.into_iter().find_map(|(range, offset)| starting_seed(range, offset, &seed_ranges, &mappings, 1)).unwrap()
+
+    // By calculating the smallest range in the input data, we can perform something similar to binary search.
+    // We start at location 0 and move in steps of this size,
+    // and when we first encounter a location that corresponds to a starting seed we start binary searching,
+    // i.e. we half the step size and move back by that until we find the lowest location that has a starting seed.
+    let mut step = mappings.iter().flatten().map(|(r, _, _)| r.try_len().unwrap()).min().unwrap() as I;
+    ranges
+        .into_iter()
+        .find_map(|(range, offset)| {
+            let mut best = I::MAX;
+            let mut location = range.start + step;
+            while location < range.end && step != 0 {
+                if has_starting_seed(location, offset, &seed_ranges, &mappings) {
+                    best = best.min(location);
+                    step = (step >> 1) + 1;
+                    location -= step;
+                } else {
+                    step >>= (best != I::MAX) as usize;
+                    location += step;
+                }
+            }
+            (best != I::MAX).then_some(best)
+        })
+        .unwrap()
 }
 
-fn starting_seed(range: Range<I>, offset: i64, seed_ranges: &Vec<Range<I>>, mappings: &Vec<Mapping>, step: usize) -> Option<i64> {
-    range.step_by(step).find(|&s| {
-        let seed = resolve_backwards(s - offset, &mappings);
-        // If seed == s, the entire resolution didn’t hit a single mapping, so we don’t need to check seeds.
-        seed != s && seed_ranges.iter().any(|r| r.contains(&seed))
-    })
+fn has_starting_seed(start: I, offset: i64, seed_ranges: &Vec<Range<I>>, mappings: &Vec<Mapping>) -> bool {
+    let seed = resolve_backwards(start - offset, &mappings);
+    // If seed == s, the entire resolution didn’t hit a single mapping, so we don’t need to check seeds.
+    seed != start && seed_ranges.iter().any(|r| r.contains(&seed))
 }
 
 boilerplate! {
