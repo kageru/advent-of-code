@@ -23,7 +23,7 @@ fn part1((races, _): &Parsed) -> usize {
 fn part2((_, (time, distance)): &Parsed) -> usize {
     let x1 = time / 2.0 + (time * time / 4.0 - distance).sqrt();
     let x2 = time / 2.0 - (time * time / 4.0 - distance).sqrt();
-    (x1 - x2).round() as usize
+    (x1.floor() - x2.ceil()) as usize + 1
 }
 
 boilerplate! {
@@ -32,7 +32,7 @@ Time:      7  15   30
 Distance:  9  40  200",
     tests: {
         part1: { TEST_INPUT => 288 },
-        part2: { TEST_INPUT => 71504 }, // this is 1 off the real solution. I blame floats
+        part2: { TEST_INPUT => 71503 },
     },
     bench1 == 131376,
     bench2 == 34123437,
