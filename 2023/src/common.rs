@@ -1,15 +1,28 @@
-use std::iter::Step;
+use std::{
+    fmt::Display,
+    iter::Step,
+    ops::{Add, Mul},
+    str::FromStr,
+};
 
 pub fn read_file(day: usize) -> String {
     std::fs::read_to_string(std::env::var("AOC_INPUT").unwrap_or_else(|_| format!("inputs/day{day:0>2}"))).unwrap()
 }
 
-pub fn parse_nums(l: &str) -> Vec<usize> {
-    l.lines().map(parse_num).collect()
+pub trait ParseableNumber<I>: FromStr + Display + From<u8> + Add<I, Output = I> + Mul<I, Output = I> {}
+macro_rules! parseable {
+    ($($t: ty),*) => {
+        $(impl ParseableNumber<$t> for $t {})*
+    };
+}
+parseable! {usize, u32, u64, isize, i32, i64}
+
+pub fn parse_nums<I: ParseableNumber<I>>(l: &str) -> Vec<I> {
+    l.lines().map(parse_num::<I>).collect()
 }
 
-pub fn parse_nums_comma(l: &str) -> Vec<usize> {
-    l.trim().split(',').map(parse_num).collect()
+pub fn parse_nums_comma<I: ParseableNumber<I>>(l: &str) -> Vec<I> {
+    l.trim().split(',').map(parse_num::<I>).collect()
 }
 
 pub trait Splitting {
@@ -43,15 +56,15 @@ impl<T: Step + Default + Copy> Inc for T {
 }
 
 #[cfg(debug_assertions)]
-pub fn parse_num<T: std::str::FromStr + std::fmt::Display>(s: &str) -> T {
+pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
     s.parse().unwrap_or_else(|_| panic!("Invalid number {s}"))
 }
 
 // For benchmarks.
 // This function assumes that the input will always be valid numbers and is UB otherwise
 #[cfg(not(debug_assertions))]
-pub fn parse_num<T: From<u8> + std::ops::Add<T, Output = T> + std::ops::Mul<T, Output = T>>(s: &str) -> T {
-    let mut digits = s.bytes().map(|b| T::from(b - b'0'));
+pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
+    let mut digits = s.bytes().map(|b| I::from(b - b'0'));
     let start = unsafe { digits.next().unwrap_unchecked() };
-    digits.fold(start, |acc, n| acc * T::from(10) + n)
+    digits.fold(start, |acc, n| acc * I::from(10) + n)
 }
