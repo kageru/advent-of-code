@@ -26,7 +26,7 @@ fn parse_input(raw: &str) -> Parsed {
     (seeds, ranges)
 }
 
-fn resolve(start: I, mappings: &Vec<Mapping>) -> I {
+fn resolve(start: I, mappings: &[Mapping]) -> I {
     mappings.iter().fold(start, |i, map| map.iter().find_map(|(range, _, offset)| range.contains(&i).then_some(i + offset)).unwrap_or(i))
 }
 
@@ -34,7 +34,7 @@ fn part1((seeds, mappings): &Parsed) -> I {
     seeds.iter().map(|&s| resolve(s, mappings)).min().unwrap()
 }
 
-fn resolve_backwards(start: I, mappings: &Vec<Mapping>) -> I {
+fn resolve_backwards(start: I, mappings: &[Mapping]) -> I {
     mappings.iter().fold(start, |i, map| map.iter().find_map(|(_, range, offset)| range.contains(&i).then_some(i - offset)).unwrap_or(i))
 }
 
@@ -77,8 +77,8 @@ fn part2((seeds, mappings): &Parsed) -> I {
         .unwrap()
 }
 
-fn has_starting_seed(start: I, offset: i64, seed_ranges: &Vec<Range<I>>, mappings: &Vec<Mapping>) -> bool {
-    let seed = resolve_backwards(start - offset, &mappings);
+fn has_starting_seed(start: I, offset: i64, seed_ranges: &[Range<I>], mappings: &[Mapping]) -> bool {
+    let seed = resolve_backwards(start - offset, mappings);
     // If seed == s, the entire resolution didn’t hit a single mapping, so we don’t need to check seeds.
     seed != start && seed_ranges.iter().any(|r| r.contains(&seed))
 }
