@@ -9,8 +9,7 @@ type I = usize;
 type Hand = [u8; 5];
 type Parsed = Vec<(Hand, I)>;
 
-const CARDS: [u8; 13] = [b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'T', b'J', b'Q', b'K', b'A'];
-const CARDS_P2: [u8; 13] = [b'J', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'T', b'Q', b'K', b'A'];
+const CARDS: [u8; 14] = [b' ', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'T', b'J', b'Q', b'K', b'A'];
 
 #[derive(Debug, PartialEq)]
 enum Quality {
@@ -45,37 +44,29 @@ fn parse_input(raw: &str) -> Parsed {
 
 fn rate_hand(mut hand: Hand) -> Quality {
     hand.sort();
-    let paired = hand
+    let equals = hand
         .into_iter()
         .map(|c| (c, 1))
         .coalesce(|(c1, n1), (c2, n2)| if c1 == c2 { Ok((c1, n1 + n2)) } else { Err(((c1, n1), (c2, n2))) })
         .map(|(_, n)| n)
         .collect_vec();
-    match paired.as_slice() {
+    match equals.as_slice() {
         [_] => Quality::AllEqual,
         [4, 1] | [1, 4] => Quality::Quad,
         [3, 2] | [2, 3] => Quality::FullHouse,
-        a @ [_, _, _] if a.contains(&3) => Quality::Triple,
+        [3, 1, 1] | [1, 3, 1] | [1, 1, 3] => Quality::Triple,
         [_, _, _] => Quality::TwoPair,
         [_, _, _, _] => Quality::Pair,
         _ => Quality::None,
     }
 }
 
-fn tiebreaker(hand: &Hand, values: &[u8; 13]) -> usize {
-    let tiebreak_hand = hand.map(|b| values.iter().position(|&c| c == b).unwrap());
-    tiebreak_hand.iter().fold(0, |acc, n| (acc << 4) + n)
+fn tiebreak(hand: &Hand) -> usize {
+    hand.iter().map(|b| CARDS.iter().position(|c| c == b).unwrap_or(0)).fold(0, |acc, n| (acc << 4) + n)
 }
 
 fn part1(hands: &Parsed) -> usize {
-    let mut rated_hands = hands
-        .iter()
-        .cloned()
-        .map(|(hand, points)| {
-            let tiebreak = tiebreaker(&hand, &CARDS);
-            (rate_hand(hand) as usize + tiebreak, points)
-        })
-        .collect_vec();
+    let mut rated_hands = hands.iter().cloned().map(|(hand, points)| (tiebreak(&hand) + rate_hand(hand) as usize, points)).collect_vec();
     rated_hands.sort_unstable_by_key(|(v, _)| *v);
     rated_hands.into_iter().zip(1..).map(|((_, points), position)| points * position).sum()
 }
@@ -85,17 +76,10 @@ fn part2(hands: &Parsed) -> usize {
         .iter()
         .cloned()
         .map(|(mut hand, points)| {
-            let tiebreak = tiebreaker(&hand, &CARDS_P2);
             // Count how many jokers there are and insert nonsense data for them so they can’t produce any pairs.
-            let mut jokers = 0;
-            for c in hand.iter_mut().filter(|c| c == &&b'J') {
-                *c = jokers;
-                jokers += 1;
-            }
-            let mut rating = rate_hand(hand);
-            for _ in 0..jokers {
-                rating = rating.upgrade();
-            }
+            let jokers = hand.iter_mut().filter(|c| c == &&b'J').zip(0..).map(|(c, i)| *c = i).count();
+            let tiebreak = tiebreak(&hand);
+            let rating = (0..jokers).fold(rate_hand(hand), |rating, _| rating.upgrade());
             (rating as usize + tiebreak, points)
         })
         .collect_vec();
@@ -127,7 +111,7 @@ mod bench {
 
     #[bench]
     fn bench_tiebreak(b: &mut test::Bencher) {
-        b.iter(|| assert_eq!(tiebreaker(black_box(&[b'3', b'2', b'T', b'3', b'K']), &CARDS), 67611))
+        b.iter(|| assert_eq!(tiebreak(black_box(&[b'3', b'2', b'T', b'3', b'K'])), 137516))
     }
 
     #[bench]
