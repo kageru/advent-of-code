@@ -12,6 +12,7 @@ type Parsed = Vec<(Hand, I)>;
 const CARDS: [u8; 13] = [b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'T', b'J', b'Q', b'K', b'A'];
 const CARDS_P2: [u8; 13] = [b'J', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'T', b'Q', b'K', b'A'];
 
+#[derive(Debug, PartialEq)]
 enum Quality {
     AllEqual = 1 << 30,
     Quad = 1 << 29,
@@ -116,4 +117,21 @@ QQQJA 483",
     bench1 == 248812215,
     bench2 == 250057090,
     bench_parse: Vec::len => 1000,
+}
+
+#[cfg(test)]
+mod bench {
+    use test::black_box;
+
+    use super::*;
+
+    #[bench]
+    fn bench_tiebreak(b: &mut test::Bencher) {
+        b.iter(|| assert_eq!(tiebreaker(black_box(&[b'3', b'2', b'T', b'3', b'K']), &CARDS), 67611))
+    }
+
+    #[bench]
+    fn bench_rate_hand(b: &mut test::Bencher) {
+        b.iter(|| assert_eq!(rate_hand(black_box([b'3', b'2', b'T', b'3', b'K'])), Quality::Pair))
+    }
 }
