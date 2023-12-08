@@ -1,6 +1,6 @@
 #![feature(test)]
 extern crate test;
-use std::collections::HashMap;
+use fnv::FnvHashMap as HashMap;
 
 use aoc2023::{boilerplate, common::*};
 
