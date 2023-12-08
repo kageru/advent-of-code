@@ -27,10 +27,6 @@ fn parse_input(raw: &str) -> Parsed {
     (directions, map)
 }
 
-fn part1(parsed: &Parsed) -> usize {
-    steps_until(parsed, "AAA", "ZZZ")
-}
-
 fn steps_until((directions, map): &Parsed, start: &str, target: &str) -> usize {
     directions
         .iter()
@@ -40,13 +36,14 @@ fn steps_until((directions, map): &Parsed, start: &str, target: &str) -> usize {
                 Direction::Left => map.get(pos)?.0,
                 Direction::Right => map.get(pos)?.1,
             };
-            (!next.ends_with(target)).then(|| {
-                *pos = next;
-                Some(next)
-            })
+            (!next.ends_with(target)).then(|| *pos = next)
         })
         .count()
         + 1
+}
+
+fn part1(parsed: &Parsed) -> usize {
+    steps_until(parsed, "AAA", "ZZZ")
 }
 
 // I’m honestly not sure why this works. It seems each path only has a single ghost node, and that
