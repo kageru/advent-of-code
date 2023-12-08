@@ -68,3 +68,17 @@ pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
     let start = unsafe { digits.next().unwrap_unchecked() };
     digits.fold(start, |acc, n| acc * I::from(10) + n)
 }
+
+fn gcd(mut x: usize, mut y: usize) -> usize {
+    let mut remainder;
+    while y != 0 {
+        remainder = x % y;
+        x = y;
+        y = remainder;
+    }
+    x
+}
+
+pub fn lcm(x: usize, y: usize) -> usize {
+    x * y / gcd(x, y)
+}
