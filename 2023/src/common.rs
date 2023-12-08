@@ -1,3 +1,4 @@
+extern crate test;
 use std::{
     fmt::Display,
     iter::Step,
@@ -81,4 +82,21 @@ fn gcd(mut x: usize, mut y: usize) -> usize {
 
 pub fn lcm(x: usize, y: usize) -> usize {
     x * y / gcd(x, y)
+}
+
+#[cfg(test)]
+mod benches {
+    use std::hint::black_box;
+
+    use super::*;
+
+    #[bench]
+    fn bench_lcm(b: &mut test::Bencher) {
+        b.iter(|| assert_eq!(lcm(black_box(20513), black_box(18827)), 1374371))
+    }
+
+    #[bench]
+    fn bench_lcm_big(b: &mut test::Bencher) {
+        b.iter(|| assert_eq!(lcm(black_box(169433831251), black_box(22199)), 13385272668829))
+    }
 }

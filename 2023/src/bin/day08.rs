@@ -51,7 +51,7 @@ fn part1(parsed: &Parsed) -> usize {
 // I assume this holds true for other inputs (it can’t have been random),
 // but I don’t see it anywhere in the task and only found out by experimentation.
 fn part2(parsed: &Parsed) -> usize {
-    parsed.1.keys().filter(|start| start.ends_with("A")).map(|start| steps_until(parsed, start, "Z")).fold(1, |acc, n| lcm(acc, n))
+    parsed.1.keys().filter(|start| start.ends_with("A")).fold(1, |acc, n| lcm(acc, steps_until(parsed, n, "Z")))
 }
 
 #[cfg(test)]
