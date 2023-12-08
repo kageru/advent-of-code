@@ -1,16 +1,16 @@
 #![feature(test)]
 extern crate test;
-use fnv::FnvHashMap as HashMap;
 
 use aoc2023::{boilerplate, common::*};
+use fnv::FnvHashMap as HashMap;
 
-const DAY: usize = 08;
-type Parsed<'a> = (Vec<Direction>, HashMap<&'a str, (&'a str, &'a str)>);
+const DAY: usize = 8;
+type Parsed<'a> = (Vec<Direction>, HashMap<&'a str, [&'a str; 2]>);
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 enum Direction {
-    Left,
-    Right,
+    Left = 0,
+    Right = 1,
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -23,7 +23,7 @@ fn parse_input(raw: &str) -> Parsed {
             _ => unreachable!(),
         })
         .collect();
-    let map = map.lines().map(|l| (&l[0..=2], (&l[7..=9], &l[12..=14]))).collect();
+    let map = map.lines().map(|l| (&l[0..=2], [&l[7..=9], &l[12..=14]])).collect();
     (directions, map)
 }
 
@@ -32,10 +32,7 @@ fn steps_until((directions, map): &Parsed, start: &str, target: &str) -> usize {
         .iter()
         .cycle()
         .scan(start, |pos, dir| {
-            let next = match dir {
-                Direction::Left => map.get(pos)?.0,
-                Direction::Right => map.get(pos)?.1,
-            };
+            let next = map.get(pos)?[*dir as usize];
             (!next.ends_with(target)).then(|| *pos = next)
         })
         .count()
@@ -78,5 +75,5 @@ ZZZ = (ZZZ, ZZZ)",
     },
     bench1 == 12083,
     bench2 == 13385272668829,
-    bench_parse: |(v, m): &Parsed| { assert_eq!(m["AAA"], ("MJJ", "QBJ")); (v.len(), v[0]) } => (281, Direction::Left),
+    bench_parse: |(v, m): &Parsed| { assert_eq!(m["AAA"], ["MJJ", "QBJ"]); (v.len(), v[0]) } => (281, Direction::Left),
 }
