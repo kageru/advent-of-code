@@ -22,8 +22,8 @@ pub fn parse_nums<I: ParseableNumber<I>>(l: &str) -> Vec<I> {
     l.lines().map(parse_num::<I>).collect()
 }
 
-pub fn parse_nums_comma<I: ParseableNumber<I>>(l: &str) -> Vec<I> {
-    l.trim().split(',').map(parse_num::<I>).collect()
+pub fn parse_nums_separator<I: ParseableNumber<I>>(l: &str, s: char) -> Vec<I> {
+    l.trim().split(s).map(parse_num::<I>).collect()
 }
 
 pub trait Splitting {
