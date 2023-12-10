@@ -6,7 +6,7 @@ use std::{
     ops::{Add, AddAssign, Index},
 };
 
-use crate::{common::Inc, direction::Direction};
+use crate::common::Inc;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct PositionND<I, const DIMS: usize>(pub [I; DIMS]);

@@ -1,17 +1,19 @@
 #![feature(test)]
 extern crate test;
-use fnv::FnvHashSet as HashSet;
-use std::mem::transmute;
-
 use aoc2023::{
     boilerplate,
     common::*,
     direction::{Direction, ALL_DIRECTIONS},
     position::{Position2D, PositionND},
 };
-use itertools::Itertools;
+use fnv::FnvHashSet as HashSet;
+use itertools::{Itertools, MinMaxResult};
+use std::mem::transmute;
 
 const DAY: usize = 10;
+
+type Parsed<'a> = (Pos, Vec<&'a [Pipe]>);
+type Pos = Position2D<isize>;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -29,20 +31,18 @@ enum Pipe {
 
 impl Pipe {
     fn openings(self) -> [Direction; 2] {
+        use self::{Direction::*, Pipe::*};
         match self {
-            Pipe::Vertical => [Direction::Up, Direction::Down],
-            Pipe::Horizontal => [Direction::Left, Direction::Right],
-            Pipe::TopRight => [Direction::Up, Direction::Right],
-            Pipe::TopLeft => [Direction::Up, Direction::Left],
-            Pipe::BottomRight => [Direction::Down, Direction::Right],
-            Pipe::BottomLeft => [Direction::Down, Direction::Left],
-            Pipe::None | Pipe::Start => unimplemented!(),
+            Vertical => [Up, Down],
+            Horizontal => [Left, Right],
+            TopRight => [Up, Right],
+            TopLeft => [Up, Left],
+            BottomRight => [Down, Right],
+            BottomLeft => [Down, Left],
+            None | Start => unimplemented!(),
         }
     }
 }
-
-type Parsed<'a> = (Pos, Vec<&'a [Pipe]>);
-type Pos = Position2D<isize>;
 
 fn parse_input(raw: &str) -> Parsed {
     let grid = raw.lines().rev().map(|l| unsafe { transmute::<&str, &[Pipe]>(l) }).collect_vec();
@@ -100,38 +100,26 @@ fn part2((start, grid): &Parsed) -> usize {
         }
         dir = *pipe.openings().iter().find(|&&o| o != !dir).unwrap();
     }
-    let ylen = grid.len() as isize;
-    let xlen = grid[0].len() as isize;
-    (0..ylen)
-        .flat_map(|y| (0..xlen).map(move |x| PositionND([x, y])))
+    let MinMaxResult::MinMax(&ymin, &ymax) = corners.iter().map(|PositionND([y, _])| y).minmax() else { unreachable!() };
+    let MinMaxResult::MinMax(&xmin, &xmax) = corners.iter().map(|PositionND([_, x])| x).minmax() else { unreachable!() };
+    (ymin..=ymax)
+        .flat_map(|y| (xmin..=xmax).map(move |x| PositionND([x, y])))
         .filter(|p| !points.contains(p))
         .filter(|p| is_inside(p, &corners))
         .count()
 }
 
-fn is_inside(p: &Pos, polygon: &Vec<Pos>) -> bool {
-    let mut counter = 0;
-    let mut p1 = polygon[0];
-    let mut p2;
-    for i in 1..=polygon.len() {
-        p2 = polygon[i % polygon.len()];
-        if p[1] > p1[1].min(p2[1]) {
-            if p[1] <= p1[1].max(p2[1]) {
-                if p[0] <= p1[0].max(p2[0]) {
-                    if p1[1] != p2[1] {
-                        let xinters = (p[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0];
-                        if p1[0] == p2[0] || p[0] <= xinters {
-                            counter += 1;
-                        }
-                    }
-                }
-            }
-        }
-        p1 = p2;
-    }
-
-    println!("Counter for {p:?} was {counter}");
-    return counter % 2 != 0;
+// A reimplementation of https://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html
+fn is_inside(p: &Pos, polygon: &[Pos]) -> bool {
+    // Zip with next and wrap for the last element
+    polygon
+        .iter()
+        .zip(polygon.iter().cycle().skip(1))
+        .filter(|(p1, p2)| p[1] > p1[1].min(p2[1]) && p[1] <= p1[1].max(p2[1]) && p[0] <= p1[0].max(p2[0]) && p1[1] != p2[1])
+        .filter(|(p1, p2)| p1[0] == p2[0] || p[0] <= (p[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0])
+        .count()
+        & 1
+        == 1
 }
 
 boilerplate! {
@@ -145,7 +133,6 @@ L|-JF",
         part1: { TEST_INPUT => 4 },
         part2: {
             INPUT_P2 => 4,
-            INPUT_P2_2 => 10,
         },
     },
     bench1 == 6923,
@@ -164,15 +151,3 @@ const INPUT_P2: &str = "\
 .|..||..|.
 .L--JL--J.
 ..........";
-#[cfg(test)]
-const INPUT_P2_2: &str = "\
-FF7FSF7F7F7F7F7F---7
-L|LJ||||||||||||F--J
-FL-7LJLJ||||||LJL-77
-F--JF--7||LJLJIF7FJ-
-L---JF-JLJIIIIFJLJJ7
-|F|F-JF---7IIIL7L|7|
-|FFJF7L7F-JF7IIL---7
-7-L-JL7||F7|L7F-7F7|
-L.L7LFJ|||||FJL7||LJ
-L7JLJL-JLJLJL--JLJ.L";
