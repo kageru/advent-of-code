@@ -1,9 +1,12 @@
 use impl_ops::*;
-use std::{ops, ops::AddAssign};
+use std::{
+    ops,
+    ops::{AddAssign, Not},
+};
 
 pub const ALL_DIRECTIONS: [Direction; 4] = [Direction::Up, Direction::Down, Direction::Left, Direction::Right];
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
     Right = 0,
     Down = 1,
@@ -45,5 +48,13 @@ impl_op!(+ |a: Direction, b: i8| -> Direction {
 impl Direction {
     pub fn turn(&mut self, turn_value: i64) {
         *self += turn_value as i8;
+    }
+}
+
+impl Not for Direction {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        self + 2
     }
 }
