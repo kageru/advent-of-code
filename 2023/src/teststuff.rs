@@ -8,8 +8,8 @@ macro_rules! boilerplate {
         $(unittests: {
             $($unittest: ident: { $($($utpi: expr),+ => $uto: expr),+$(,)? }),*$(,)?
         },)?
-        bench1$(($bi1: literal))? == $b1: literal,
-        bench2$(($bi2: literal))? == $b2: literal,
+        bench1$(($bi1: literal))? == $b1: expr,
+        bench2$(($bi2: literal))? == $b2: expr,
         bench_parse: $input_fn: expr => $it: expr$(,)?
     ) => {
     fn main() {

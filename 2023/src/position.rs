@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
     hash::Hash,
     iter::Step,
-    ops::{Add, AddAssign},
+    ops::{Add, AddAssign, Index},
 };
 
 use crate::{common::Inc, direction::Direction};
@@ -52,6 +52,14 @@ where I: AddAssign<I> + Copy
             *x += y;
         }
         self
+    }
+}
+
+impl<I, const D: usize> Index<usize> for PositionND<I, D> {
+    type Output = I;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }
 

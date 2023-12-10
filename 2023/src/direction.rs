@@ -1,17 +1,33 @@
 use impl_ops::*;
 use std::{
-    ops,
+    fmt, ops,
     ops::{AddAssign, Not},
 };
 
 pub const ALL_DIRECTIONS: [Direction; 4] = [Direction::Up, Direction::Down, Direction::Left, Direction::Right];
 
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
     Right = 0,
     Down = 1,
     Left = 2,
     Up = 3,
+}
+
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Direction::Up => "Up",
+                Direction::Down => "Down",
+                Direction::Left => "Left",
+                Direction::Right => "Right",
+            }
+        )
+    }
 }
 
 impl AddAssign<i8> for Direction {
