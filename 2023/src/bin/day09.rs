@@ -8,7 +8,7 @@ type I = i64;
 type Parsed = Vec<Vec<I>>;
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines().map(|l| parse_nums_separator(l, ' ')).collect()
+    raw.lines().map(|l| l.split(' ').map(|n| n.parse().unwrap()).collect()).collect()
 }
 
 fn build_levels(levels: &mut Parsed) {
