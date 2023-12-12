@@ -1,12 +1,12 @@
 #![feature(test)]
 extern crate test;
+use aoc2023::{boilerplate, common::*};
+use fnv::FnvHashMap;
+use itertools::Itertools;
 use std::mem::transmute;
 
-use aoc2023::{boilerplate, common::*};
-use itertools::Itertools;
-
 const DAY: usize = 12;
-type I = u32;
+type I = usize;
 type Parsed<'a> = Vec<(&'a [Spring], Vec<I>)>;
 
 #[repr(u8)]
@@ -25,44 +25,104 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
-fn is_legal(springs: &[Spring], expected: &[I]) -> bool {
-    let broken = springs
-        .iter()
-        .map(|s| (s, 1))
-        .coalesce(|(s1, n1), (s2, n2)| if s1 == s2 { Ok((s1, n1 + n2)) } else { Err(((s1, n1), (s2, n2))) })
-        .filter_map(|(&s, n)| (s == Spring::Broken).then_some(n))
-        .collect_vec();
-    broken == expected
-}
-
-fn fill(springs: &mut Vec<Vec<Spring>>, base: Vec<Spring>, mut unknowns: Vec<usize>) {
-    match unknowns.pop() {
-        Some(i) => {
-            let mut clone = base.clone();
-            clone[i] = Spring::Operational;
-            fill(springs, clone, unknowns.clone());
-            let mut clone = base.clone();
-            clone[i] = Spring::Broken;
-            fill(springs, clone, unknowns.clone());
-        }
-        None => springs.push(base),
-    }
-}
-
 fn part1(lines: &Parsed) -> usize {
     lines
         .iter()
         .map(|(springs, expected)| {
-            let unknowns = springs.iter().enumerate().filter_map(|(i, s)| (s == &Spring::Unknown).then_some(i)).collect_vec();
-            let mut buffer = Vec::with_capacity(1 << unknowns.len());
-            fill(&mut buffer, springs.to_vec(), unknowns);
-            buffer.iter().filter(|s| is_legal(s, expected)).count()
+            let mut cache = FnvHashMap::default();
+            valid_combinations_recursive(&springs, &expected, 0, 0, 0, 0, false, &mut cache)
         })
         .sum()
 }
 
-fn part2(_parsed: &Parsed) -> usize {
-    unimplemented!()
+fn valid_combinations_recursive(
+    springs: &[Spring],
+    constraints: &[usize],
+    index: usize,
+    broken_count: usize,
+    current_constraint: usize,
+    broken_streak: usize,
+    just_completed_streak: bool,
+    cache: &mut FnvHashMap<(usize, usize, usize, usize, bool), usize>,
+) -> usize {
+    if let Some(&cached) = cache.get(&(index, broken_count, current_constraint, broken_streak, just_completed_streak)) {
+        return cached;
+    }
+    if index == springs.len() {
+        let valid = broken_count == constraints.iter().sum::<usize>()
+            && current_constraint == constraints.len()
+            && (broken_streak == 0 || just_completed_streak);
+        return valid as usize;
+    }
+
+    let valid = match springs[index] {
+        Spring::Operational => {
+            valid_combinations_recursive(springs, constraints, index + 1, broken_count, current_constraint, 0, false, cache)
+        }
+        Spring::Broken => {
+            if current_constraint < constraints.len()
+                && broken_count < constraints.iter().take(current_constraint + 1).sum()
+                && !just_completed_streak
+            {
+                let just_completed_streak = broken_streak + 1 == constraints[current_constraint];
+                valid_combinations_recursive(
+                    springs,
+                    constraints,
+                    index + 1,
+                    broken_count + 1,
+                    current_constraint + just_completed_streak as usize,
+                    broken_streak + 1,
+                    just_completed_streak,
+                    cache,
+                )
+            } else {
+                0
+            }
+        }
+        Spring::Unknown => {
+            let operational =
+                valid_combinations_recursive(springs, constraints, index + 1, broken_count, current_constraint, 0, false, cache);
+            let broken = if current_constraint < constraints.len()
+                && broken_count < constraints.iter().take(current_constraint + 1).sum()
+                && !just_completed_streak
+            {
+                let just_completed_streak = broken_streak + 1 == constraints[current_constraint];
+                valid_combinations_recursive(
+                    springs,
+                    constraints,
+                    index + 1,
+                    broken_count + 1,
+                    current_constraint + just_completed_streak as usize,
+                    broken_streak + 1,
+                    just_completed_streak,
+                    cache,
+                )
+            } else {
+                0
+            };
+            operational + broken
+        }
+    };
+    cache.insert((index, broken_count, current_constraint, broken_streak, just_completed_streak), valid);
+    valid
+}
+
+fn part2(lines: &Parsed) -> usize {
+    lines
+        .iter()
+        .map(|(springs, expected)| {
+            let springs = springs.to_vec();
+            let new_spring_length = springs.len() * 5 + 4;
+            (
+                springs.into_iter().chain(std::iter::once(Spring::Unknown)).cycle().take(new_spring_length).collect_vec(),
+                expected.iter().cloned().cycle().take(expected.len() * 5).collect_vec(),
+            )
+        })
+        .map(|(springs, expected)| {
+            let mut cache = FnvHashMap::default();
+            valid_combinations_recursive(&springs, &expected, 0, 0, 0, 0, false, &mut cache)
+        })
+        .sum()
 }
 
 boilerplate! {
@@ -75,9 +135,9 @@ boilerplate! {
 ?###???????? 3,2,1",
     tests: {
         part1: { TEST_INPUT => 21 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 525152 },
     },
     bench1 == 7260,
-    bench2 == 0,
+    bench2 == 1909291258644,
     bench_parse: Vec::len => 1000,
 }
