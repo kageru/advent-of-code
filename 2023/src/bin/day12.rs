@@ -30,80 +30,69 @@ fn part1(lines: &Parsed) -> usize {
         .iter()
         .map(|(springs, expected)| {
             let mut cache = FnvHashMap::default();
-            valid_combinations_recursive(&springs, &expected, 0, 0, 0, 0, false, &mut cache)
+            valid_combinations(&springs, &expected, CallState::default(), &mut cache)
         })
         .sum()
 }
 
-fn valid_combinations_recursive(
-    springs: &[Spring],
-    constraints: &[usize],
-    index: usize,
-    broken_count: usize,
-    current_constraint: usize,
-    broken_streak: usize,
+#[derive(Debug, PartialEq, Eq, Hash, Default, Clone, Copy)]
+struct CallState {
+    index:                 usize,
+    broken_count:          usize,
+    current_constraint:    usize,
+    broken_streak:         usize,
     just_completed_streak: bool,
-    cache: &mut FnvHashMap<(usize, usize, usize, usize, bool), usize>,
-) -> usize {
-    if let Some(&cached) = cache.get(&(index, broken_count, current_constraint, broken_streak, just_completed_streak)) {
-        return cached;
-    }
-    if index == springs.len() {
-        let valid = broken_count == constraints.iter().sum::<usize>()
-            && current_constraint == constraints.len()
-            && (broken_streak == 0 || just_completed_streak);
-        return valid as usize;
+}
+
+impl CallState {
+    fn new(index: usize, broken_count: usize, current_constraint: usize, broken_streak: usize, just_completed_streak: bool) -> Self {
+        Self { index, broken_count, current_constraint, broken_streak, just_completed_streak }
     }
 
-    let valid = match springs[index] {
-        Spring::Operational => {
-            valid_combinations_recursive(springs, constraints, index + 1, broken_count, current_constraint, 0, false, cache)
-        }
-        Spring::Broken => {
-            if current_constraint < constraints.len()
-                && broken_count < constraints.iter().take(current_constraint + 1).sum()
-                && !just_completed_streak
-            {
-                let just_completed_streak = broken_streak + 1 == constraints[current_constraint];
-                valid_combinations_recursive(
-                    springs,
-                    constraints,
-                    index + 1,
-                    broken_count + 1,
-                    current_constraint + just_completed_streak as usize,
-                    broken_streak + 1,
+    fn operational(self) -> Self {
+        CallState::new(self.index + 1, self.broken_count, self.current_constraint, 0, false)
+    }
+}
+
+fn add_broken(springs: &[Spring], constraints: &[usize], state: CallState, cache: &mut FnvHashMap<CallState, usize>) -> Option<usize> {
+    (state.current_constraint < constraints.len()
+        && state.broken_count < constraints.iter().take(state.current_constraint + 1).sum()
+        && !state.just_completed_streak)
+        .then(|| {
+            let just_completed_streak = state.broken_streak + 1 == constraints[state.current_constraint];
+            valid_combinations(
+                springs,
+                constraints,
+                CallState::new(
+                    state.index + 1,
+                    state.broken_count + 1,
+                    state.current_constraint + just_completed_streak as usize,
+                    state.broken_streak + 1,
                     just_completed_streak,
-                    cache,
-                )
-            } else {
-                0
-            }
-        }
+                ),
+                cache,
+            )
+        })
+}
+
+fn valid_combinations(springs: &[Spring], constraints: &[usize], state: CallState, cache: &mut FnvHashMap<CallState, usize>) -> usize {
+    if let Some(&cached) = cache.get(&state) {
+        return cached;
+    }
+    if state.index == springs.len() {
+        return (state.broken_count == constraints.iter().sum::<usize>() && state.current_constraint == constraints.len()) as _;
+    }
+
+    let valid = match springs[state.index] {
+        Spring::Operational => valid_combinations(springs, constraints, state.operational(), cache),
+        Spring::Broken => add_broken(springs, constraints, state, cache).unwrap_or(0),
         Spring::Unknown => {
-            let operational =
-                valid_combinations_recursive(springs, constraints, index + 1, broken_count, current_constraint, 0, false, cache);
-            let broken = if current_constraint < constraints.len()
-                && broken_count < constraints.iter().take(current_constraint + 1).sum()
-                && !just_completed_streak
-            {
-                let just_completed_streak = broken_streak + 1 == constraints[current_constraint];
-                valid_combinations_recursive(
-                    springs,
-                    constraints,
-                    index + 1,
-                    broken_count + 1,
-                    current_constraint + just_completed_streak as usize,
-                    broken_streak + 1,
-                    just_completed_streak,
-                    cache,
-                )
-            } else {
-                0
-            };
+            let operational = valid_combinations(springs, constraints, state.operational(), cache);
+            let broken = add_broken(springs, constraints, state, cache).unwrap_or(0);
             operational + broken
         }
     };
-    cache.insert((index, broken_count, current_constraint, broken_streak, just_completed_streak), valid);
+    cache.insert(state, valid);
     valid
 }
 
@@ -111,6 +100,7 @@ fn part2(lines: &Parsed) -> usize {
     lines
         .iter()
         .map(|(springs, expected)| {
+            // this seems cursed. is there a join() for iterators?
             let springs = springs.to_vec();
             let new_spring_length = springs.len() * 5 + 4;
             (
@@ -120,7 +110,7 @@ fn part2(lines: &Parsed) -> usize {
         })
         .map(|(springs, expected)| {
             let mut cache = FnvHashMap::default();
-            valid_combinations_recursive(&springs, &expected, 0, 0, 0, 0, false, &mut cache)
+            valid_combinations(&springs, &expected, CallState::default(), &mut cache)
         })
         .sum()
 }
