@@ -30,7 +30,7 @@ fn part1(lines: &Parsed) -> usize {
         .iter()
         .map(|(springs, expected)| {
             let mut cache = FnvHashMap::default();
-            valid_combinations(&springs, &expected, CallState::default(), &mut cache)
+            valid_combinations(springs, expected, CallState::default(), &mut cache)
         })
         .sum()
 }
