@@ -1,8 +1,8 @@
 #[macro_export]
 macro_rules! boilerplate {
     (
-        TEST_INPUT == $ti: literal,
-        tests: {
+        $($tin: ident == $ti: literal),+
+        for tests: {
             $($part: ident: { $($tpi: expr $(,$ati: expr)* => $to: expr),+$(,)? }),*$(,)?
         },
         $(unittests: {
@@ -24,7 +24,9 @@ macro_rules! boilerplate {
         use super::*;
         use aoc2023::*;
 
-        const TEST_INPUT: &str = $ti;
+        $(
+        const $tin: &str = $ti;
+        )+
 
         $($($(paste::paste! {
             #[test]

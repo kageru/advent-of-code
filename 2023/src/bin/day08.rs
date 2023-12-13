@@ -75,8 +75,15 @@ fn part2(parsed: &Parsed) -> usize {
     parsed.1.iter().filter(|&&n| ends_with(n, b'A')).fold(1, |acc, n| lcm(acc, steps_until(parsed, *n)))
 }
 
-#[cfg(test)]
-const TEST_INPUT_P2: &str = "LR
+boilerplate! {
+    TEST_INPUT == "\
+LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)",
+    TEST_INPUT_P2 == "\
+LR
 
 11A = (11B, XXX)
 11B = (XXX, 11Z)
@@ -85,15 +92,8 @@ const TEST_INPUT_P2: &str = "LR
 22B = (22C, 22C)
 22C = (22Z, 22Z)
 22Z = (22B, 22B)
-XXX = (XXX, XXX)";
-
-boilerplate! {
-    TEST_INPUT == "LLR
-
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)",
-    tests: {
+XXX = (XXX, XXX)"
+    for tests: {
         part1: { TEST_INPUT => 6 },
         part2: { TEST_INPUT_P2 => 6 },
     },

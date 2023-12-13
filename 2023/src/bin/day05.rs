@@ -116,8 +116,8 @@ temperature-to-humidity map:
 
 humidity-to-location map:
 60 56 37
-56 93 4",
-    tests: {
+56 93 4"
+    for tests: {
         part1: { TEST_INPUT => 35 },
         part2: { TEST_INPUT => 46 },
     },

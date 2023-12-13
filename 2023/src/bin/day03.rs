@@ -92,8 +92,8 @@ boilerplate! {
 ..592.....
 ......755.
 ...$.*....
-.664.598..",
-    tests: {
+.664.598.."
+    for tests: {
         part1: { TEST_INPUT => 4361 },
         part2: { TEST_INPUT => 467835 },
     },

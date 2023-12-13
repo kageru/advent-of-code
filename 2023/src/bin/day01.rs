@@ -40,21 +40,21 @@ fn part2(parsed: &Parsed) -> usize {
         .sum()
 }
 
-#[cfg(test)]
-const TEST_INPUT_2: &str = "two1nine
+boilerplate! {
+    TEST_INPUT == "\
+1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet",
+    TEST_INPUT_2 == "\
+two1nine
 eightwothree
 abcone2threexyz
 xtwone3four
 4nineeightseven2
 zoneight234
-7pqrstsixteen";
-
-boilerplate! {
-    TEST_INPUT == "1abc2
-pqr3stu8vwx
-a1b2c3d4e5f
-treb7uchet",
-    tests: {
+7pqrstsixteen"
+    for tests: {
         part1: { TEST_INPUT => 142 },
         part2: { TEST_INPUT_2 => 281 },
     },

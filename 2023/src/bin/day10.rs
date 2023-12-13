@@ -128,8 +128,8 @@ boilerplate! {
 7S-7|
 L|7||
 -L-J|
-L|-JF",
-    tests: {
+L|-JF"
+    for tests: {
         part1: { TEST_INPUT => 4 },
         part2: {
             INPUT_P2 => 4,

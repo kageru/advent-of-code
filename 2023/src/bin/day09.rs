@@ -56,8 +56,8 @@ boilerplate! {
     TEST_INPUT == "\
 0 3 6 9 12 15
 1 3 6 10 15 21
-10 13 16 21 30 45",
-    tests: {
+10 13 16 21 30 45"
+    for tests: {
         part1: { TEST_INPUT => 114 },
         part2: { TEST_INPUT => 2 },
     },

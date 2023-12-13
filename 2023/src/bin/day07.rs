@@ -93,8 +93,8 @@ boilerplate! {
 T55J5 684
 KK677 28
 KTJJT 220
-QQQJA 483",
-    tests: {
+QQQJA 483"
+    for tests: {
         part1: { TEST_INPUT => 6440 },
         part2: { TEST_INPUT => 5905 },
     },

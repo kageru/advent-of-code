@@ -29,8 +29,8 @@ fn part2((_, (time, distance)): &Parsed) -> usize {
 boilerplate! {
     TEST_INPUT == "\
 Time:      7  15   30
-Distance:  9  40  200",
-    tests: {
+Distance:  9  40  200"
+    for tests: {
         part1: { TEST_INPUT => 288 },
         part2: { TEST_INPUT => 71503 },
     },
