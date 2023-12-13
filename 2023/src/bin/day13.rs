@@ -17,17 +17,12 @@ fn find_reflection<const DEVIATIONS: u32>(block: &[I]) -> Option<usize> {
         let mut offset = 0;
         let mut deviations = DEVIATIONS;
         loop {
-            match try { block.get(i.checked_sub(offset)?)? ^ block.get(i + 1 + offset)? } {
+            match try { (block.get(i.checked_sub(offset)?)? ^ block.get(i + 1 + offset)?).count_ones() } {
                 None if deviations == 0 => return Some(i + 1),
                 Some(0) => offset += 1,
-                Some(diff) => {
-                    let diff = diff.count_ones();
-                    if diff > deviations {
-                        continue 'outer;
-                    } else {
-                        offset += 1;
-                        deviations -= diff;
-                    }
+                Some(diff) if diff <= deviations => {
+                    offset += 1;
+                    deviations -= diff;
                 }
                 _ => continue 'outer,
             }
@@ -42,26 +37,27 @@ fn transpose(orig: &[I]) -> Vec<I> {
     let mut out = vec![0; len];
     for j in 0..len {
         for (i, &value) in orig.iter().enumerate() {
-            if (value & (1 << j)) != 0 {
-                out[len - 1 - j] |= 1 << (orig.len() - 1) >> i;
-            }
+            let src_bit = value & (1 << j);
+            let dst_position = orig.len() - 1 - i;
+            out[len - 1 - j] |= ((src_bit != 0) as I) << dst_position;
         }
     }
     out
 }
 
-fn part1(blocks: &Parsed) -> usize {
+fn solve<const DEV: u32>(blocks: &Parsed) -> usize {
     blocks
         .iter()
-        .map(|block| find_reflection::<0>(block).map(|n| n * 100).or_else(|| find_reflection::<0>(&transpose(block))).unwrap())
+        .map(|block| find_reflection::<DEV>(block).map(|n| n * 100).or_else(|| find_reflection::<DEV>(&transpose(block))).unwrap())
         .sum()
 }
 
+fn part1(blocks: &Parsed) -> usize {
+    solve::<0>(blocks)
+}
+
 fn part2(blocks: &Parsed) -> usize {
-    blocks
-        .iter()
-        .map(|block| find_reflection::<1>(&block).map(|n| n * 100).or_else(|| find_reflection::<1>(&transpose(&block))).unwrap())
-        .sum()
+    solve::<1>(blocks)
 }
 
 boilerplate! {
