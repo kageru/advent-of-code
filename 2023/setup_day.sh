@@ -24,8 +24,8 @@ fn part2(parsed: &Parsed) -> usize {
 }
 
 boilerplate! {
-    TEST_INPUT == "",
-    tests: {
+    TEST_INPUT == ""
+    for tests: {
         part1: { TEST_INPUT => 0 },
         part2: { TEST_INPUT => 0 },
     },
