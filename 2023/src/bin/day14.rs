@@ -1,14 +1,14 @@
 #![feature(test, try_blocks)]
 extern crate test;
-use aoc2023::{boilerplate, common::*, direction::Direction};
-use itertools::Itertools;
-use std::mem::transmute;
+use aoc2023::{boilerplate, common::*};
+use fnv::{FnvHashMap, FnvHasher};
+use std::{hash::Hasher, mem::transmute};
 
 const DAY: usize = 14;
 type Parsed = Vec<Vec<Tile>>;
 
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(u8)]
 enum Tile {
     Round = b'O',
@@ -16,33 +16,65 @@ enum Tile {
     Empty = b'.',
 }
 
-fn next_index(x: usize, y: usize, direction: Direction) -> Option<(usize, usize)> {
-    match direction {
-        Direction::Up => Some((x, y.checked_sub(1)?)),
-        Direction::Down => Some((x, y + 1)),
-        Direction::Right => Some((x + 1, y)),
-        Direction::Left => Some((x.checked_sub(1)?, y)),
-    }
-}
-
 fn parse_input(raw: &str) -> Parsed {
     raw.lines().map(|l| unsafe { transmute::<&str, &[Tile]>(l) }.to_vec()).collect()
 }
 
-fn tilt(grid: &mut Parsed, direction: Direction) {
+fn tilt_north(grid: &mut Parsed) {
     for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            if grid[y][x] == Tile::Round {
+                let mut i = 0;
+                while let Some(Tile::Empty) = try { grid.get(y.checked_sub(i + 1)?)?[x] } {
+                    i += 1;
+                }
+                grid[y][x] = Tile::Empty;
+                grid[y - i][x] = Tile::Round;
+            }
+        }
+    }
+}
+
+fn tilt_west(grid: &mut Parsed) {
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            if grid[y][x] == Tile::Round {
+                let mut i = 0;
+                while let Some(Tile::Empty) = try { grid[y][x.checked_sub(i + 1)?] } {
+                    i += 1;
+                }
+                grid[y][x] = Tile::Empty;
+                grid[y][x - i] = Tile::Round;
+            }
+        }
+    }
+}
+
+fn tilt_south(grid: &mut Parsed) {
+    for y in (0..grid.len()).rev() {
         for x in 0..(grid[y].len()) {
             if grid[y][x] == Tile::Round {
-                grid[y][x] = Tile::Empty;
-                let (mut x, mut y) = (x, y);
-                // While the next position is valid, move 1 step
-                while let Some(idx) = try {
-                    let (next_x, next_y) = next_index(x, y, direction)?;
-                    (*grid.get(next_y)?.get(next_x)? == Tile::Empty).then_some((next_x, next_y))?
-                } {
-                    (x, y) = idx;
+                let mut i = 0;
+                while let Some(Tile::Empty) = try { grid.get(y + i + 1)?[x] } {
+                    i += 1;
                 }
-                grid[y][x] = Tile::Round;
+                grid[y][x] = Tile::Empty;
+                grid[y + i][x] = Tile::Round;
+            }
+        }
+    }
+}
+
+fn tilt_east(grid: &mut Parsed) {
+    for y in 0..grid.len() {
+        for x in (0..grid[y].len()).rev() {
+            if grid[y][x] == Tile::Round {
+                let mut i = 0;
+                while let Some(Tile::Empty) = try { grid[y].get(x + i + 1)? } {
+                    i += 1;
+                }
+                grid[y][x] = Tile::Empty;
+                grid[y][x + i] = Tile::Round;
             }
         }
     }
@@ -54,12 +86,33 @@ fn weight(grid: &Parsed) -> usize {
 
 fn part1(parsed: &Parsed) -> usize {
     let mut grid = parsed.clone();
-    tilt(&mut grid, Direction::Up);
+    tilt_north(&mut grid);
     weight(&grid)
 }
 
 fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    let mut grid = parsed.clone();
+    let mut weights = FnvHashMap::default();
+    let mut n = 0;
+    let cycle = loop {
+        let mut hasher = FnvHasher::default();
+        for l in grid.iter() {
+            hasher.write(unsafe { transmute(l.as_slice()) });
+        }
+        let hash = hasher.finish();
+        if let Some((_, old_n)) = weights.insert(hash, (weight(&grid), n)) {
+            break n - old_n;
+        }
+        n += 1;
+
+        tilt_north(&mut grid);
+        tilt_west(&mut grid);
+        tilt_south(&mut grid);
+        tilt_east(&mut grid);
+    };
+    const REPETITIONS: usize = 1000000000;
+    let steps = (REPETITIONS - n) % cycle;
+    weights.into_iter().find_map(|(_, (w, n2))| (n2 == n - cycle + steps).then_some(w)).unwrap()
 }
 
 boilerplate! {
@@ -79,6 +132,6 @@ O.#..O.#.#
         part2: { TEST_INPUT => 64 },
     },
     bench1 == 110407,
-    bench2 == 0,
+    bench2 == 87273,
     bench_parse: Vec::len => 100,
 }
