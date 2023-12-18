@@ -11,7 +11,7 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn hash(s: &[u8]) -> I {
-    s.iter().fold(0, |acc, &b| (acc + b as I) * 17 & 255)
+    s.iter().fold(0, |acc, &b| ((acc + b as I) * 17) & 255)
 }
 
 fn part1(parsed: &Parsed) -> I {
@@ -23,13 +23,13 @@ fn part2(parsed: &Parsed) -> I {
     for s in parsed.clone() {
         match s.as_bytes() {
             [label @ .., b'-'] => {
-                let hash = hash(&label);
+                let hash = hash(label);
                 if let Some(p) = boxes[hash].iter().position(|(l, _)| l == &label) {
                     boxes[hash].remove(p);
                 }
             }
             [label @ .., b'=', focal_strength] => {
-                let hash = hash(&label);
+                let hash = hash(label);
                 match boxes[hash].iter().position(|(l, _)| l == &label) {
                     Some(p) => boxes[hash][p] = (&label, focal_strength - b'0'),
                     None => boxes[hash].push((&label, focal_strength - b'0')),

@@ -35,7 +35,7 @@ impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> Positio
         let ns = neighbor_vectors::<I, DIMS>();
         let mut out = [*self; num_neighbors(DIMS)];
         for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[I::default(); DIMS])) {
-            *out = *out + PositionND(dir);
+            *out += PositionND(dir);
         }
         out
     }
