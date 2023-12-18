@@ -7,34 +7,43 @@ use aoc2023::{
     position::{Position2D, PositionND},
 };
 use itertools::Itertools;
-use std::ops::Div;
 
 const DAY: usize = 18;
 type I = isize;
 type Pos = Position2D<I>;
-type Parsed = Vec<(Direction, I, u32)>;
+type Parsed = Vec<((Direction, I), (Direction, I))>;
+
+fn parse_dir(c: u8) -> Direction {
+    match c {
+        b'R' | b'0' => Right,
+        b'D' | b'1' => Down,
+        b'L' | b'2' => Left,
+        b'U' | b'3' => Up,
+        _ => unreachable!(),
+    }
+}
 
 fn parse_input(raw: &str) -> Parsed {
     raw.lines()
         .map(|line| line.split(' ').collect_tuple().unwrap())
         .map(|(d, l, c)| {
-            let dir = match d {
-                "R" => Right,
-                "D" => Down,
-                "U" => Up,
-                "L" => Left,
-                _ => unreachable!(),
-            };
-            (dir, parse_num(l), u32::from_str_radix(&c[2..8], 16).unwrap())
+            ((parse_dir(d.as_bytes()[0]), parse_num(l)), (parse_dir(c.as_bytes()[7]), I::from_str_radix(&c[2..7], 16).unwrap()))
         })
         .collect()
 }
 
 fn part1(instructions: &Parsed) -> isize {
-    let n_points: I = instructions.iter().map(|(_, len, _)| len).sum();
+    solve(instructions.iter().map(|(a, _)| a))
+}
+
+fn part2(instructions: &Parsed) -> isize {
+    solve(instructions.iter().map(|(_, b)| b))
+}
+
+fn solve<'a>(instructions: impl Iterator<Item = &'a (Direction, I)> + Clone) -> isize {
+    let n_points: I = instructions.clone().map(|(_, len)| len).sum();
     let points: Vec<_> = instructions
-        .iter()
-        .scan(PositionND([0, 0]), |pos, &(dir, len, _)| {
+        .scan(PositionND([0, 0]), |pos, &(dir, len)| {
             let movement = PositionND(match dir {
                 Up => [len, 0],
                 Down => [-len, 0],
@@ -49,11 +58,7 @@ fn part1(instructions: &Parsed) -> isize {
 }
 
 fn area(polygon: &[Pos]) -> isize {
-    polygon.iter().zip(polygon.iter().cycle().skip(1)).map(|(p1, p2)| p1[0] * p2[1] - p1[1] * p2[0]).sum::<I>().abs().div(2)
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+    polygon.iter().zip(polygon.iter().cycle().skip(1)).map(|(p1, p2)| p1[0] * p2[1] - p1[1] * p2[0]).sum::<I>().abs() >> 1
 }
 
 boilerplate! {
@@ -74,7 +79,7 @@ L 2 (#015232)
 U 2 (#7a21e3)"
     for tests: {
         part1: { TEST_INPUT => 62 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 952408144115 },
     },
     unittests: {
         area: {
@@ -87,6 +92,6 @@ U 2 (#7a21e3)"
         }
     },
     bench1 == 35991,
-    bench2 == 0,
+    bench2 == 54058824661845,
     bench_parse: Vec::len => 602,
 }
