@@ -4,13 +4,12 @@ use aoc2023::{
     boilerplate,
     common::*,
     direction::Direction::{self, *},
-    position::{Position2D, PositionND},
 };
 use itertools::Itertools;
 
 const DAY: usize = 18;
 type I = isize;
-type Pos = Position2D<I>;
+type Pos = [I; 2];
 type Parsed = Vec<((Direction, I), (Direction, I))>;
 
 fn parse_dir(c: u8) -> Direction {
@@ -41,24 +40,25 @@ fn part2(instructions: &Parsed) -> isize {
 }
 
 fn solve<'a>(instructions: impl Iterator<Item = &'a (Direction, I)> + Clone) -> isize {
-    let n_points: I = instructions.clone().map(|(_, len)| len).sum();
-    let points: Vec<_> = instructions
-        .scan(PositionND([0, 0]), |pos, &(dir, len)| {
-            let movement = PositionND(match dir {
-                Up => [len, 0],
-                Down => [-len, 0],
-                Right => [0, len],
-                Left => [0, -len],
-            });
-            *pos += movement;
-            Some(*pos)
-        })
-        .collect();
+    let n_points: isize = instructions.clone().map(|(_, i)| i).sum();
+    let points: Vec<_> = instructions.scan([0, 0], |pos, ins| Some(*mov(pos, ins))).collect();
     (2 * area(&points) - n_points + 2) / 2 + n_points
 }
 
+#[inline] // I don’t understand why, but inlining this makes a 5% difference
 fn area(polygon: &[Pos]) -> isize {
     polygon.iter().zip(polygon.iter().cycle().skip(1)).map(|(p1, p2)| p1[0] * p2[1] - p1[1] * p2[0]).sum::<I>().abs() >> 1
+}
+
+#[inline]
+fn mov<'a>(pos: &'a mut Pos, (dir, len): &(Direction, I)) -> &'a Pos {
+    match dir {
+        Up => pos[0] += len,
+        Down => pos[0] -= len,
+        Right => pos[1] += len,
+        Left => pos[1] -= len,
+    };
+    pos
 }
 
 boilerplate! {
@@ -84,10 +84,10 @@ U 2 (#7a21e3)"
     unittests: {
         area: {
             &[
-                PositionND([0, 0]),
-                PositionND([0, 2]),
-                PositionND([2, 2]),
-                PositionND([2, 0]),
+                [0, 0],
+                [0, 2],
+                [2, 2],
+                [2, 0],
             ] => 4
         }
     },
