@@ -6,8 +6,8 @@ use aoc2023::{
     direction::Direction::{self, *},
     position::{Position2D, PositionND},
 };
-use fnv::FnvHashSet as HashSet;
-use itertools::{Itertools, MinMaxResult};
+use itertools::Itertools;
+use std::ops::Div;
 
 const DAY: usize = 18;
 type I = isize;
@@ -30,50 +30,26 @@ fn parse_input(raw: &str) -> Parsed {
         .collect()
 }
 
-fn part1(instructions: &Parsed) -> usize {
-    let mut edges = Vec::new();
-    let mut points = HashSet::default();
-    let mut pos = PositionND([0, 0]);
-    points.insert(pos);
-    edges.push(pos);
-    for &(dir, len, _) in instructions {
-        let movement = PositionND(match dir {
-            Up => [1, 0],
-            Down => [-1, 0],
-            Right => [0, 1],
-            Left => [0, -1],
-        });
-        for _ in 0..len {
-            pos += movement;
-            points.insert(pos);
-        }
-        edges.push(pos);
-    }
-    let MinMaxResult::MinMax(xmin, xmax) = edges.iter().map(|p| p[0]).minmax() else { unreachable!() };
-    let MinMaxResult::MinMax(ymin, ymax) = edges.iter().map(|p| p[1]).minmax() else { unreachable!() };
-    let mut count = 0;
-    for x in xmin..=xmax {
-        for y in ymin..=ymax {
-            let p = PositionND([x, y]);
-            if points.contains(&p) || is_inside(&p, &edges) {
-                count += 1;
-            }
-        }
-    }
-    count
+fn part1(instructions: &Parsed) -> isize {
+    let n_points: I = instructions.iter().map(|(_, len, _)| len).sum();
+    let points: Vec<_> = instructions
+        .iter()
+        .scan(PositionND([0, 0]), |pos, &(dir, len, _)| {
+            let movement = PositionND(match dir {
+                Up => [len, 0],
+                Down => [-len, 0],
+                Right => [0, len],
+                Left => [0, -len],
+            });
+            *pos += movement;
+            Some(*pos)
+        })
+        .collect();
+    (2 * area(&points) - n_points + 2) / 2 + n_points
 }
 
-// copied from day 10
-fn is_inside(p: &Pos, polygon: &[Pos]) -> bool {
-    // Zip with next and wrap for the last element
-    polygon
-        .iter()
-        .zip(polygon.iter().cycle().skip(1))
-        .filter(|(p1, p2)| p[1] > p1[1].min(p2[1]) && p[1] <= p1[1].max(p2[1]) && p[0] <= p1[0].max(p2[0]) && p1[1] != p2[1])
-        .filter(|(p1, p2)| p1[0] == p2[0] || p[0] <= (p[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0])
-        .count()
-        & 1
-        == 1
+fn area(polygon: &[Pos]) -> isize {
+    polygon.iter().zip(polygon.iter().cycle().skip(1)).map(|(p1, p2)| p1[0] * p2[1] - p1[1] * p2[0]).sum::<I>().abs().div(2)
 }
 
 fn part2(parsed: &Parsed) -> usize {
@@ -99,6 +75,16 @@ U 2 (#7a21e3)"
     for tests: {
         part1: { TEST_INPUT => 62 },
         part2: { TEST_INPUT => 0 },
+    },
+    unittests: {
+        area: {
+            &[
+                PositionND([0, 0]),
+                PositionND([0, 2]),
+                PositionND([2, 2]),
+                PositionND([2, 0]),
+            ] => 4
+        }
     },
     bench1 == 35991,
     bench2 == 0,
