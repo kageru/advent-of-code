@@ -6,8 +6,7 @@ use aoc2023::{
     direction::{Direction, ALL_DIRECTIONS},
     position::{Position2D, PositionND},
 };
-use fnv::FnvHashSet as HashSet;
-use itertools::{Itertools, MinMaxResult};
+use itertools::Itertools;
 use std::mem::transmute;
 
 const DAY: usize = 10;
@@ -87,11 +86,11 @@ fn part2((start, grid): &Parsed) -> usize {
     let mut corners = Vec::new();
     let mut dir = Direction::Down; // I got this from my part 1 solution.
     let mut pos = *start;
-    let mut points = HashSet::default();
+    let mut points = 0;
     loop {
         pos = step(pos, dir);
         let pipe = grid[pos.0[1] as usize][pos.0[0] as usize];
-        points.insert(pos);
+        points += 1;
         if matches!(pipe, Pipe::Start | Pipe::TopLeft | Pipe::TopRight | Pipe::BottomLeft | Pipe::BottomRight) {
             corners.push(pos);
         }
@@ -100,26 +99,11 @@ fn part2((start, grid): &Parsed) -> usize {
         }
         dir = *pipe.openings().iter().find(|&&o| o != !dir).unwrap();
     }
-    let MinMaxResult::MinMax(&ymin, &ymax) = corners.iter().map(|PositionND([y, _])| y).minmax() else { unreachable!() };
-    let MinMaxResult::MinMax(&xmin, &xmax) = corners.iter().map(|PositionND([_, x])| x).minmax() else { unreachable!() };
-    (ymin..=ymax)
-        .flat_map(|y| (xmin..=xmax).map(move |x| PositionND([x, y])))
-        .filter(|p| !points.contains(p))
-        .filter(|p| is_inside(p, &corners))
-        .count()
+    (2 * area(&corners) as usize - points + 2) / 2
 }
 
-// A reimplementation of https://www.eecs.umich.edu/courses/eecs380/HANDOUTS/PROJ2/InsidePoly.html
-fn is_inside(p: &Pos, polygon: &[Pos]) -> bool {
-    // Zip with next and wrap for the last element
-    polygon
-        .iter()
-        .zip(polygon.iter().cycle().skip(1))
-        .filter(|(p1, p2)| p[1] > p1[1].min(p2[1]) && p[1] <= p1[1].max(p2[1]) && p[0] <= p1[0].max(p2[0]) && p1[1] != p2[1])
-        .filter(|(p1, p2)| p1[0] == p2[0] || p[0] <= (p[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0])
-        .count()
-        & 1
-        == 1
+fn area(polygon: &[Pos]) -> isize {
+    polygon.iter().zip(polygon.iter().cycle().skip(1)).map(|(p1, p2)| p1[0] * p2[1] - p1[1] * p2[0]).sum::<isize>().abs() >> 1
 }
 
 boilerplate! {
