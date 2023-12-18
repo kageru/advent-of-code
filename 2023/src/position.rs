@@ -1,12 +1,11 @@
 extern crate test;
+use crate::common::Inc;
 use std::{
     fmt::Debug,
     hash::Hash,
     iter::Step,
-    ops::{Add, AddAssign, Index},
+    ops::{Add, AddAssign, Index, IndexMut},
 };
-
-use crate::common::Inc;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct PositionND<I, const DIMS: usize>(pub [I; DIMS]);
@@ -54,12 +53,27 @@ where I: AddAssign<I> + Copy
         self
     }
 }
+impl<I, const D: usize> AddAssign<PositionND<I, D>> for PositionND<I, D>
+where I: AddAssign<I> + Copy
+{
+    fn add_assign(&mut self, rhs: PositionND<I, D>) {
+        for i in 0..D {
+            self[i] += rhs[i];
+        }
+    }
+}
 
 impl<I, const D: usize> Index<usize> for PositionND<I, D> {
     type Output = I;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.0[index]
+    }
+}
+
+impl<I, const D: usize> IndexMut<usize> for PositionND<I, D> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.0[index]
     }
 }
 
