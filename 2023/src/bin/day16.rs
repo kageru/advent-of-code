@@ -14,7 +14,7 @@ type Parsed<'a> = Vec<&'a [Tile]>;
 
 #[repr(u8)]
 #[allow(dead_code)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Tile {
     Empty = b'.',
     HSplit = b'|',
@@ -28,30 +28,49 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(grid: &Parsed) -> usize {
+    start(grid, 0, 0, Right)
+}
+
+fn part2(grid: &Parsed) -> usize {
+    (0..grid.len())
+        .map(|y| (0, y, Right))
+        .chain((0..grid.len()).map(|y| (grid[0].len() - 1, y, Left)))
+        .chain((0..grid[0].len()).map(|x| (x, 0, Down)))
+        .chain((0..grid[0].len()).map(|x| (x, grid.len() - 1, Up)))
+        .map(|(x, y, dir)| start(grid, x, y, dir))
+        .max()
+        .unwrap()
+}
+
+fn start(grid: &Parsed, x: usize, y: usize, dir: Direction) -> usize {
     let mut points = FnvHashSet::default();
-    points.insert((0, 0));
+    points.insert((x, y));
     let mut known = FnvHashSet::default();
-    // my real input starts with a mirror,
-    // and I don’t want to rewrite the code to not blindly make the first step.
-    energized(grid, &mut points, &mut known, 0, 0, if grid[0][0] == Empty { Right } else { Down });
+    match turn(dir, grid[y][x]) {
+        (d1, Some(d2)) => {
+            energized(grid, &mut points, &mut known, x, y, d1);
+            energized(grid, &mut points, &mut known, x, y, d2);
+        }
+        (d1, None) => energized(grid, &mut points, &mut known, x, y, d1),
+    }
     points.len()
 }
 
-fn angle1(dir: Direction) -> Direction {
-    match dir {
-        Up => Right,
-        Right => Up,
-        Down => Left,
-        Left => Down,
-    }
-}
-
-fn angle2(dir: Direction) -> Direction {
-    match dir {
-        Up => Left,
-        Left => Up,
-        Down => Right,
-        Right => Down,
+fn turn(dir: Direction, tile: Tile) -> (Direction, Option<Direction>) {
+    match (dir, tile) {
+        (dir, Empty) => (dir, None),
+        (Up, Angle1) => (Right, None),
+        (Right, Angle1) => (Up, None),
+        (Down, Angle1) => (Left, None),
+        (Left, Angle1) => (Down, None),
+        (Up, Angle2) => (Left, None),
+        (Left, Angle2) => (Up, None),
+        (Down, Angle2) => (Right, None),
+        (Right, Angle2) => (Down, None),
+        (Left | Right, HSplit) => (Up, Some(Down)),
+        (dir, HSplit) => (dir, None),
+        (Up | Down, VSplit) => (Right, Some(Left)),
+        (dir, VSplit) => (dir, None),
     }
 }
 
@@ -66,34 +85,18 @@ fn energized(
     if !known.insert((x, y, dir)) {
         return;
     }
-    if let Some(tile) = try {
+    if let Some(&tile) = try {
         y = y.checked_sub((dir == Up) as usize)? + (dir == Down) as usize;
         x = x.checked_sub((dir == Left) as usize)? + (dir == Right) as usize;
         grid.get(y)?.get(x)?
     } {
         points.insert((x, y));
-        match (tile, dir) {
-            (Empty, _) => {
-                energized(grid, points, known, x, y, dir);
-            }
-            (Angle1, _) => energized(grid, points, known, x, y, angle1(dir)),
-            (Angle2, _) => energized(grid, points, known, x, y, angle2(dir)),
-            (HSplit, Up | Down) => energized(grid, points, known, x, y, dir),
-            (HSplit, Left | Right) => {
-                energized(grid, points, known, x, y, Up);
-                energized(grid, points, known, x, y, Down);
-            }
-            (VSplit, Up | Down) => {
-                energized(grid, points, known, x, y, Right);
-                energized(grid, points, known, x, y, Left);
-            }
-            (VSplit, Left | Right) => energized(grid, points, known, x, y, dir),
+        let (d1, d2) = turn(dir, tile);
+        energized(grid, points, known, x, y, d1);
+        if let Some(d2) = d2 {
+            energized(grid, points, known, x, y, d2);
         }
     }
-}
-
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
 }
 
 boilerplate! {
@@ -109,9 +112,9 @@ boilerplate! {
 ..//.|...."
     for tests: {
         part1: { TEST_INPUT => 46 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 51 },
     },
     bench1 == 7517,
-    bench2 == 0,
+    bench2 == 7741,
     bench_parse: Vec::len => 110,
 }

@@ -3,7 +3,7 @@ use std::{
     fmt::Display,
     iter::Step,
     ops::{Add, Mul},
-    str::FromStr, mem::transmute,
+    str::FromStr,
 };
 
 pub fn read_file(day: usize) -> String {
