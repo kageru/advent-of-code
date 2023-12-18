@@ -1,7 +1,7 @@
 #!/bin/sh
 
 today=$(date +%d)
-aocd > inputs/day$today
+aocd "$today" > inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
