@@ -58,7 +58,7 @@ impl<T: Step + Default + Copy> Inc for T {
 
 #[cfg(debug_assertions)]
 pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
-    s.parse().unwrap_or_else(|_| panic!("Invalid number {s}"))
+    s.parse().unwrap_or_else(|_| panic!("Invalid number “{s}”"))
 }
 
 // For benchmarks.
