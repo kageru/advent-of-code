@@ -1,30 +1,28 @@
-#![feature(test)]
+#![feature(test, iter_array_chunks)]
 extern crate test;
 use self::Result::*;
 use aoc2023::{boilerplate, common::*};
 use fnv::FnvHashMap as HashMap;
-use itertools::Itertools;
-use tuple_map::TupleMap4;
 
 const DAY: usize = 19;
 type I = u32;
-type Rule<'a> = Box<dyn Fn(&Part) -> Result<'a> + 'a>;
+type Rule<'a> = (Comp, Result<'a>);
 type Parsed<'a> = (HashMap<&'a str, Vec<Rule<'a>>>, Vec<Part>);
+const LIMIT: I = 4000;
 
 #[derive(Clone, Copy, Debug)]
 enum Result<'a> {
     Accepted,
     Rejected,
-    Next,
     Jump(&'a str),
 }
 
-#[derive(Debug)]
-struct Part {
-    x: I,
-    m: I,
-    a: I,
-    s: I,
+type Part = [I; 4];
+
+enum Comp {
+    GT(usize, I),
+    LT(usize, I),
+    None,
 }
 
 fn parse_target(t: &str) -> Result<'_> {
@@ -37,35 +35,30 @@ fn parse_target(t: &str) -> Result<'_> {
 
 fn parse_rule<'a>(r: &'a str) -> Rule {
     match r.split_once(':') {
-        None => {
-            let target = parse_target(r);
-            Box::new(move |_| target)
-        }
+        None => (Comp::None, parse_target(r)),
         Some((condition, target)) => {
-            let target = parse_target(target);
             let value = parse_num(&condition[2..]);
-            match &condition[0..2] {
-                "x<" => Box::new(move |p| if p.x < value { target } else { Next }),
-                "x>" => Box::new(move |p| if p.x > value { target } else { Next }),
-                "m<" => Box::new(move |p| if p.m < value { target } else { Next }),
-                "m>" => Box::new(move |p| if p.m > value { target } else { Next }),
-                "a<" => Box::new(move |p| if p.a < value { target } else { Next }),
-                "a>" => Box::new(move |p| if p.a > value { target } else { Next }),
-                "s<" => Box::new(move |p| if p.s < value { target } else { Next }),
-                "s>" => Box::new(move |p| if p.s > value { target } else { Next }),
+            let idx = match condition.as_bytes()[0] {
+                b'x' => 0,
+                b'm' => 1,
+                b'a' => 2,
+                b's' => 3,
                 _ => unreachable!(),
-            }
+            };
+            let comp = match condition.as_bytes()[1] {
+                b'<' => Comp::LT(idx, value),
+                b'>' => Comp::GT(idx, value),
+                _ => unreachable!(),
+            };
+            (comp, parse_target(target))
         }
     }
 }
 
 fn parse_input(raw: &str) -> Parsed {
     let (rules, parts) = raw.split_once("\n\n").unwrap();
-    let parts = parts
-        .lines()
-        .map(|l| l[1..].trim_matches('}').split(',').collect_tuple::<(_, _, _, _)>().unwrap().map(|s| parse_num(&s[2..])))
-        .map(|(x, m, a, s)| Part { x, m, a, s })
-        .collect();
+    let parts =
+        parts.lines().map(|l| l[1..].trim_matches('}').split(',').array_chunks().next().unwrap().map(|s| parse_num(&s[2..]))).collect();
     let rules = rules
         .lines()
         .map(|line| line.trim_end_matches('}').split_once('{').unwrap())
@@ -74,11 +67,13 @@ fn parse_input(raw: &str) -> Parsed {
     (rules, parts)
 }
 
-fn resolve<'a>(part: &Part, rules: &'a [Rule]) -> Result<'a> {
-    for rule in rules {
-        match rule(part) {
-            Next => continue,
-            res => return res,
+fn resolve<'a>(part: &Part, rules: &'a [Rule]) -> &'a Result<'a> {
+    for (comp, res) in rules {
+        match comp {
+            Comp::None => return res,
+            &Comp::LT(idx, val) if part[idx] < val => return res,
+            &Comp::GT(idx, val) if part[idx] > val => return res,
+            _ => continue,
         }
     }
     unreachable!()
@@ -92,9 +87,8 @@ fn part1((rules, parts): &Parsed) -> I {
             loop {
                 match resolve(p, &rule) {
                     Jump(r) => rule = rules.get(r).unwrap(),
-                    Accepted => return p.x + p.m + p.a + p.s,
+                    Accepted => return p.iter().sum(),
                     Rejected => return 0,
-                    Next => unreachable!(),
                 }
             }
         })
