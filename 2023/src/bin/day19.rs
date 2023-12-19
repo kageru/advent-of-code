@@ -1,14 +1,19 @@
-#![feature(test, iter_array_chunks)]
+#![feature(test, iter_array_chunks, inline_const)]
 extern crate test;
 use self::Result::*;
 use aoc2023::{boilerplate, common::*};
 use fnv::FnvHashMap as HashMap;
+use std::ops::RangeInclusive;
 
 const DAY: usize = 19;
-type I = u32;
-type Rule<'a> = (Comp, Result<'a>);
-type Parsed<'a> = (HashMap<&'a str, Vec<Rule<'a>>>, Vec<Part>);
 const LIMIT: I = 4000;
+
+type I = usize;
+type Rule<'a> = (Comp, Result<'a>);
+type Rules<'a> = HashMap<&'a str, Vec<Rule<'a>>>;
+type Parsed<'a> = (Rules<'a>, Vec<Part>);
+type Part = [I; 4];
+type Ranges = [RangeInclusive<I>; 4];
 
 #[derive(Clone, Copy, Debug)]
 enum Result<'a> {
@@ -17,8 +22,7 @@ enum Result<'a> {
     Jump(&'a str),
 }
 
-type Part = [I; 4];
-
+#[derive(Clone, Copy, Debug)]
 enum Comp {
     GT(usize, I),
     LT(usize, I),
@@ -57,11 +61,10 @@ fn parse_rule<'a>(r: &'a str) -> Rule {
 
 fn parse_input(raw: &str) -> Parsed {
     let (rules, parts) = raw.split_once("\n\n").unwrap();
-    let parts =
-        parts.lines().map(|l| l[1..].trim_matches('}').split(',').array_chunks().next().unwrap().map(|s| parse_num(&s[2..]))).collect();
+    let parts = parts.lines().map(|l| l[1..(l.len() - 1)].split(',').array_chunks().next().unwrap().map(|s| parse_num(&s[2..]))).collect();
     let rules = rules
         .lines()
-        .map(|line| line.trim_end_matches('}').split_once('{').unwrap())
+        .map(|line| line[..(line.len() - 1)].split_once('{').unwrap())
         .map(|(name, rules)| (name, rules.split(',').map(parse_rule).collect()))
         .collect();
     (rules, parts)
@@ -95,8 +98,41 @@ fn part1((rules, parts): &Parsed) -> I {
         .sum()
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn num_ranges(ranges: &Ranges) -> usize {
+    ranges.iter().map(|r| r.end() - r.start() + 1).product()
+}
+
+fn split(all_rules: &Rules, rules: &[Rule], rule_idx: usize, matching_range: Ranges, nonmatching_range: Ranges, res: Result<'_>) -> usize {
+    let nonmatching = accepted(all_rules, rules, rule_idx + 1, nonmatching_range);
+    match res {
+        Jump(dst) => accepted(all_rules, all_rules.get(dst).unwrap(), 0, matching_range) + nonmatching,
+        Accepted => num_ranges(&matching_range) + nonmatching,
+        Rejected => nonmatching,
+    }
+}
+
+fn accepted(all_rules: &Rules, rules: &[Rule], rule_idx: usize, mut ranges: Ranges) -> usize {
+    match rules[rule_idx] {
+        (Comp::None, Jump(dst)) => accepted(all_rules, all_rules.get(dst).unwrap(), 0, ranges),
+        (Comp::None, Accepted) => num_ranges(&ranges),
+        (Comp::None, Rejected) => 0,
+        (Comp::LT(idx, val), res) => {
+            let mut matching_ranges = ranges.clone();
+            matching_ranges[idx] = *matching_ranges[idx].start()..=val - 1;
+            ranges[idx] = val..=*ranges[idx].end();
+            split(all_rules, rules, rule_idx, matching_ranges, ranges, res)
+        }
+        (Comp::GT(idx, val), res) => {
+            let mut matching_ranges = ranges.clone();
+            matching_ranges[idx] = (val + 1)..=*matching_ranges[idx].end();
+            ranges[idx] = *ranges[idx].start()..=val;
+            split(all_rules, rules, rule_idx, matching_ranges, ranges, res)
+        }
+    }
+}
+
+fn part2((rules, _): &Parsed) -> usize {
+    accepted(rules, rules.get("in").unwrap(), 0, [const { 1..=LIMIT }; 4])
 }
 
 boilerplate! {
@@ -120,9 +156,12 @@ hdj{m>838:A,pv}
 {x=2127,m=1623,a=2188,s=1013}"
     for tests: {
         part1: { TEST_INPUT => 19114 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 167409079868000 },
+    },
+    unittests : {
+        num_ranges: { &[1..=10, 1..=10, 1..=10, 1..=10] => 10_000 },
     },
     bench1 == 333263,
-    bench2 == 0,
+    bench2 == 130745440937650,
     bench_parse: |(rules, parts): &Parsed| (rules.len(), parts.len()) => (572, 200),
 }
