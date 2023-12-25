@@ -8,6 +8,7 @@ use std::{
 };
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+#[repr(transparent)]
 pub struct PositionND<I, const DIMS: usize>(pub [I; DIMS]);
 
 pub type Position2D<I> = PositionND<I, 2>;
