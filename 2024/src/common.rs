@@ -65,9 +65,7 @@ pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
 // This function assumes that the input will always be valid numbers and is UB otherwise
 #[cfg(not(debug_assertions))]
 pub fn parse_num<I: ParseableNumber<I>>(s: &str) -> I {
-    let mut digits = s.bytes().map(|b| I::from(b - b'0'));
-    let start = unsafe { digits.next().unwrap_unchecked() };
-    digits.fold(start, |acc, n| acc * I::from(10) + n)
+    s.bytes().fold(0.into(), |acc, n| acc * I::from(10) + (I::from(n - b'0')))
 }
 
 fn gcd(mut x: usize, mut y: usize) -> usize {
