@@ -1,4 +1,4 @@
-#![feature(test, never_type)]
+#![feature(test)]
 extern crate test;
 
 use aoc2024::{boilerplate, common::*};
@@ -18,7 +18,7 @@ type Parsed = Vec<Instruction>;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 enum Instruction {
-    Mul(I, I),
+    Mul((I, I)),
     Noop,
     Do,
     Dont,
@@ -30,13 +30,13 @@ fn parse_input(raw: &str) -> Parsed {
     instructions
 }
 
-fn digit(input: &str) -> IResult<&str, I> {
+fn number(input: &str) -> IResult<&str, I> {
     map_res(digit1, str::parse)(input)
 }
 
 fn parse_command(input: &str) -> IResult<&str, Parsed> {
     many1(alt((
-        delimited(tag("mul("), map(separated_pair(digit, tag(","), digit), |(a, b)| Instruction::Mul(a, b)), tag(")")),
+        map(delimited(tag("mul("), separated_pair(number, tag(","), number), tag(")")), Instruction::Mul),
         map(tag("do()"), |_| Instruction::Do),
         map(tag("don't()"), |_| Instruction::Dont),
         map(take(1u32), |_| Instruction::Noop),
@@ -44,14 +44,14 @@ fn parse_command(input: &str) -> IResult<&str, Parsed> {
 }
 
 fn part1(parsed: &Parsed) -> I {
-    parsed.iter().map(|i| if let Instruction::Mul(a, b) = i { a * b } else { 0 }).sum()
+    parsed.iter().map(|i| if let Instruction::Mul((a, b)) = i { a * b } else { 0 }).sum()
 }
 
 fn part2(parsed: &Parsed) -> I {
     parsed
         .iter()
         .scan(1, |enabled, &i| {
-            if let Instruction::Mul(a, b) = i {
+            if let Instruction::Mul((a, b)) = i {
                 Some(*enabled * a * b)
             } else {
                 *enabled = (i == Instruction::Do) as I;
