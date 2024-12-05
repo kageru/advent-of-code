@@ -4,7 +4,8 @@ use aoc2024::{boilerplate, common::*};
 
 const DAY: usize = 05;
 type I = usize;
-type Parsed = ([Vec<I>; 100], Vec<Vec<I>>);
+type Rules = [Vec<I>; 100];
+type Parsed = (Rules, Vec<Vec<I>>);
 
 fn parse_input(raw: &str) -> Parsed {
     let (rules, prints) = raw.split_once("\n\n").unwrap();
@@ -30,22 +31,27 @@ fn parse_input(raw: &str) -> Parsed {
     (full_rules, prints)
 }
 
-fn part1((rules, prints): &Parsed) -> usize {
-    prints
-        .iter()
-        .filter_map(|p| {
-            for i in 0..p.len() - 1 {
-                if rules[p[i]].iter().any(|r| p[i..].contains(r)) {
-                    return None;
-                }
-            }
-            return Some(p[p.len() / 2]);
-        })
-        .sum()
+fn invalid_at(rules: &Rules, print: &[I]) -> Option<(I, I)> {
+    (0..print.len() - 1).find_map(|i| rules[print[i]].iter().find_map(|r| print[i..].iter().position(|n| n == r).map(|pos| (i, i + pos))))
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn middle_value(v: &Vec<I>) -> I {
+    v[v.len() / 2]
+}
+
+fn part1((rules, prints): &Parsed) -> usize {
+    prints.iter().filter(|p| invalid_at(rules, p).is_none()).map(middle_value).sum()
+}
+
+fn fix_print(rules: &Rules, mut print: Vec<I>) -> Vec<I> {
+    while let Some((i, j)) = invalid_at(rules, &print) {
+        print.swap(i, j);
+    }
+    print
+}
+
+fn part2((rules, prints): &Parsed) -> usize {
+    prints.iter().filter(|p| invalid_at(rules, p).is_some()).cloned().map(|p| middle_value(&fix_print(rules, p))).sum()
 }
 
 boilerplate! {
@@ -83,6 +89,6 @@ boilerplate! {
         part2: { TEST_INPUT => 123 },
     },
     bench1 == 5091,
-    bench2 == 0,
+    bench2 == 4681,
     bench_parse: |(_, v): &Parsed| v.len() => 185,
 }
