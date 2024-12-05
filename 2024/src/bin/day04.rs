@@ -10,7 +10,7 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn is_xmas(slice: &[u8; 4]) -> bool {
-    slice == &[b'X', b'M', b'A', b'S'] || slice == &[b'S', b'A', b'M', b'X']
+    slice == b"XMAS" || slice == b"SAMX"
 }
 
 fn xmas_slice<F: Fn(usize) -> Option<u8>>(f: F) -> [u8; 4] {

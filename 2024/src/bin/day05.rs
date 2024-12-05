@@ -1,8 +1,10 @@
-#![feature(test)]
+#![feature(test, cow_is_borrowed)]
 extern crate test;
+use std::borrow::Cow;
+
 use aoc2024::{boilerplate, common::*};
 
-const DAY: usize = 05;
+const DAY: usize = 5;
 type I = usize;
 type Rules = [Vec<I>; 100];
 type Parsed = (Rules, Vec<Vec<I>>);
@@ -35,23 +37,23 @@ fn invalid_at(rules: &Rules, print: &[I]) -> Option<(I, I)> {
     (0..print.len() - 1).find_map(|i| rules[print[i]].iter().find_map(|r| print[i..].iter().position(|n| n == r).map(|pos| (i, i + pos))))
 }
 
-fn middle_value(v: &Vec<I>) -> I {
+fn middle_value(v: &[I]) -> I {
     v[v.len() / 2]
 }
 
 fn part1((rules, prints): &Parsed) -> usize {
-    prints.iter().filter(|p| invalid_at(rules, p).is_none()).map(middle_value).sum()
+    prints.iter().filter(|p| invalid_at(rules, p).is_none()).map(|p| middle_value(p)).sum()
 }
 
-fn fix_print(rules: &Rules, mut print: Vec<I>) -> Vec<I> {
+fn fix_print<'a>(rules: &'_ Rules, mut print: Cow<'a, Vec<I>>) -> Cow<'a, Vec<I>> {
     while let Some((i, j)) = invalid_at(rules, &print) {
-        print.swap(i, j);
+        print.to_mut().swap(i, j);
     }
     print
 }
 
 fn part2((rules, prints): &Parsed) -> usize {
-    prints.iter().filter(|p| invalid_at(rules, p).is_some()).cloned().map(|p| middle_value(&fix_print(rules, p))).sum()
+    prints.iter().map(Cow::Borrowed).map(|p| fix_print(rules, p)).filter(Cow::is_owned).map(|p| middle_value(&p)).sum()
 }
 
 boilerplate! {

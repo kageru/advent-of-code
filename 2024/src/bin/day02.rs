@@ -19,17 +19,17 @@ fn part1(parsed: &Parsed) -> usize {
         .count()
 }
 
-fn report_valid_inner<const DAMPENER: bool>(report: &Vec<u32>, asc: bool) -> bool {
+fn report_valid_inner<const DAMPENER: bool>(report: &[u32], asc: bool) -> bool {
     for (i, &[a, b]) in report.array_windows().enumerate() {
         if (asc && a > b) || (!asc && a < b) || !(1..=3).contains(&a.abs_diff(b)) {
             return DAMPENER
                 // We don’t know if the current or next element has to be removed, so we just try both.
                 && ({
-                    let mut r1 = report.clone();
+                    let mut r1 = report.to_owned();
                     r1.remove(i);
                     report_valid_inner::<false>(&r1, asc)
                 } || {
-                    let mut r2 = report.clone();
+                    let mut r2 = report.to_owned();
                     r2.remove(i + 1);
                     report_valid_inner::<false>(&r2, asc)
                 });
