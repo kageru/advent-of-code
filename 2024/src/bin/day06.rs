@@ -7,6 +7,7 @@ use aoc2024::{
     grid::{Grid, VecGrid},
     position::Pos,
 };
+use fnv::FnvHashSet;
 
 const DAY: usize = 6;
 type Parsed = (VecGrid<Tile>, Pos<usize, 2>);
@@ -58,8 +59,31 @@ fn part1((grid, start): &Parsed) -> usize {
     grid.fields.iter().flatten().filter(|&&t| t == Tile::Visited).count()
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn part2((grid, start): &Parsed) -> usize {
+    (0..grid.len())
+        .flat_map(|y| (0..grid.fields[0].len()).map(move |x| Pos([y, x])))
+        .filter(|p| grid.get(p) == Some(&Tile::Empty))
+        .map(|p| {
+            let mut grid = grid.clone();
+            *grid.get_mut(&p).unwrap() = Tile::Obstacle;
+
+            let mut visited = FnvHashSet::default();
+            let mut dir = Direction::Up;
+            let mut pos = *start;
+            while let Some(next) = mov(pos, dir) {
+                match grid.get_mut(&next) {
+                    None => break,
+                    Some(Tile::Empty) => pos = next,
+                    Some(Tile::Obstacle) => dir.turn(1),
+                    _ => pos = next,
+                }
+                if !visited.insert((dir, pos)) {
+                    return 1;
+                }
+            }
+            0
+        })
+        .sum()
 }
 
 boilerplate! {
@@ -75,9 +99,9 @@ boilerplate! {
 ......#..."
     for tests: {
         part1: { TEST_INPUT => 41 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 6 },
     },
     bench1 == 4454,
-    bench2 == 0,
+    bench2 == 1503,
     bench_parse: |(_, p): &Parsed| *p => Pos([84usize, 42]),
 }
