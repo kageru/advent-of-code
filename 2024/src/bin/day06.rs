@@ -1,5 +1,7 @@
 #![feature(test)]
 extern crate test;
+use std::iter::successors;
+
 use aoc2024::{
     boilerplate,
     common::*,
@@ -13,7 +15,7 @@ const DAY: usize = 6;
 type P = Pos<usize, 2>;
 type Parsed = (VecGrid<Tile>, P);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u8)]
 enum Tile {
     Empty = b'.',
@@ -28,64 +30,51 @@ fn parse_input(raw: &str) -> Parsed {
     (grid, start)
 }
 
-fn try_move(Pos([y, x]): P, dir: Direction) -> Option<P> {
-    Some(match dir {
-        Direction::Up => Pos([y + 1, x]),
-        Direction::Down => Pos([y.checked_sub(1)?, x]),
-        Direction::Right => Pos([y, x + 1]),
-        Direction::Left => Pos([y, x.checked_sub(1)?]),
+fn walk(grid: &VecGrid<Tile>, &start: &P) -> impl Iterator<Item = (Direction, P)> {
+    successors(Some((Direction::Up, start)), |(dir, p)| {
+        let next = p.checked_add(*dir)?;
+        match grid.get(&next)? {
+            Tile::Obstacle => Some((*dir + 1, *p)),
+            _ => Some((*dir, next)),
+        }
     })
 }
 
-fn part1((grid, start): &Parsed) -> usize {
-    let mut grid = grid.to_owned();
-    let mut dir = Direction::Up;
-    let mut pos = *start;
-    grid[pos] = Tile::Visited;
-    while let Some(next) = try_move(pos, dir) {
-        match grid.get_mut(&next) {
-            None => break,
-            Some(e @ Tile::Empty) => {
-                *e = Tile::Visited;
-                pos = next;
-            }
-            Some(Tile::Obstacle) => dir.turn(1),
-            _ => pos = next,
-        }
+fn part1((unmodified_grid, start): &Parsed) -> usize {
+    let mut grid = unmodified_grid.to_owned();
+    for (_, pos) in walk(unmodified_grid, start) {
+        grid[pos] = Tile::Visited;
     }
     grid.iter().filter(|&&t| t == Tile::Visited).count()
 }
 
-fn has_loop(mut grid: VecGrid<Tile>, mut pos: P) -> usize {
+fn has_loop(grid: &VecGrid<Tile>, pos: &P) -> usize {
     let mut visited = FnvHashSet::default();
-    let mut dir = Direction::Up;
-    while let Some(next) = try_move(pos, dir) {
-        match grid.get_mut(&next) {
-            None => break,
-            Some(Tile::Empty) => pos = next,
-            Some(Tile::Obstacle) => dir.turn(1),
-            _ => pos = next,
-        }
-        if !visited.insert((dir, pos)) {
+    for p in walk(grid, pos) {
+        if !visited.insert(p) {
             return 1;
         }
     }
     0
 }
 
-fn part2((grid, start): &Parsed) -> usize {
-    grid.indices()
-        .filter(|&p| grid[p] == Tile::Empty)
+fn part2((unmodified_grid, start): &Parsed) -> usize {
+    let mut grid = unmodified_grid.to_owned();
+    unmodified_grid
+        .indices()
+        .filter(|&p| unmodified_grid[p] == Tile::Empty)
         .map(|p| {
-            let mut grid = grid.clone();
-            *grid.get_mut(&p).unwrap() = Tile::Obstacle;
-            has_loop(grid, *start)
+            grid[p] = Tile::Obstacle;
+            let has_loop = has_loop(&grid, start);
+            grid[p] = Tile::Empty;
+            has_loop
         })
         .sum()
 }
 
 boilerplate! {
-    TEST_INPUT == "....#.....
+    TEST_INPUT == "\
+....#.....
 .........#
 ..........
 ..#.......
@@ -101,5 +90,5 @@ boilerplate! {
     },
     bench1 == 4454,
     bench2 == 1503,
-    bench_parse: |(_, p): &Parsed| *p => Pos([84usize, 42]),
+    bench_parse: |(_, p): &Parsed| *p => Pos([84, 42]),
 }

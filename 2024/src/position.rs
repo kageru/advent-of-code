@@ -1,5 +1,5 @@
 extern crate test;
-use crate::common::Inc;
+use crate::{common::Inc, direction::Direction};
 use std::{
     fmt::Debug,
     hash::Hash,
@@ -7,7 +7,7 @@ use std::{
     ops::{Add, AddAssign, Index, IndexMut},
 };
 
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct Pos<I, const DIMS: usize>(pub [I; DIMS]);
 
@@ -54,6 +54,7 @@ where I: AddAssign<I> + Copy
         self
     }
 }
+
 impl<I, const D: usize> AddAssign<Pos<I, D>> for Pos<I, D>
 where I: AddAssign<I> + Copy
 {
@@ -61,6 +62,34 @@ where I: AddAssign<I> + Copy
         for i in 0..D {
             self[i] += rhs[i];
         }
+    }
+}
+
+impl<I> Add<Direction> for Pos<I, 2>
+where I: Inc
+{
+    type Output = Self;
+
+    fn add(self, rhs: Direction) -> Self::Output {
+        let Pos([y, x]) = self;
+        match rhs {
+            Direction::Up => Pos([y.inc(), x]),
+            Direction::Down => Pos([y.dec(), x]),
+            Direction::Right => Pos([y, x.inc()]),
+            Direction::Left => Pos([y, x.dec()]),
+        }
+    }
+}
+
+impl Pos<usize, 2> {
+    pub fn checked_add(self, dir: Direction) -> Option<Self> {
+        let Pos([y, x]) = self;
+        Some(match dir {
+            Direction::Up => Pos([y + 1, x]),
+            Direction::Down => Pos([y.checked_sub(1)?, x]),
+            Direction::Right => Pos([y, x + 1]),
+            Direction::Left => Pos([y, x.checked_sub(1)?]),
+        })
     }
 }
 
@@ -137,29 +166,11 @@ mod tests {
     fn test_neighbors_2d() {
         let p = Pos([0, 0]);
         let n = p.neighbors();
-        assert_eq!(n, [
-            Pos([-1, -1]),
-            Pos([-1, 0]),
-            Pos([-1, 1]),
-            Pos([0, -1]),
-            Pos([0, 1]),
-            Pos([1, -1]),
-            Pos([1, 0]),
-            Pos([1, 1]),
-        ]);
+        assert_eq!(n, [Pos([-1, -1]), Pos([-1, 0]), Pos([-1, 1]), Pos([0, -1]), Pos([0, 1]), Pos([1, -1]), Pos([1, 0]), Pos([1, 1]),]);
 
         let p = Pos([1, 1]);
         let n = p.neighbors();
-        assert_eq!(n, [
-            Pos([0, 0]),
-            Pos([0, 1]),
-            Pos([0, 2]),
-            Pos([1, 0]),
-            Pos([1, 2]),
-            Pos([2, 0]),
-            Pos([2, 1]),
-            Pos([2, 2]),
-        ])
+        assert_eq!(n, [Pos([0, 0]), Pos([0, 1]), Pos([0, 2]), Pos([1, 0]), Pos([1, 2]), Pos([2, 0]), Pos([2, 1]), Pos([2, 2]),])
     }
 
     #[test]
