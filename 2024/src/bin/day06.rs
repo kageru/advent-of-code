@@ -1,4 +1,4 @@
-#![feature(test)]
+#![feature(test, iter_map_windows)]
 extern crate test;
 use std::iter::successors;
 
@@ -10,6 +10,7 @@ use aoc2024::{
     position::Pos,
 };
 use fnv::FnvHashSet;
+use itertools::Itertools;
 
 const DAY: usize = 6;
 type P = Pos<usize, 2>;
@@ -30,8 +31,8 @@ fn parse_input(raw: &str) -> Parsed {
     (grid, start)
 }
 
-fn walk(grid: &VecGrid<Tile>, &start: &P) -> impl Iterator<Item = (Direction, P)> {
-    successors(Some((Direction::Up, start)), |(dir, p)| {
+fn walk(grid: &VecGrid<Tile>, &start: &P, start_dir: Direction) -> impl Iterator<Item = (Direction, P)> {
+    successors(Some((start_dir, start)), |(dir, p)| {
         let next = p.checked_add(*dir)?;
         match grid.get(&next)? {
             Tile::Obstacle => Some((*dir + 1, *p)),
@@ -42,14 +43,14 @@ fn walk(grid: &VecGrid<Tile>, &start: &P) -> impl Iterator<Item = (Direction, P)
 
 fn part1((unmodified_grid, start): &Parsed) -> usize {
     let mut grid = unmodified_grid.to_owned();
-    for (_, pos) in walk(unmodified_grid, start) {
+    for (_, pos) in walk(unmodified_grid, start, Direction::Up) {
         grid[pos] = Tile::Visited;
     }
     grid.iter().filter(|&&t| t == Tile::Visited).count()
 }
 
-fn has_loop(grid: &VecGrid<Tile>, pos: &P, visited: &mut FnvHashSet<usize>) -> usize {
-    for (d, p) in walk(grid, pos) {
+fn has_loop(grid: &VecGrid<Tile>, pos: &P, d: Direction, visited: &mut FnvHashSet<usize>) -> usize {
+    for (d, p) in walk(grid, pos, d) {
         // Manually “hashing” into a single integer: 50% speedup.
         let key = (d as usize) * 1_000_000 + p[0] * 1000 + p[1];
         if !visited.insert(key) {
@@ -63,13 +64,12 @@ fn part2((unmodified_grid, start): &Parsed) -> usize {
     let mut grid = unmodified_grid.to_owned();
     // Re-using the allocation each loop: 70% speedup.
     let mut visited = FnvHashSet::default();
-    unmodified_grid
-        .indices()
-        .filter(|&p| unmodified_grid[p] == Tile::Empty)
-        .map(|p| {
-            grid[p] = Tile::Obstacle;
-            let has_loop = has_loop(&grid, start, &mut visited);
-            grid[p] = Tile::Empty;
+    walk(unmodified_grid, start, Direction::Up)
+        .unique_by(|(_, p)| *p)
+        .map_windows(|&[(d1, p1), (_, p2)]| {
+            grid[p2] = Tile::Obstacle;
+            let has_loop = has_loop(&grid, &p1, d1, &mut visited);
+            grid[p2] = Tile::Empty;
             visited.clear();
             has_loop
         })
