@@ -48,10 +48,11 @@ fn part1((unmodified_grid, start): &Parsed) -> usize {
     grid.iter().filter(|&&t| t == Tile::Visited).count()
 }
 
-fn has_loop(grid: &VecGrid<Tile>, pos: &P) -> usize {
-    let mut visited = FnvHashSet::default();
-    for p in walk(grid, pos) {
-        if !visited.insert(p) {
+fn has_loop(grid: &VecGrid<Tile>, pos: &P, visited: &mut FnvHashSet<usize>) -> usize {
+    for (d, p) in walk(grid, pos) {
+        // Manually “hashing” into a single integer: 50% speedup.
+        let key = (d as usize) * 1_000_000 + p[0] * 1000 + p[1];
+        if !visited.insert(key) {
             return 1;
         }
     }
@@ -60,13 +61,16 @@ fn has_loop(grid: &VecGrid<Tile>, pos: &P) -> usize {
 
 fn part2((unmodified_grid, start): &Parsed) -> usize {
     let mut grid = unmodified_grid.to_owned();
+    // Re-using the allocation each loop: 70% speedup.
+    let mut visited = FnvHashSet::default();
     unmodified_grid
         .indices()
         .filter(|&p| unmodified_grid[p] == Tile::Empty)
         .map(|p| {
             grid[p] = Tile::Obstacle;
-            let has_loop = has_loop(&grid, start);
+            let has_loop = has_loop(&grid, start, &mut visited);
             grid[p] = Tile::Empty;
+            visited.clear();
             has_loop
         })
         .sum()
