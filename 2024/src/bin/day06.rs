@@ -10,11 +10,11 @@ use aoc2024::{
 use fnv::FnvHashSet;
 
 const DAY: usize = 6;
-type Parsed = (VecGrid<Tile>, Pos<usize, 2>);
+type P = Pos<usize, 2>;
+type Parsed = (VecGrid<Tile>, P);
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
-#[allow(dead_code)] // not actually dead, we transmute into it
 enum Tile {
     Empty = b'.',
     Obstacle = b'#',
@@ -23,15 +23,12 @@ enum Tile {
 }
 
 fn parse_input(raw: &str) -> Parsed {
-    let grid = VecGrid { fields: raw.lines().rev().map(|l| unsafe { std::mem::transmute::<_, &[Tile]>(l.as_bytes()).to_vec() }).collect() };
-    let start = (0..grid.len())
-        .flat_map(|y| (0..grid.fields[0].len()).map(move |x| Pos([y, x])))
-        .find(|p| grid.get(p) == Some(&Tile::Guard))
-        .expect("No guard on map");
+    let grid = VecGrid::transmute_from_lines(raw);
+    let start = grid.indices().find(|&p| grid[p] == Tile::Guard).expect("No guard on map");
     (grid, start)
 }
 
-fn mov(Pos([y, x]): Pos<usize, 2>, dir: Direction) -> Option<Pos<usize, 2>> {
+fn try_move(Pos([y, x]): P, dir: Direction) -> Option<P> {
     Some(match dir {
         Direction::Up => Pos([y + 1, x]),
         Direction::Down => Pos([y.checked_sub(1)?, x]),
@@ -42,10 +39,10 @@ fn mov(Pos([y, x]): Pos<usize, 2>, dir: Direction) -> Option<Pos<usize, 2>> {
 
 fn part1((grid, start): &Parsed) -> usize {
     let mut grid = grid.to_owned();
-    *grid.get_mut(start).unwrap() = Tile::Visited;
     let mut dir = Direction::Up;
     let mut pos = *start;
-    while let Some(next) = mov(pos, dir) {
+    grid[pos] = Tile::Visited;
+    while let Some(next) = try_move(pos, dir) {
         match grid.get_mut(&next) {
             None => break,
             Some(e @ Tile::Empty) => {
@@ -56,32 +53,33 @@ fn part1((grid, start): &Parsed) -> usize {
             _ => pos = next,
         }
     }
-    grid.fields.iter().flatten().filter(|&&t| t == Tile::Visited).count()
+    grid.iter().filter(|&&t| t == Tile::Visited).count()
+}
+
+fn has_loop(mut grid: VecGrid<Tile>, mut pos: P) -> usize {
+    let mut visited = FnvHashSet::default();
+    let mut dir = Direction::Up;
+    while let Some(next) = try_move(pos, dir) {
+        match grid.get_mut(&next) {
+            None => break,
+            Some(Tile::Empty) => pos = next,
+            Some(Tile::Obstacle) => dir.turn(1),
+            _ => pos = next,
+        }
+        if !visited.insert((dir, pos)) {
+            return 1;
+        }
+    }
+    0
 }
 
 fn part2((grid, start): &Parsed) -> usize {
-    (0..grid.len())
-        .flat_map(|y| (0..grid.fields[0].len()).map(move |x| Pos([y, x])))
-        .filter(|p| grid.get(p) == Some(&Tile::Empty))
+    grid.indices()
+        .filter(|&p| grid[p] == Tile::Empty)
         .map(|p| {
             let mut grid = grid.clone();
             *grid.get_mut(&p).unwrap() = Tile::Obstacle;
-
-            let mut visited = FnvHashSet::default();
-            let mut dir = Direction::Up;
-            let mut pos = *start;
-            while let Some(next) = mov(pos, dir) {
-                match grid.get_mut(&next) {
-                    None => break,
-                    Some(Tile::Empty) => pos = next,
-                    Some(Tile::Obstacle) => dir.turn(1),
-                    _ => pos = next,
-                }
-                if !visited.insert((dir, pos)) {
-                    return 1;
-                }
-            }
-            0
+            has_loop(grid, *start)
         })
         .sum()
 }

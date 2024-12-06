@@ -1,6 +1,11 @@
 use crate::position::Pos;
 use itertools::{Itertools, MinMaxResult, join};
-use std::{collections::HashMap, fmt::Display, hash::BuildHasher};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    hash::BuildHasher,
+    ops::{Index, IndexMut},
+};
 
 pub trait Grid<T, I, const D: usize> {
     fn get_mut(&mut self, pos: &Pos<I, D>) -> Option<&mut T>;
@@ -14,11 +19,27 @@ pub trait Grid<T, I, const D: usize> {
     fn is_empty(&self) -> bool {
         self.len() != 0
     }
+
+    fn indices(&self) -> impl Iterator<Item = Pos<I, D>>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HashGrid<T: Default, const D: usize> {
     pub fields: HashMap<Pos<i64, D>, T>,
+}
+
+impl<T> IndexMut<Pos<usize, 2>> for VecGrid<T> {
+    fn index_mut(&mut self, Pos([y, x]): Pos<usize, 2>) -> &mut Self::Output {
+        &mut self.0[y][x]
+    }
+}
+
+impl<T> Index<Pos<usize, 2>> for VecGrid<T> {
+    type Output = T;
+
+    fn index(&self, Pos([y, x]): Pos<usize, 2>) -> &Self::Output {
+        &self.0[y][x]
+    }
 }
 
 impl<T: Default, const D: usize> Grid<T, i64, D> for HashGrid<T, D> {
@@ -41,6 +62,10 @@ impl<T: Default, const D: usize> Grid<T, i64, D> for HashGrid<T, D> {
     fn is_empty(&self) -> bool {
         self.len() != 0
     }
+
+    fn indices(&self) -> impl Iterator<Item = Pos<i64, D>> {
+        self.fields.keys().cloned()
+    }
 }
 
 impl<T: Default + Copy> HashGrid<T, 2> {
@@ -56,31 +81,42 @@ impl<T: Default, const D: usize> std::iter::FromIterator<(Pos<i64, D>, T)> for H
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct VecGrid<T> {
-    pub fields: Vec<Vec<T>>,
-}
+pub struct VecGrid<T>(pub Vec<Vec<T>>);
 
 impl<T> Grid<T, usize, 2> for VecGrid<T> {
     fn get(&self, pos: &Pos<usize, 2>) -> Option<&T> {
-        self.fields.get(pos.0[0])?.get(pos.0[1])
+        self.0.get(pos.0[0])?.get(pos.0[1])
     }
 
     fn get_mut(&mut self, pos: &Pos<usize, 2>) -> Option<&mut T> {
-        self.fields.get_mut(pos.0[0])?.get_mut(pos.0[1])
+        self.0.get_mut(pos.0[0])?.get_mut(pos.0[1])
     }
 
-    fn insert(&mut self, Pos([x, y]): Pos<usize, 2>, element: T) {
-        self.fields[x][y] = element;
+    fn insert(&mut self, p: Pos<usize, 2>, element: T) {
+        self[p] = element;
     }
 
     fn len(&self) -> usize {
-        self.fields.len()
+        self.0.len()
+    }
+
+    fn indices(&self) -> impl Iterator<Item = Pos<usize, 2>> {
+        (0..self.len()).flat_map(|y| (0..self.0[0].len()).map(move |x| Pos([y, x])))
     }
 }
 
 impl<T: Copy> VecGrid<T> {
     pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, f: F) -> VecGrid<T> {
-        VecGrid { fields: raw.lines().map(|l| l.bytes().map(f).collect()).collect() }
+        // reverse here so the bottom line is at y=0
+        VecGrid(raw.lines().rev().map(|l| l.bytes().map(f).collect()).collect())
+    }
+
+    pub fn transmute_from_lines(raw: &str) -> VecGrid<T> {
+        VecGrid(raw.lines().rev().map(|l| unsafe { std::mem::transmute::<&[u8], &[T]>(l.as_bytes()) }.to_vec()).collect())
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.0.iter().flatten()
     }
 }
 
