@@ -9,62 +9,62 @@ use std::{
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
 #[repr(transparent)]
-pub struct PositionND<I, const DIMS: usize>(pub [I; DIMS]);
+pub struct Pos<I, const DIMS: usize>(pub [I; DIMS]);
 
-pub type Position2D<I> = PositionND<I, 2>;
+pub type Pos2D<I> = Pos<I, 2>;
 
 pub const fn num_neighbors(d: usize) -> usize {
     3usize.pow(d as u32) - 1
 }
 
-impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> PositionND<I, DIMS> {
+impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> Pos<I, DIMS> {
     pub fn zero() -> Self {
-        PositionND([I::default(); DIMS])
+        Pos([I::default(); DIMS])
     }
 
-    pub fn from_padded(slice: &[I]) -> PositionND<I, DIMS> {
+    pub fn from_padded(slice: &[I]) -> Pos<I, DIMS> {
         let mut points = [I::default(); DIMS];
         #[allow(clippy::manual_memcpy)]
         for i in 0..(DIMS.min(slice.len())) {
             points[i] = slice[i];
         }
-        PositionND(points)
+        Pos(points)
     }
 
-    pub fn neighbors(&self) -> [PositionND<I, DIMS>; num_neighbors(DIMS)]
-    where [PositionND<I, DIMS>; num_neighbors(DIMS) + 1]: Sized {
+    pub fn neighbors(&self) -> [Pos<I, DIMS>; num_neighbors(DIMS)]
+    where [Pos<I, DIMS>; num_neighbors(DIMS) + 1]: Sized {
         let ns = neighbor_vectors::<I, DIMS>();
         let mut out = [*self; num_neighbors(DIMS)];
         for (out, dir) in out.iter_mut().zip(IntoIterator::into_iter(ns).filter(|n| n != &[I::default(); DIMS])) {
-            *out += PositionND(dir);
+            *out += Pos(dir);
         }
         out
     }
 }
 
-impl<I, const D: usize> Add<PositionND<I, D>> for PositionND<I, D>
+impl<I, const D: usize> Add<Pos<I, D>> for Pos<I, D>
 where I: AddAssign<I> + Copy
 {
-    type Output = PositionND<I, D>;
+    type Output = Pos<I, D>;
 
-    fn add(mut self, rhs: PositionND<I, D>) -> Self::Output {
+    fn add(mut self, rhs: Pos<I, D>) -> Self::Output {
         for (x, y) in self.0.iter_mut().zip(rhs.0) {
             *x += y;
         }
         self
     }
 }
-impl<I, const D: usize> AddAssign<PositionND<I, D>> for PositionND<I, D>
+impl<I, const D: usize> AddAssign<Pos<I, D>> for Pos<I, D>
 where I: AddAssign<I> + Copy
 {
-    fn add_assign(&mut self, rhs: PositionND<I, D>) {
+    fn add_assign(&mut self, rhs: Pos<I, D>) {
         for i in 0..D {
             self[i] += rhs[i];
         }
     }
 }
 
-impl<I, const D: usize> Index<usize> for PositionND<I, D> {
+impl<I, const D: usize> Index<usize> for Pos<I, D> {
     type Output = I;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -72,16 +72,16 @@ impl<I, const D: usize> Index<usize> for PositionND<I, D> {
     }
 }
 
-impl<I, const D: usize> IndexMut<usize> for PositionND<I, D> {
+impl<I, const D: usize> IndexMut<usize> for Pos<I, D> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.0[index]
     }
 }
 
-impl<I: Copy + Default + Step> PositionND<I, 2> {
-    pub fn neighbors_no_diagonals(&self) -> [PositionND<I, 2>; 4] {
-        let PositionND([x, y]) = *self;
-        [PositionND([x.inc(), y]), PositionND([x, y.inc()]), PositionND([x.dec(), y]), PositionND([x, y.dec()])]
+impl<I: Copy + Default + Step> Pos<I, 2> {
+    pub fn neighbors_no_diagonals(&self) -> [Pos<I, 2>; 4] {
+        let Pos([x, y]) = *self;
+        [Pos([x.inc(), y]), Pos([x, y.inc()]), Pos([x.dec(), y]), Pos([x, y.dec()])]
     }
 }
 
@@ -135,64 +135,64 @@ mod tests {
 
     #[test]
     fn test_neighbors_2d() {
-        let p = PositionND([0, 0]);
+        let p = Pos([0, 0]);
         let n = p.neighbors();
         assert_eq!(n, [
-            PositionND([-1, -1]),
-            PositionND([-1, 0]),
-            PositionND([-1, 1]),
-            PositionND([0, -1]),
-            PositionND([0, 1]),
-            PositionND([1, -1]),
-            PositionND([1, 0]),
-            PositionND([1, 1]),
+            Pos([-1, -1]),
+            Pos([-1, 0]),
+            Pos([-1, 1]),
+            Pos([0, -1]),
+            Pos([0, 1]),
+            Pos([1, -1]),
+            Pos([1, 0]),
+            Pos([1, 1]),
         ]);
 
-        let p = PositionND([1, 1]);
+        let p = Pos([1, 1]);
         let n = p.neighbors();
         assert_eq!(n, [
-            PositionND([0, 0]),
-            PositionND([0, 1]),
-            PositionND([0, 2]),
-            PositionND([1, 0]),
-            PositionND([1, 2]),
-            PositionND([2, 0]),
-            PositionND([2, 1]),
-            PositionND([2, 2]),
+            Pos([0, 0]),
+            Pos([0, 1]),
+            Pos([0, 2]),
+            Pos([1, 0]),
+            Pos([1, 2]),
+            Pos([2, 0]),
+            Pos([2, 1]),
+            Pos([2, 2]),
         ])
     }
 
     #[test]
     fn test_neighbors_3d() {
-        let p = PositionND([0, 0, 0]);
+        let p = Pos([0, 0, 0]);
         let n = p.neighbors();
         assert_eq!(n, [
-            PositionND([-1, -1, -1]),
-            PositionND([-1, -1, 0]),
-            PositionND([-1, -1, 1]),
-            PositionND([-1, 0, -1]),
-            PositionND([-1, 0, 0]),
-            PositionND([-1, 0, 1]),
-            PositionND([-1, 1, -1]),
-            PositionND([-1, 1, 0]),
-            PositionND([-1, 1, 1]),
-            PositionND([0, -1, -1]),
-            PositionND([0, -1, 0]),
-            PositionND([0, -1, 1]),
-            PositionND([0, 0, -1]),
-            PositionND([0, 0, 1]),
-            PositionND([0, 1, -1]),
-            PositionND([0, 1, 0]),
-            PositionND([0, 1, 1]),
-            PositionND([1, -1, -1]),
-            PositionND([1, -1, 0]),
-            PositionND([1, -1, 1]),
-            PositionND([1, 0, -1]),
-            PositionND([1, 0, 0]),
-            PositionND([1, 0, 1]),
-            PositionND([1, 1, -1]),
-            PositionND([1, 1, 0]),
-            PositionND([1, 1, 1]),
+            Pos([-1, -1, -1]),
+            Pos([-1, -1, 0]),
+            Pos([-1, -1, 1]),
+            Pos([-1, 0, -1]),
+            Pos([-1, 0, 0]),
+            Pos([-1, 0, 1]),
+            Pos([-1, 1, -1]),
+            Pos([-1, 1, 0]),
+            Pos([-1, 1, 1]),
+            Pos([0, -1, -1]),
+            Pos([0, -1, 0]),
+            Pos([0, -1, 1]),
+            Pos([0, 0, -1]),
+            Pos([0, 0, 1]),
+            Pos([0, 1, -1]),
+            Pos([0, 1, 0]),
+            Pos([0, 1, 1]),
+            Pos([1, -1, -1]),
+            Pos([1, -1, 0]),
+            Pos([1, -1, 1]),
+            Pos([1, 0, -1]),
+            Pos([1, 0, 0]),
+            Pos([1, 0, 1]),
+            Pos([1, 1, -1]),
+            Pos([1, 1, 0]),
+            Pos([1, 1, 1]),
         ]);
     }
 

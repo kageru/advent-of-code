@@ -4,3 +4,4 @@ pub mod common;
 pub mod direction;
 pub mod position;
 pub mod teststuff;
+pub mod grid;
