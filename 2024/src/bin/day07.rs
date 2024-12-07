@@ -17,16 +17,15 @@ fn concat(a: I, b: I) -> I {
     (a * 10usize.pow(b.ilog10() + 1)) + b
 }
 
-fn can_be_solved_inner<F: Fn(I, I) -> I, const NUM_OPS: usize>(target: I, sum: I, ns: &[I], op: F) -> bool {
+fn can_be_solved_inner<const NUM_OPS: usize>(target: I, sum: I, ns: &[I]) -> bool {
     match ns {
-        [n] => op(sum, *n) == target,
-        [n, ns @ ..] => OPS.iter().take(NUM_OPS).any(|&f| can_be_solved_inner::<_, NUM_OPS>(target, op(sum, *n), ns, f)),
-        _ => unreachable!(),
+        [] => sum == target,
+        [n, ns @ ..] => OPS.iter().take(NUM_OPS).any(|&f| can_be_solved_inner::<NUM_OPS>(target, f(sum, *n), ns)),
     }
 }
 
 fn can_be_solved<const N: usize>(parsed: &Parsed) -> I {
-    parsed.iter().filter_map(|(r, ns)| OPS.iter().take(N).any(|&f| can_be_solved_inner::<_, N>(*r, ns[0], &ns[1..], f)).then_some(*r)).sum()
+    parsed.iter().filter_map(|(r, ns)| can_be_solved_inner::<N>(*r, ns[0], &ns[1..]).then_some(*r)).sum()
 }
 
 fn part1(parsed: &Parsed) -> I {
