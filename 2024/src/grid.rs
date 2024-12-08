@@ -150,3 +150,7 @@ pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Po
         "\n",
     )
 }
+
+pub fn draw<T: Copy, F: Fn(T) -> char>(grid: &VecGrid<T>, draw: F) -> String {
+    join((0..grid.len()).rev().map(|y| (0..(grid.0[0].len())).map(|x| draw(grid.0[y][x])).collect::<String>()), "\n")
+}
