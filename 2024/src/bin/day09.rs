@@ -1,36 +1,28 @@
-#![feature(test)]
+#![feature(test, iter_intersperse)]
 extern crate test;
+use aoc2024::{boilerplate, common::*};
 use std::iter;
 
-use aoc2024::{boilerplate, common::*};
-
-const DAY: usize = 9;
+const DAY: I = 9;
 type I = usize;
-type Parsed = Vec<usize>;
+type Parsed = Vec<I>;
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.trim_end().bytes().map(|b| (b - b'0') as usize).collect()
+    raw.trim_end().bytes().map(|b| (b - b'0') as I).collect()
 }
 
-fn build_disk(parsed: &Parsed) -> Vec<Option<I>> {
-    let len = parsed.iter().sum();
-    let mut disk = Vec::with_capacity(len);
-    let mut gap = false;
-    let mut id = 0;
-    for &size in parsed {
-        if gap {
-            disk.extend(iter::repeat_n(None, size));
-        } else {
-            disk.extend(iter::repeat_n(Some(id), size));
-            id += 1;
-        }
-        gap = !gap;
-    }
-    disk
+fn build_disk<T, F: Fn((bool, I, I)) -> Iter, Iter: IntoIterator<Item = T>>(parsed: &Parsed, f: F) -> Vec<T> {
+    parsed
+        .iter()
+        .zip(iter::successors(Some(true), |b| Some(!b))) // alternate between true and false
+        .zip((0..).intersperse(0)) // block IDs
+        .map(|((&size, is_file), id)| (is_file, id, size))
+        .flat_map(f)
+        .collect()
 }
 
-fn part1(parsed: &Parsed) -> usize {
-    let mut disk = build_disk(parsed);
+fn part1(parsed: &Parsed) -> I {
+    let mut disk = build_disk(parsed, |(is_file, id, size)| iter::repeat_n(is_file.then_some(id), size));
     let mut from = disk.len() - 1;
     let mut to = 0;
     while from > to {
@@ -47,42 +39,24 @@ fn part1(parsed: &Parsed) -> usize {
     disk.into_iter().flatten().enumerate().map(|(i, id)| i * id).sum()
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    let mut disk = Vec::new();
-    let mut gap = false;
-    let mut id = 0;
-    for &size in parsed {
-        if gap {
-            disk.push((None, size));
-        } else {
-            disk.push((Some(id), size));
-            id += 1;
-        }
-        gap = !gap;
-    }
-    let mut right_offset = 1;
-    while right_offset < disk.len() - 1 {
-        let src_index = disk.len() - right_offset;
+fn part2(parsed: &Parsed) -> I {
+    let mut disk = build_disk(parsed, |(is_file, id, size)| iter::once((is_file.then_some(id), size)));
+    for src_index in (2..disk.len()).rev() {
         match disk[src_index] {
-            (None, _) => right_offset += 1,
+            (None, _) => (),
             (Some(_), src_size) => {
-                for dst_index in 0..src_index {
+                for dst_index in 1..src_index {
                     match disk[dst_index] {
                         (None, dst_size) if dst_size > src_size => {
-                            let remaining = dst_size - src_size;
-                            disk[dst_index] = (None, remaining);
+                            disk[dst_index] = (None, dst_size - src_size);
                             disk.insert(dst_index, disk[src_index]);
                             disk[src_index + 1] = (None, src_size);
-                            break;
                         }
-                        (None, s) if s == src_size => {
-                            disk.swap(src_index, dst_index);
-                            break;
-                        }
-                        _ => (),
+                        (None, dst_size) if dst_size == src_size => disk.swap(src_index, dst_index),
+                        _ => continue,
                     }
+                    break;
                 }
-                right_offset += 1;
             }
         }
     }
