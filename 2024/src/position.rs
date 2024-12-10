@@ -108,6 +108,20 @@ impl<I, const D: usize> IndexMut<usize> for Pos<I, D> {
 }
 
 impl<I: Copy + Default + Step> Pos<I, 2> {
+    pub fn neighbors_no_diagonals_checked(&self) -> Vec<Pos<I, 2>> {
+        let Pos([x, y]) = *self;
+        let mut v = Vec::with_capacity(4);
+        v.push(Pos([x.inc(), y]));
+        v.push(Pos([x, y.inc()]));
+        if let Some(x2) = x.dec_checked() {
+            v.push(Pos([x2, y]));
+        }
+        if let Some(y2) = y.dec_checked() {
+            v.push(Pos([x, y2]));
+        }
+        v
+    }
+
     pub fn neighbors_no_diagonals(&self) -> [Pos<I, 2>; 4] {
         let Pos([x, y]) = *self;
         [Pos([x.inc(), y]), Pos([x, y.inc()]), Pos([x.dec(), y]), Pos([x, y.dec()])]

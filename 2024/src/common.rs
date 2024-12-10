@@ -44,6 +44,8 @@ impl Splitting for &str {
 pub trait Inc: Default + Copy + Step {
     fn inc(self) -> Self;
     fn dec(self) -> Self;
+    fn inc_checked(self) -> Option<Self>;
+    fn dec_checked(self) -> Option<Self>;
 }
 
 impl<T: Step + Default + Copy> Inc for T {
@@ -53,6 +55,14 @@ impl<T: Step + Default + Copy> Inc for T {
 
     fn dec(self) -> Self {
         T::backward(self, 1)
+    }
+
+    fn inc_checked(self) -> Option<Self> {
+        T::forward_checked(self, 1)
+    }
+
+    fn dec_checked(self) -> Option<Self> {
+        T::backward_checked(self, 1)
     }
 }
 
