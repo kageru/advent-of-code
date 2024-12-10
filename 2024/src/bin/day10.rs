@@ -21,38 +21,32 @@ fn valid_trails(map: &Parsed, pos: P, heads: &mut Vec<P>) {
         heads.push(pos);
         return;
     }
-    for p in pos.neighbors_no_diagonals_checked().into_iter() {
-        match map.get(&p) {
-            Some(&height) if height == here + 1 => valid_trails(map, p, heads),
-            _ => (),
-        }
+    for p in pos.manhattan_neighbors_checked().into_iter().filter(|p| map.get(p).is_some_and(|&height| height == here + 1)) {
+        valid_trails(map, p, heads)
     }
 }
 
-fn part1(map: &Parsed) -> usize {
+fn solve<const UNIQUE: bool>(map: &Parsed) -> usize {
     map.indices()
-        .filter_map(|p| {
-            (map[p] == 0).then(|| {
-                let mut heads = Vec::new();
-                valid_trails(map, p, &mut heads);
+        .filter(|&p| map[p] == 0)
+        .map(|p| {
+            let mut heads = Vec::new();
+            valid_trails(map, p, &mut heads);
+            if UNIQUE {
                 heads.sort();
                 heads.dedup();
-                heads.len()
-            })
+            }
+            heads.len()
         })
         .sum()
 }
 
+fn part1(map: &Parsed) -> usize {
+    solve::<true>(map)
+}
+
 fn part2(map: &Parsed) -> usize {
-    map.indices()
-        .filter_map(|p| {
-            (map[p] == 0).then(|| {
-                let mut heads = Vec::new();
-                valid_trails(map, p, &mut heads);
-                heads.len()
-            })
-        })
-        .sum()
+    solve::<false>(map)
 }
 
 boilerplate! {

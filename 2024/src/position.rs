@@ -108,7 +108,7 @@ impl<I, const D: usize> IndexMut<usize> for Pos<I, D> {
 }
 
 impl<I: Copy + Default + Step> Pos<I, 2> {
-    pub fn neighbors_no_diagonals_checked(&self) -> Vec<Pos<I, 2>> {
+    pub fn manhattan_neighbors_checked(&self) -> Vec<Pos<I, 2>> {
         let Pos([x, y]) = *self;
         let mut v = Vec::with_capacity(4);
         v.push(Pos([x.inc(), y]));
