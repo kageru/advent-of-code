@@ -25,7 +25,7 @@ macro_rules! boilerplate {
         use aoc2024::*;
 
         $(
-        const $tin: &str = $ti;
+        pub const $tin: &str = $ti;
         )+
 
         $($($(paste::paste! {
