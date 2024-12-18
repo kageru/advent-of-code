@@ -8,15 +8,15 @@ macro_rules! boilerplate {
         $(unittests: {
             $($unittest: ident: { $($($utpi: expr),+ => $uto: expr),+$(,)? }),*$(,)?
         },)?
-        bench1$(($bi1: literal))? == $b1: expr,
-        bench2$(($bi2: literal))? == $b2: expr,
+        bench1$(($($bi1: literal),+))? == $b1: expr,
+        bench2$(($($bi2: literal),+))? == $b2: expr,
         bench_parse: $input_fn: expr => $it: expr$(,)?
     ) => {
     fn main() {
         let raw_input = read_file(DAY);
         let input = parse_input(&raw_input);
-        println!("Part 1: {}", part1(&input$(,$bi1)?));
-        println!("Part 2: {}", part2(&input$(,$bi2)?));
+        println!("Part 1: {}", part1(&input$($(,$bi1)+)?));
+        println!("Part 2: {}", part2(&input$($(,$bi2)+)?));
     }
 
     #[cfg(test)]
@@ -41,8 +41,8 @@ macro_rules! boilerplate {
                 assert_eq!($part(&input, $($ati),*), $to);
             }
         })+)*
-        bench!(part1($($bi1)?) == $b1);
-        bench!(part2($($bi2)?) == $b2);
+        bench!(part1($($(,$bi1)+)?) == $b1);
+        bench!(part2($($(,$bi2)+)?) == $b2);
         #[bench]
         fn bench_input_parsing(b: &mut test::Bencher) {
             let raw = &read_file(DAY);
@@ -54,13 +54,13 @@ macro_rules! boilerplate {
 
 #[macro_export]
 macro_rules! bench {
-    ($part: ident($($bi: literal)?) == $expected:expr) => {
+    ($part: ident($($(,$bi: literal)+)?) == $expected:expr) => {
         paste::paste! {
             #[bench]
             fn [<$part _bench>](b: &mut test::Bencher) {
                 let raw = &read_file(DAY);
                 let input = parse_input(&raw);
-                b.iter(|| assert_eq!($part(test::black_box(&input)$(, $bi)?), $expected));
+                b.iter(|| assert_eq!($part(test::black_box(&input)$($(, $bi)+)?), $expected));
             }
         }
     };
