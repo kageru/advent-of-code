@@ -44,7 +44,7 @@ fn step(opcode: I, operand: I, registers: &mut Registers, out: &mut Vec<I>) -> O
     None
 }
 
-fn run(registers: &mut Registers, ops: &Vec<I>) -> Vec<I> {
+fn run(registers: &mut Registers, ops: &[I]) -> Vec<I> {
     let (mut ins, mut out) = (0, Vec::new());
     while ins + 1 < ops.len() {
         ins = step(ops[ins], ops[ins + 1], registers, &mut out).unwrap_or(ins + 2);

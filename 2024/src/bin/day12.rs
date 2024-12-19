@@ -113,7 +113,7 @@ fn checked_diagonals(Pos([x, y]): P) -> Vec<P> {
         try { Pos([x + 1, y.checked_sub(1)?]) },
     ]
     .into_iter()
-    .filter_map(|p: Option<P>| p)
+    .flatten()
     .collect()
 }
 
