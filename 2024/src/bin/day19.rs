@@ -1,0 +1,47 @@
+#![feature(test)]
+extern crate test;
+use aoc2024::{boilerplate, common::*};
+
+const DAY: usize = 19;
+type Parsed<'a> = (Vec<&'a str>, Vec<&'a str>);
+
+fn parse_input(raw: &str) -> Parsed<'_> {
+    let (raw_towels, raw_patterns) = raw.split_once("\n\n").unwrap();
+    (raw_towels.split(", ").collect(), raw_patterns.lines().collect())
+}
+
+fn solvable(pattern: &str, towels: &[&str]) -> bool {
+    match pattern {
+        "" => true,
+        _ => towels.iter().filter_map(|t| pattern.strip_prefix(t)).any(|p| solvable(p, towels)),
+    }
+}
+
+fn part1((towels, patterns): &Parsed) -> usize {
+    patterns.iter().filter(|p| solvable(p, towels)).count()
+}
+
+fn part2(parsed: &Parsed) -> usize {
+    unimplemented!()
+}
+
+boilerplate! {
+    TEST_INPUT == "\
+r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb"
+    for tests: {
+        part1: { TEST_INPUT => 6 },
+        part2: { TEST_INPUT => 0 },
+    },
+    bench1 == 374,
+    bench2 == 0,
+    bench_parse: |(a, b): &Parsed| (a.len(), b.len()) => (447, 400),
+}
