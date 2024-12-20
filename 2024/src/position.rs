@@ -122,7 +122,7 @@ impl<I: Copy + Default + Step> Pos<I, 2> {
         v
     }
 
-    pub fn neighbors_no_diagonals(&self) -> [Pos<I, 2>; 4] {
+    pub fn manhattan_neighbors(&self) -> [Pos<I, 2>; 4] {
         let Pos([x, y]) = *self;
         [Pos([x.inc(), y]), Pos([x, y.inc()]), Pos([x.dec(), y]), Pos([x, y.dec()])]
     }
