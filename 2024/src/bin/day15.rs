@@ -1,9 +1,10 @@
 #![feature(test, if_let_guard)]
 extern crate test;
+use Tile::*;
 use aoc2024::{
     boilerplate,
     common::*,
-    direction::Direction,
+    direction::Direction::{self, *},
     grid::{Grid, VecGrid},
     position::Pos,
 };
@@ -15,12 +16,15 @@ type P = Pos<usize, 2>;
 
 #[repr(u8)]
 #[allow(dead_code)] // transmuted into
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 enum Tile {
     Wall = b'#',
     Box = b'O',
     Robot = b'@',
+    #[default]
     Empty = b'.',
+    BoxLeft = b'[',
+    BoxRight = b']',
 }
 
 fn parse_input(raw: &str) -> Parsed {
@@ -30,10 +34,10 @@ fn parse_input(raw: &str) -> Parsed {
         .bytes()
         .filter(|&b| b != b'\n')
         .map(|b| match b {
-            b'^' => Direction::Up,
-            b'>' => Direction::Right,
-            b'<' => Direction::Left,
-            b'v' => Direction::Down,
+            b'^' => Up,
+            b'>' => Right,
+            b'<' => Left,
+            b'v' => Down,
             _ => unreachable!(),
         })
         .collect();
@@ -42,31 +46,31 @@ fn parse_input(raw: &str) -> Parsed {
 
 fn move_box(map: &Map, pos: P, dir: Direction) -> Option<P> {
     match map[pos + dir] {
-        Tile::Empty => Some(pos + dir),
-        Tile::Wall => None,
-        Tile::Box => move_box(map, pos + dir, dir),
-        Tile::Robot => unreachable!(),
+        Empty => Some(pos + dir),
+        Wall => None,
+        Box => move_box(map, pos + dir, dir),
+        _ => unreachable!(),
     }
 }
 
 fn part1((map, path): &Parsed) -> usize {
-    let mut pos = map.indices().find(|&p| map[p] == Tile::Robot).expect("no robot on map");
+    let mut pos = map.find(&Robot).expect("no robot on map");
     let mut map = map.clone();
     for &dir in path {
         let newpos = pos + dir;
         match map[newpos] {
-            Tile::Empty => (map[pos], map[newpos], pos) = (Tile::Empty, Tile::Robot, newpos),
-            Tile::Box if let Some(free) = move_box(&map, pos + dir, dir) => {
-                (map[free], map[pos], map[newpos], pos) = (Tile::Box, Tile::Empty, Tile::Robot, newpos)
-            }
+            Empty => (map[pos], map[newpos], pos) = (Empty, Robot, newpos),
+            Box if let Some(free) = move_box(&map, pos + dir, dir) => (map[free], map[pos], map[newpos], pos) = (Box, Empty, Robot, newpos),
             _ => (),
         }
     }
     let height = map.0.len() - 1;
-    map.indices().filter(|&p| map[p] == Tile::Box).map(|Pos([x, y])| 100 * (height - x) + y).sum()
+    map.indices().filter(|&p| map[p] == Box).map(|Pos([x, y])| 100 * (height - x) + y).sum()
 }
 
-fn part2(_parsed: &Parsed) -> usize {
+fn part2((map, path): &Parsed) -> usize {
+    let map: VecGrid<Tile> =
+        map.0.iter().map(|line| line.iter().flat_map(|&t| if t == Box { [BoxLeft, BoxRight] } else { [t, t] }).collect()).collect();
     unimplemented!()
 }
 

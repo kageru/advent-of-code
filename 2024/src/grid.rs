@@ -21,6 +21,8 @@ pub trait Grid<T, I, const D: usize> {
     }
 
     fn indices(&self) -> impl Iterator<Item = Pos<I, D>>;
+
+    fn find(&self, needle: &T) -> Option<Pos<I, D>>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -28,13 +30,13 @@ pub struct HashGrid<T: Default, const D: usize> {
     pub fields: HashMap<Pos<i64, D>, T>,
 }
 
-impl<T> IndexMut<Pos<usize, 2>> for VecGrid<T> {
+impl<T: PartialEq> IndexMut<Pos<usize, 2>> for VecGrid<T> {
     fn index_mut(&mut self, Pos([y, x]): Pos<usize, 2>) -> &mut Self::Output {
         &mut self.0[y][x]
     }
 }
 
-impl<T> Index<Pos<usize, 2>> for VecGrid<T> {
+impl<T: PartialEq> Index<Pos<usize, 2>> for VecGrid<T> {
     type Output = T;
 
     fn index(&self, Pos([y, x]): Pos<usize, 2>) -> &Self::Output {
@@ -42,7 +44,7 @@ impl<T> Index<Pos<usize, 2>> for VecGrid<T> {
     }
 }
 
-impl<T: Default, const D: usize> Grid<T, i64, D> for HashGrid<T, D> {
+impl<T: Default + PartialEq, const D: usize> Grid<T, i64, D> for HashGrid<T, D> {
     fn get_mut(&mut self, pos: &Pos<i64, D>) -> Option<&mut T> {
         self.fields.get_mut(pos)
     }
@@ -66,6 +68,10 @@ impl<T: Default, const D: usize> Grid<T, i64, D> for HashGrid<T, D> {
     fn indices(&self) -> impl Iterator<Item = Pos<i64, D>> {
         self.fields.keys().cloned()
     }
+
+    fn find(&self, needle: &T) -> Option<Pos<i64, D>> {
+        self.fields.iter().find_map(|(p, v)| (v == needle).then_some(*p))
+    }
 }
 
 impl<T: Default + Copy> HashGrid<T, 2> {
@@ -81,9 +87,9 @@ impl<T: Default, const D: usize> std::iter::FromIterator<(Pos<i64, D>, T)> for H
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct VecGrid<T>(pub Vec<Vec<T>>);
+pub struct VecGrid<T: PartialEq>(pub Vec<Vec<T>>);
 
-impl<T> Grid<T, usize, 2> for VecGrid<T> {
+impl<T: PartialEq> Grid<T, usize, 2> for VecGrid<T> {
     fn get(&self, pos: &Pos<usize, 2>) -> Option<&T> {
         self.0.get(pos.0[0])?.get(pos.0[1])
     }
@@ -103,9 +109,13 @@ impl<T> Grid<T, usize, 2> for VecGrid<T> {
     fn indices(&self) -> impl Iterator<Item = Pos<usize, 2>> {
         (0..self.len()).flat_map(|y| (0..self.0[0].len()).map(move |x| Pos([y, x])))
     }
+
+    fn find(&self, needle: &T) -> Option<Pos<usize, 2>> {
+        self.indices().find(|p| self.get(p) == Some(needle))
+    }
 }
 
-impl<T: Copy> VecGrid<T> {
+impl<T: Copy + PartialEq> VecGrid<T> {
     pub fn from_bytes_2d<F: FnMut(u8) -> T + Copy>(raw: &str, f: F) -> VecGrid<T> {
         // reverse here so the bottom line is at y=0
         VecGrid(raw.lines().rev().map(|l| l.bytes().map(f).collect()).collect())
@@ -117,6 +127,12 @@ impl<T: Copy> VecGrid<T> {
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.0.iter().flatten()
+    }
+}
+
+impl<T: Default + PartialEq> std::iter::FromIterator<Vec<T>> for VecGrid<T> {
+    fn from_iter<I: IntoIterator<Item = Vec<T>>>(iter: I) -> Self {
+        VecGrid(iter.into_iter().collect())
     }
 }
 
@@ -151,6 +167,6 @@ pub fn draw_ascii<T: Display + Default, S: BuildHasher>(coordinates: &HashMap<Po
     )
 }
 
-pub fn draw<T: Copy, F: Fn(T) -> char>(grid: &VecGrid<T>, draw: F) -> String {
+pub fn draw<T: Copy + PartialEq, F: Fn(T) -> char>(grid: &VecGrid<T>, draw: F) -> String {
     join((0..grid.len()).rev().map(|y| (0..(grid.0[0].len())).map(|x| draw(grid.0[y][x])).collect::<String>()), "\n")
 }
