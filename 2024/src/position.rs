@@ -4,7 +4,7 @@ use std::{
     fmt::Debug,
     hash::Hash,
     iter::Step,
-    ops::{Add, AddAssign, Index, IndexMut},
+    ops::{Add, AddAssign, Index, IndexMut, Sub},
 };
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
@@ -17,7 +17,7 @@ pub const fn num_neighbors(d: usize) -> usize {
     3usize.pow(d as u32) - 1
 }
 
-impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> Pos<I, DIMS> {
+impl<I: Inc + Add<I, Output = I> + AddAssign + Sub<I, Output = I> + Ord + Debug, const DIMS: usize> Pos<I, DIMS> {
     pub fn zero() -> Self {
         Pos([I::default(); DIMS])
     }
@@ -39,6 +39,21 @@ impl<I: Inc + Add<I, Output = I> + AddAssign + Debug, const DIMS: usize> Pos<I, 
             *out += Pos(dir);
         }
         out
+    }
+
+    pub fn manhattan_distance(&self, other: &Self) -> I {
+        let mut d = I::default();
+        for i in 0..DIMS {
+            let a = self.0[i];
+            let b = other.0[i];
+            // abs_diff is not part of any trait
+            if a > b {
+                d += a - b;
+            } else {
+                d += b - a;
+            }
+        }
+        d
     }
 }
 
@@ -219,6 +234,15 @@ mod tests {
             Pos([1, 1, 0]),
             Pos([1, 1, 1]),
         ]);
+    }
+
+    #[test]
+    fn test_manhattan_distance() {
+        assert_eq!(Pos([5, 10]).manhattan_distance(&Pos([15, 20])), 20);
+        assert_eq!(Pos([15, 10]).manhattan_distance(&Pos([5, 20])), 20);
+        assert_eq!(Pos([10, 10]).manhattan_distance(&Pos([10, 10])), 0);
+        assert_eq!(Pos([0, 0]).manhattan_distance(&Pos([1, 1])), 2);
+        assert_eq!(Pos([2, 0]).manhattan_distance(&Pos([0, -5])), 7);
     }
 
     #[test]
