@@ -1,6 +1,7 @@
 #![feature(test)]
 extern crate test;
 use aoc2025::{boilerplate, common::*};
+use itertools::Itertools;
 
 const DAY: usize = 1;
 type I = i32;
@@ -20,33 +21,36 @@ fn part1(parsed: &Parsed) -> usize {
     parsed
         .iter()
         .scan(50, |pos, rot| {
-            *pos = (*pos + rot + 100) % 100;
+            *pos += rot;
             Some(*pos)
         })
-        .filter(|&n| n == 0)
+        .filter(|&n| n % 100 == 0)
         .count()
 }
 
-fn part2(parsed: &Parsed) -> usize {
+fn part2(parsed: &Parsed) -> I {
     parsed
         .iter()
+        .copied()
+        .coalesce(|a, b| if (a >= 0) == (b >= 0) /* faster than signum() */ { Ok(a + b) } else { Err((a, b)) })
         .scan(50, |pos, rot| {
             *pos += rot;
             Some(match *pos {
-                (..0) => {
-                    *pos = (*pos + 100) % 100;
-                    true
+                p @ ..0 => {
+                    let rotations = p.abs() / 100 + 1;
+                    *pos = (p + rotations * 100) % 100; // `% 100` because this can be exactly 100 after the movement
+                    rotations
                 }
-                (0..=99) => false,
-                (100..) => {
-                    *pos -= 100;
-                    true
+                0 => 1,
+                1..=99 => 0,
+                p @ 100.. => {
+                    let rotations = p / 100;
+                    *pos = p - rotations * 100;
+                    rotations - (*pos == 0) as I // if we end on exactly 0, that will be counted as a cross by the next left movement
                 }
             })
         })
-        .inspect(|b| println!("{b}"))
-        .filter(|&b| b)
-        .count()
+        .sum()
 }
 
 boilerplate! {
@@ -66,6 +70,6 @@ L82"
         part2: { TEST_INPUT => 6 },
     },
     bench1 == 1158,
-    bench2 == 0, // 3418 too low
+    bench2 == 6860,
     bench_parse: Vec::len => 4659,
 }
