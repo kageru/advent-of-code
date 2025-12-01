@@ -5,7 +5,7 @@ aocd "$today" > inputs/day$today
 
 echo '#![feature(test)]
 extern crate test;
-use aoc2024::{boilerplate, common::*};
+use aoc2025::{boilerplate, common::*};
 
 const DAY: usize = '$today';
 type I = u32;

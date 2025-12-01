@@ -22,7 +22,7 @@ macro_rules! boilerplate {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use aoc2024::*;
+        use aoc2025::*;
 
         $(
         pub const $tin: &str = $ti;
