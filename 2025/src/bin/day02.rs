@@ -29,16 +29,16 @@ fn is_invalid(n: I) -> bool {
     if !num_digits.is_multiple_of(2) {
         return false;
     }
-    let array = array_of_digits(n);
-    let (left, right) = array.split_at(num_digits / 2);
-    left == right
+    repeats_every(array_of_digits(n), num_digits / 2)
 }
 
 fn is_invalid_p2(n: I) -> bool {
     let b = array_of_digits(n);
-    (1..=(b.len() / 2))
-        .filter(|&step_size| b.len().is_multiple_of(step_size))
-        .any(|step_size| (0..step_size).all(|offset| b.iter().skip(offset).step_by(step_size).dedup().count() == 1))
+    (1..=(b.len() / 2)).filter(|&n| b.len().is_multiple_of(n)).any(|step_size| repeats_every(b, step_size))
+}
+
+fn repeats_every(b: &[u8], step_size: usize) -> bool {
+    (0..step_size).all(|offset| b.iter().skip(offset).step_by(step_size).dedup().count() == 1)
 }
 
 // Reusing the allocation like this is ~20% faster and perfectly safe because there’s no threading.
