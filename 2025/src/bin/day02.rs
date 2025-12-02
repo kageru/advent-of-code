@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(static_mut_refs)]
 extern crate test;
 use aoc2025::{boilerplate, common::*};
 use itertools::Itertools;
@@ -28,17 +29,28 @@ fn is_invalid(n: I) -> bool {
     if !num_digits.is_multiple_of(2) {
         return false;
     }
-    let s = n.to_string();
-    let (left, right) = s.as_bytes().split_at(num_digits / 2);
+    let array = array_of_digits(n);
+    let (left, right) = array.split_at(num_digits / 2);
     left == right
 }
 
 fn is_invalid_p2(n: I) -> bool {
-    let s = n.to_string();
-    let b = s.as_bytes();
+    let b = array_of_digits(n);
     (1..=(b.len() / 2))
         .filter(|&step_size| b.len().is_multiple_of(step_size))
         .any(|step_size| (0..step_size).all(|offset| b.iter().skip(offset).step_by(step_size).dedup().count() == 1))
+}
+
+// Reusing the allocation like this is ~20% faster and perfectly safe because there’s no threading.
+fn array_of_digits(mut n: I) -> &'static [u8] {
+    static mut BUFFER: Vec<u8> = Vec::new();
+    unsafe { BUFFER.clear() };
+    while n > 0 {
+        let rem = (n % 10) as u8;
+        n /= 10;
+        unsafe { BUFFER.push(rem) };
+    }
+    unsafe { &BUFFER }
 }
 
 boilerplate! {
