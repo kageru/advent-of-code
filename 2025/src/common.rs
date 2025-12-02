@@ -41,6 +41,26 @@ impl Splitting for &str {
     }
 }
 
+pub trait Evenness {
+    fn is_even(self) -> bool;
+    fn is_odd(self) -> bool;
+}
+
+macro_rules! evenness {
+    ($($t: ty) ,*) => {
+        $(impl Evenness for $t {
+            fn is_even(self) -> bool {
+                self & 1 == 0
+            }
+            fn is_odd(self) -> bool {
+                self & 1 == 1
+            }
+        })*
+    };
+}
+
+evenness!(i32, u32, isize, usize);
+
 pub trait Inc: Default + Copy + Step {
     fn inc(self) -> Self;
     fn dec(self) -> Self;
