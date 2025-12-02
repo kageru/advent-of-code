@@ -11,13 +11,21 @@ fn parse_input(raw: &str) -> Parsed {
     raw.trim().split(',').filter_map(|s| s.split_once('-')).map(|(start, end)| (parse_num(start), parse_num(end))).collect()
 }
 
+fn solve<F: Fn(I) -> bool>(parsed: &Parsed, f: F) -> usize {
+    parsed.iter().map(|&(start, end)| (start..=end).filter(|&n| f(n)).sum::<I>()).sum()
+}
+
 fn part1(parsed: &Parsed) -> usize {
-    parsed.iter().map(|&(start, end)| (start..=end).filter(|&n| is_invalid(n)).sum::<I>()).sum()
+    solve(parsed, is_invalid)
+}
+
+fn part2(parsed: &Parsed) -> usize {
+    solve(parsed, is_invalid_p2)
 }
 
 fn is_invalid(n: I) -> bool {
     let num_digits = n.ilog10() as usize + 1;
-    if num_digits.is_odd() {
+    if !num_digits.is_multiple_of(2) {
         return false;
     }
     let s = n.to_string();
@@ -25,26 +33,12 @@ fn is_invalid(n: I) -> bool {
     left == right
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    parsed.iter().map(|&(start, end)| (start..=end).filter(|&n| is_invalid_p2(n)).sum::<I>()).sum()
-}
-
 fn is_invalid_p2(n: I) -> bool {
     let s = n.to_string();
     let b = s.as_bytes();
-    'outer: for step_size in 1..=(b.len() / 2) {
-        if b.len() % step_size != 0 {
-            continue;
-        }
-        for offset in 0..step_size {
-            if b.iter().skip(offset).step_by(step_size).dedup().count() != 1 {
-                continue 'outer;
-            }
-        }
-
-        return true;
-    }
-    false
+    (1..=(b.len() / 2))
+        .filter(|&step_size| b.len().is_multiple_of(step_size))
+        .any(|step_size| (0..step_size).all(|offset| b.iter().skip(offset).step_by(step_size).dedup().count() == 1))
 }
 
 boilerplate! {
