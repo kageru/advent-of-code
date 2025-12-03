@@ -30,7 +30,7 @@ macro_rules! boilerplate {
 
         $($($(paste::paste! {
             #[test]
-            fn [<$unittest _test_ $($utpi),+ _expects_ $uto:lower>]() {
+            fn [<$unittest _test_ $($utpi)_+ _expects_ $uto:lower>]() {
                 assert_eq!($unittest($($utpi),+), $uto);
             }
         })+)*)?

@@ -4,7 +4,7 @@ use aoc2025::{boilerplate, common::*};
 use itertools::Itertools;
 
 const DAY: usize = 3;
-type I = u32;
+type I = usize;
 type Parsed = Vec<Vec<u8>>;
 
 fn parse_input(raw: &str) -> Parsed {
@@ -12,16 +12,23 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1(parsed: &Parsed) -> I {
-    parsed.iter().map(|batch| highest_battery(batch)).sum()
+    solve(parsed, 2)
 }
 
-fn highest_battery(batch: &[u8]) -> I {
-    let max = batch.iter().rev().skip(1).rev().max().unwrap();
-    (max * 10 + batch.iter().skip(batch.iter().position(|n| n == max).unwrap() + 1).max().unwrap()) as I
+fn part2(parsed: &Parsed) -> I {
+    solve(parsed, 12)
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn solve(parsed: &Parsed, digits: usize) -> I {
+    parsed.iter().map(|batch| max_joltage(batch, digits, 0)).sum()
+}
+
+fn max_joltage(batch: &[u8], remaining_digits: usize, sum: I) -> I {
+    if remaining_digits == 0 {
+        return sum;
+    }
+    let max_pos = batch.len() - batch[..=(batch.len() - remaining_digits)].iter().rev().position_max().unwrap() - remaining_digits;
+    max_joltage(&batch[max_pos + 1..], remaining_digits - 1, sum * 10 + batch[max_pos] as I)
 }
 
 boilerplate! {
@@ -32,9 +39,15 @@ boilerplate! {
 818181911112111"
     for tests: {
         part1: { TEST_INPUT => 357 },
-        part2: { TEST_INPUT => 0 },
+        part2: {
+            TEST_INPUT => 3121910778619,
+            "987654321111111" => 987654321111,
+            "811111111111119" => 811111111119,
+            "234234234234278" => 434234234278,
+            "818181911112111" => 888911112111,
+        },
     },
     bench1 == 17087,
-    bench2 == 0,
+    bench2 == 169019504359949,
     bench_parse: Vec::len => 200,
 }
