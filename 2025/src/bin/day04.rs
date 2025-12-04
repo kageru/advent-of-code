@@ -1,5 +1,7 @@
 #![feature(test)]
 extern crate test;
+use std::mem::transmute;
+
 use Tile::*;
 use aoc2025::{
     boilerplate,
@@ -21,7 +23,7 @@ enum Tile {
 }
 
 fn parse_input(raw: &str) -> Parsed {
-    HashGrid::from_bytes_2d(raw, |b| unsafe { std::mem::transmute::<u8, Tile>(b) })
+    HashGrid::from_bytes_2d(raw, |b| unsafe { transmute(b) })
 }
 
 fn part1(parsed: &Parsed) -> usize {
@@ -36,16 +38,14 @@ fn find_accessible(parsed: &Parsed) -> impl Iterator<Item = Pos<i64, 2>> {
 
 fn part2(parsed: &Parsed) -> usize {
     let mut modified = parsed.clone();
-    loop {
-        let accessible = find_accessible(&modified).collect_vec();
-        if accessible.is_empty() {
-            break;
-        }
+    let mut removed = 0;
+    while let accessible @ [_, ..] = find_accessible(&modified).collect_vec().as_slice() {
         for p in accessible {
             *modified.get_mut(&p).unwrap() = Empty;
         }
+        removed += accessible.len();
     }
-    parsed.fields.values().filter(|&&t| t == Paper).count() - modified.fields.values().filter(|&&t| t == Paper).count()
+    removed
 }
 
 boilerplate! {
