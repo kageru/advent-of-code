@@ -2,6 +2,7 @@
 extern crate test;
 use aoc2025::{boilerplate, common::*};
 use itertools::Itertools;
+use std::cmp::Ordering::{Greater, Less};
 
 const DAY: usize = 3;
 type I = usize;
@@ -20,14 +21,15 @@ fn part2(parsed: &Parsed) -> I {
 }
 
 fn solve(parsed: &Parsed, digits: usize) -> I {
-    parsed.iter().map(|batch| max_joltage(batch, digits, 0)).sum()
+    parsed.iter().map(|batch| max_joltage(batch, digits, 0).unwrap()).sum()
 }
 
-fn max_joltage(batch: &[u8], remaining_digits: usize, sum: I) -> I {
+fn max_joltage(batch: &[u8], remaining_digits: usize, sum: I) -> Option<I> {
     if remaining_digits == 0 {
-        return sum;
+        return Some(sum);
     }
-    let max_pos = batch.len() - batch[..=(batch.len() - remaining_digits)].iter().rev().position_max().unwrap() - remaining_digits;
+    // like position_max() but find the first max instead of the last
+    let max_pos = batch[..=(batch.len() - remaining_digits)].iter().position_max_by(|x, y| if x < y { Less } else { Greater })?;
     max_joltage(&batch[max_pos + 1..], remaining_digits - 1, sum * 10 + batch[max_pos] as I)
 }
 
