@@ -6,20 +6,17 @@ use std::ops::RangeInclusive;
 
 const DAY: usize = 5;
 type I = usize;
-type Parsed = (Vec<RangeInclusive<I>>, Vec<I>);
+type Ranges = Vec<RangeInclusive<I>>;
+type Parsed = (Ranges, Vec<I>);
 
 fn parse_input(raw: &str) -> Parsed {
     let (fresh, items) = raw.split_once("\n\n").unwrap();
     let fresh = fresh.lines().filter_map(|l| l.split_once('-')).map(|(a, b)| parse_num(a)..=parse_num(b)).collect();
-    (fresh, parse_nums_separator(items, '\n'))
+    (merge_ranges(fresh), parse_nums_separator(items, '\n'))
 }
 
-fn part1((fresh, items): &Parsed) -> usize {
-    items.iter().filter(|i| fresh.iter().any(|range| range.contains(i))).count()
-}
-
-fn part2((ranges, _): &Parsed) -> usize {
-    let mut ranges = ranges.clone();
+// might as well do it in parsing because it speeds up part 1 by 3x.
+fn merge_ranges(mut ranges: Ranges) -> Ranges {
     ranges.sort_unstable_by_key(|r| *r.start());
     let mut i = 0;
     while i < ranges.len() {
@@ -32,7 +29,15 @@ fn part2((ranges, _): &Parsed) -> usize {
             None => i += 1,
         }
     }
-    ranges.into_iter().map(|r| r.count()).sum()
+    ranges
+}
+
+fn part1((fresh, items): &Parsed) -> usize {
+    items.iter().filter(|i| fresh.iter().any(|range| range.contains(i))).count()
+}
+
+fn part2((ranges, _): &Parsed) -> usize {
+    ranges.iter().map(|r| r.end() - r.start() + 1).sum()
 }
 
 boilerplate! {
@@ -54,5 +59,5 @@ boilerplate! {
     },
     bench1 == 558,
     bench2 == 344813017450467,
-    bench_parse: |(a, b): &Parsed| (a.len(), b.len()) => (187, 1000),
+    bench_parse: |(a, b): &Parsed| (a.len(), b.len()) => (91, 1000),
 }
