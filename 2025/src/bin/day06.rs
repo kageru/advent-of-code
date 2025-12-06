@@ -24,7 +24,20 @@ fn part1((ops, lines): &Parsed) -> usize {
 }
 
 fn part2((ops, lines): &Parsed) -> usize {
-    unimplemented!()
+    let lines = transpose(&lines.iter().map(|l| l.as_bytes().to_vec()).collect());
+    ops.split_ascii_whitespace()
+        .zip(
+            lines.split(|l| l.iter().all(|&b| b == b' ')).map(|bytes| {
+                bytes.iter().map(|bs| String::from_utf8(bs.clone()).unwrap().trim().parse::<I>().unwrap()).collect::<Vec<_>>()
+            }),
+        )
+        // .zip(lines)
+        .map(|(op, ns)| match op {
+            "+" => ns.iter().sum::<I>(),
+            "*" => ns.iter().product(),
+            _ => unreachable!(),
+        })
+        .sum()
 }
 
 fn transpose<T: Copy + Default>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -47,9 +60,9 @@ boilerplate! {
 *   +   *   +  "
     for tests: {
         part1: { TEST_INPUT => 4277556 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 3263827 },
     },
     bench1 == 4805473544166,
-    bench2 == 0,
+    bench2 == 8907730960817,
     bench_parse: |(ops, nums): &Parsed| (ops.len(), nums.len()) => (3727, 4),
 }
