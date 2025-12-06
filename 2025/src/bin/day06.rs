@@ -11,10 +11,9 @@ fn parse_input(raw: &str) -> Parsed<'_> {
     (lines.next().unwrap(), lines.rev().collect())
 }
 
-fn part1((ops, lines): &Parsed) -> usize {
-    let nums = transpose(&lines.iter().map(|l| l.split_ascii_whitespace().map(parse_num::<I>).collect()).collect());
+fn solve<F: Fn(&Vec<&str>) -> Vec<Vec<I>>>((ops, lines): &Parsed, parse_lines: F) -> I {
     ops.split_ascii_whitespace()
-        .zip(nums)
+        .zip(parse_lines(lines))
         .map(|(op, ns)| match op {
             "+" => ns.iter().sum::<I>(),
             "*" => ns.iter().product(),
@@ -23,21 +22,19 @@ fn part1((ops, lines): &Parsed) -> usize {
         .sum()
 }
 
-fn part2((ops, lines): &Parsed) -> usize {
-    let lines = transpose(&lines.iter().map(|l| l.as_bytes().to_vec()).collect());
-    ops.split_ascii_whitespace()
-        .zip(
-            lines.split(|l| l.iter().all(|&b| b == b' ')).map(|bytes| {
-                bytes.iter().map(|bs| String::from_utf8(bs.clone()).unwrap().trim().parse::<I>().unwrap()).collect::<Vec<_>>()
-            }),
-        )
-        // .zip(lines)
-        .map(|(op, ns)| match op {
-            "+" => ns.iter().sum::<I>(),
-            "*" => ns.iter().product(),
-            _ => unreachable!(),
-        })
-        .sum()
+fn part1(parsed: &Parsed) -> I {
+    solve(parsed, |lines| transpose(&lines.iter().map(|l| l.split_ascii_whitespace().map(parse_num::<I>).collect()).collect()))
+}
+
+fn part2(parsed: &Parsed) -> I {
+    solve(parsed, |lines| {
+        let lines = transpose(&lines.iter().map(|l| l.as_bytes().to_vec()).collect());
+        lines.split(|l| l.iter().all(|&b| b == b' ')).map(|bytes| bytes.iter().map(n_from_bytes).collect()).collect()
+    })
+}
+
+fn n_from_bytes(bytes: &Vec<u8>) -> I {
+    bytes.iter().fold(0, |acc, &b| if b != b' ' { acc * 10 + (b - b'0') as I } else { acc })
 }
 
 fn transpose<T: Copy + Default>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {

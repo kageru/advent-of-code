@@ -41,7 +41,7 @@ fn part2(parsed: &Parsed) -> usize {
     let mut removed = 0;
     while let accessible @ [_, ..] = find_accessible(&modified).collect_vec().as_slice() {
         for p in accessible {
-            *modified.get_mut(&p).unwrap() = Empty;
+            *modified.get_mut(p).unwrap() = Empty;
         }
         removed += accessible.len();
     }
