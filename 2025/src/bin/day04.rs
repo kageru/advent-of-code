@@ -7,12 +7,12 @@ use aoc2025::{
     boilerplate,
     common::*,
     grid::{Grid, HashGrid},
-    position::Pos,
+    position::{Neighbors, Pos},
 };
 use itertools::Itertools;
 
 const DAY: usize = 4;
-type Parsed = HashGrid<Tile, 2>;
+type Parsed = HashGrid<Tile>;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 #[repr(u8)]
@@ -30,7 +30,7 @@ fn part1(parsed: &Parsed) -> usize {
     find_accessible(parsed).count()
 }
 
-fn find_accessible(parsed: &Parsed) -> impl Iterator<Item = Pos<i64, 2>> {
+fn find_accessible(parsed: &Parsed) -> impl Iterator<Item = Pos<i64>> {
     parsed
         .indices()
         .filter(|p| parsed.get(p) == Some(&Paper) && { p.neighbors().into_iter().filter(|np| parsed.get(np) == Some(&Paper)).count() < 4 })
