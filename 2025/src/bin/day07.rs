@@ -1,6 +1,6 @@
 #![feature(test, try_blocks)]
 extern crate test;
-use std::collections::HashSet;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 
 use aoc2025::{
     boilerplate,
@@ -28,7 +28,7 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1((start, grid): &Parsed) -> usize {
-    let mut splits = HashSet::new();
+    let mut splits = HashSet::default();
     count_splits(grid, *start, &mut splits);
     splits.len()
 }
@@ -38,20 +38,35 @@ fn count_splits(grid: &VecGrid<Tile>, pos: Pos<usize>, splits: &mut HashSet<Pos<
     try {
         let down = pos.checked_add(Direction::Down)?;
         match grid.get(&down)? {
-            Tile::Empty => count_splits(grid, down, splits),
-            Tile::Splitter => {
-                if splits.insert(down) {
-                    count_splits(grid, down + Direction::Right, splits);
-                    count_splits(grid, down + Direction::Left, splits);
-                }
+            Tile::Splitter if splits.insert(down) => {
+                count_splits(grid, down + Direction::Right, splits);
+                count_splits(grid, down + Direction::Left, splits);
             }
-            Tile::Start => unreachable!(),
+            Tile::Empty => count_splits(grid, down, splits),
+            _ => (),
         }
     };
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn part2((start, grid): &Parsed) -> usize {
+    let mut splits = HashMap::default();
+    count_splits_2(grid, *start, &mut splits)
+}
+
+fn count_splits_2(grid: &VecGrid<Tile>, pos: Pos<usize>, splits: &mut HashMap<Pos<usize>, usize>) -> usize {
+    if let Some(&n) = splits.get(&pos) {
+        return n;
+    }
+    let s = try {
+        let down = pos.checked_add(Direction::Down)?;
+        match grid.get(&down)? {
+            Tile::Splitter => count_splits_2(grid, down + Direction::Right, splits) + count_splits_2(grid, down + Direction::Left, splits),
+            _ => count_splits_2(grid, down, splits),
+        }
+    }
+    .unwrap_or(1);
+    splits.insert(pos, s);
+    s
 }
 
 boilerplate! {
@@ -74,9 +89,9 @@ boilerplate! {
 ..............."
     for tests: {
         part1: { TEST_INPUT => 21 },
-        part2: { TEST_INPUT => 0 },
+        part2: { TEST_INPUT => 40 },
     },
     bench1 == 1579,
-    bench2 == 0,
+    bench2 == 13418215871354,
     bench_parse: |(p, grid): &Parsed| (*p, grid.len()) => (Pos(141, 70), 142),
 }
