@@ -1,6 +1,6 @@
 #![feature(test, try_blocks)]
 extern crate test;
-use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use fnv::FnvHashMap as HashMap;
 
 use aoc2025::{
     boilerplate,
@@ -15,6 +15,7 @@ type Parsed = (Pos<usize>, VecGrid<Tile>);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
+#[allow(unused)] // we transmute into it
 enum Tile {
     Empty = b'.',
     Splitter = b'^',
@@ -28,40 +29,26 @@ fn parse_input(raw: &str) -> Parsed {
 }
 
 fn part1((start, grid): &Parsed) -> usize {
-    let mut splits = HashSet::default();
+    let mut splits = HashMap::default();
     count_splits(grid, *start, &mut splits);
-    splits.len()
-}
-
-// there are no splitters at the left/right edge of the input
-fn count_splits(grid: &VecGrid<Tile>, pos: Pos<usize>, splits: &mut HashSet<Pos<usize>>) {
-    try {
-        let down = pos.checked_add(Direction::Down)?;
-        match grid.get(&down)? {
-            Tile::Splitter if splits.insert(down) => {
-                count_splits(grid, down + Direction::Right, splits);
-                count_splits(grid, down + Direction::Left, splits);
-            }
-            Tile::Empty => count_splits(grid, down, splits),
-            _ => (),
-        }
-    };
+    // splitters aren’t in the map, so we just count the number of visited squares right above a splitter
+    splits.keys().filter_map(|p| grid.get(&p.checked_add(Direction::Down)?).filter(|&&t| t == Tile::Splitter)).count()
 }
 
 fn part2((start, grid): &Parsed) -> usize {
     let mut splits = HashMap::default();
-    count_splits_2(grid, *start, &mut splits)
+    count_splits(grid, *start, &mut splits)
 }
 
-fn count_splits_2(grid: &VecGrid<Tile>, pos: Pos<usize>, splits: &mut HashMap<Pos<usize>, usize>) -> usize {
+fn count_splits(grid: &VecGrid<Tile>, pos: Pos<usize>, splits: &mut HashMap<Pos<usize>, usize>) -> usize {
     if let Some(&n) = splits.get(&pos) {
         return n;
     }
     let s = try {
         let down = pos.checked_add(Direction::Down)?;
         match grid.get(&down)? {
-            Tile::Splitter => count_splits_2(grid, down + Direction::Right, splits) + count_splits_2(grid, down + Direction::Left, splits),
-            _ => count_splits_2(grid, down, splits),
+            Tile::Splitter => count_splits(grid, down + Direction::Right, splits) + count_splits(grid, down + Direction::Left, splits),
+            _ => count_splits(grid, down, splits),
         }
     }
     .unwrap_or(1);
