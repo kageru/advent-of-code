@@ -1,50 +1,53 @@
 #![feature(test)]
 extern crate test;
 use aoc2025::{boilerplate, common::*};
-use fnv::FnvHashSet;
 use itertools::Itertools;
+use std::collections::HashSet;
 
 const DAY: usize = 8;
 type I = i64;
 type Point = (I, I, I);
-type Parsed = Vec<Point>;
+type Parsed = (usize, Vec<(Point, Point)>);
 
 fn parse_input(raw: &str) -> Parsed {
-    raw.lines().map(|l| l.split(',').map(parse_num).collect_tuple().unwrap()).collect()
+    let points = raw.lines().map(|l| l.split(',').map(parse_num).collect_tuple().unwrap()).collect_vec();
+    (points.len(), points.into_iter().tuple_combinations().sorted_by_cached_key(|(p1, p2)| distance(p1, p2)).collect())
 }
 
-fn part1(parsed: &Parsed) -> usize {
-    let pairs = parsed.iter().tuple_combinations().sorted_by_cached_key(|(p1, p2)| distance(p1, p2)).collect_vec();
-    let mut circuits = Vec::<FnvHashSet<Point>>::new();
-    let limit = if parsed.len() < 100 { 10 } else { 1000 }; // meh
-    for (p1, p2) in pairs.into_iter().take(limit) {
-        match &mut circuits.iter_mut().filter(|c| c.contains(p1) || c.contains(p2)).collect_vec()[..] {
-            [] => {
-                let mut c = FnvHashSet::default();
-                c.insert(*p1);
-                c.insert(*p2);
-                circuits.push(c);
-            }
-            [c] => {
-                c.insert(*p1);
-                c.insert(*p2);
-            }
-            [c1, c2] => {
-                c1.extend(c2.drain());
-                circuits.retain(|c| !c.is_empty());
-            }
-            _ => unreachable!(),
-        }
+fn part1((count, pairs): &Parsed) -> usize {
+    let mut circuits = Vec::new();
+    let limit = if *count < 100 { 10 } else { 1000 }; // meh
+    for pair in pairs.iter().take(limit) {
+        connect(pair, &mut circuits);
     }
     circuits.iter().map(|c| c.len()).sorted().rev().take(3).product()
+}
+
+fn connect((p1, p2): &(Point, Point), circuits: &mut Vec<HashSet<Point>>) {
+    match &mut circuits.iter_mut().filter(|c| c.contains(p1) || c.contains(p2)).collect_vec()[..] {
+        [] => circuits.push(HashSet::from([*p1, *p2])),
+        [c] => c.extend([*p1, *p2]),
+        [c1, c2] => {
+            c1.extend(c2.drain());
+            circuits.retain(|c| !c.is_empty());
+        }
+        _ => unreachable!(),
+    }
 }
 
 fn distance((x1, y1, z1): &Point, (x2, y2, z2): &Point) -> I {
     (x1 - x2).pow(2) + (y1 - y2).pow(2) + (z1 - z2).pow(2)
 }
 
-fn part2(parsed: &Parsed) -> usize {
-    unimplemented!()
+fn part2((count, pairs): &Parsed) -> i64 {
+    let mut circuits = Vec::new();
+    for pair in pairs {
+        connect(pair, &mut circuits);
+        if circuits.len() == 1 && circuits[0].len() == *count {
+            return pair.0.0 * pair.1.0;
+        }
+    }
+    unreachable!()
 }
 
 boilerplate! {
@@ -74,6 +77,6 @@ boilerplate! {
         part2: { TEST_INPUT => 25272 },
     },
     bench1 == 46398,
-    bench2 == 0,
-    bench_parse: Vec::len => 1000,
+    bench2 == 8141888143,
+    bench_parse: |(count, pairs): &Parsed| (*count, pairs.len()) => (1000, 499500),
 }
