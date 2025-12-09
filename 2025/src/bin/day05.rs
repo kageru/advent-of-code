@@ -2,6 +2,7 @@
 extern crate test;
 use aoc2025::{boilerplate, common::*};
 use core::slice::GetDisjointMutIndex;
+use itertools::Itertools;
 use std::ops::RangeInclusive;
 
 const DAY: usize = 5;
@@ -12,24 +13,13 @@ type Parsed = (Ranges, Vec<I>);
 fn parse_input(raw: &str) -> Parsed {
     let (fresh, items) = raw.split_once("\n\n").unwrap();
     let fresh = fresh.lines().filter_map(|l| l.split_once('-')).map(|(a, b)| parse_num(a)..=parse_num(b)).collect();
-    (merge_ranges(fresh), parse_nums_separator(items, '\n'))
+    (merge_adjacent(fresh), parse_nums_separator(items, '\n'))
 }
 
 // might as well do it in parsing because it speeds up part 1 by 3x.
-fn merge_ranges(mut ranges: Ranges) -> Ranges {
+fn merge_adjacent(mut ranges: Ranges) -> Ranges {
     ranges.sort_unstable_by_key(|r| *r.start());
-    let mut i = 0;
-    while i < ranges.len() {
-        let current = ranges[i].clone();
-        match ranges.iter().enumerate().skip(i + 1).find(|(_, r)| r.is_overlapping(&current)) {
-            Some((idx, range)) => {
-                ranges[i] = *current.start()..=*(current.end().max(range.end()));
-                ranges.remove(idx);
-            }
-            None => i += 1,
-        }
-    }
-    ranges
+    ranges.into_iter().coalesce(|a, b| if a.is_overlapping(&b) { Ok(*a.start()..=*(a.end().max(b.end()))) } else { Err((a, b)) }).collect()
 }
 
 fn part1((fresh, items): &Parsed) -> usize {
