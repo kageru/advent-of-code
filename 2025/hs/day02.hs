@@ -5,7 +5,6 @@ type Input = [(Int, Int)]
 main :: IO ()
 main = do
   input <- parse <$> getContents
-  print input
   putStrLn $ "Part 1: " ++ show (solve isValid input)
   putStrLn $ "Part 2: " ++ show (solve isValid2 input)
 
