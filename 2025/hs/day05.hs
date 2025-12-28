@@ -1,5 +1,6 @@
 import Data.Tuple.Extra
 import Data.List
+import Common
 
 type Input = (Ranges, [Int])
 type Ranges = [(Int, Int)]
@@ -13,7 +14,6 @@ main = do
 parse :: String -> Input
 parse = (map parseRange *** map read) . splitOnce "" . lines
   where parseRange = both read . splitOnce '-'
-        splitOnce a = second tail . break (==a)
 
 part1 :: Ranges -> [Int] -> Int
 part1 rs = length . filter (`inAnyRange` rs)
