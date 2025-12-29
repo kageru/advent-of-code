@@ -1,15 +1,17 @@
 import Data.Vector (Vector, fromList, findIndex, elemIndex, (!), (!?))
 import Data.Tuple.Extra ((&&&))
 import Data.Maybe (fromJust)
-import qualified Data.Map as M 
+import qualified Data.Map as M
+import Control.Monad.State.Strict (State, get, modify, runState)
 
-type Input = (P, Vector (Vector Char))
 type P = (Int, Int)
+type Input = (P, Vector (Vector Char))
+type Cache = (M.Map P Int)
 
 main :: IO ()
 main = do
   input <- parse <$> getContents
-  let (splits, total) = part2 input M.empty
+  let (total, splits) = runState (solve input) M.empty
   putStrLn $ "Part 1: " ++ show (length splits)
   putStrLn $ "Part 2: " ++ show total
 
@@ -21,14 +23,14 @@ position :: Eq a => a -> Vector (Vector a) -> (Int, Int)
 position e m = (fromJust $ elemIndex e (m ! y), y)
   where Just y = findIndex (elem e) m
 
-part2 :: Input -> M.Map P Int -> (M.Map P Int, Int)
-part2 ((x, y), m) cache
-  | Just i <- (M.!?) cache (x, y) = (cache, i)
-  | otherwise = case (!? x) =<< (m !? y) of
-      Nothing -> (cache, 1)
-      Just '^' -> let
-        (leftCache, leftNum) = part2 ((x - 1, y), m) cache
-        (rightCache, rightNum) = part2 ((x + 1, y), m) leftCache
-        total = leftNum + rightNum
-        in (M.insert (x, y) total rightCache, total)
-      Just e -> part2 ((x, y - 1), m) cache
+solve :: Input -> State Cache Int
+solve ((x, y), m) = do
+  cache <- get
+  maybe fallback pure $ cache M.!? (x, y)
+  where
+    fallback = maybe (pure 1) nextStep $ (!? x) =<< (m !? y)
+    nextStep '^' = do
+      total <- sum <$> mapM (\f -> solve ((f x, y), m)) [pred, succ]
+      modify (M.insert (x, y) total)
+      pure total
+    nextStep _ = solve ((x, y - 1), m)
