@@ -1,6 +1,6 @@
 import Data.List.Extra
-import Data.Tuple.Extra
-import Protolude.Functor
+import Data.Tuple.Extra ((&&&))
+import Common
 
 main :: IO ()
 main = do
